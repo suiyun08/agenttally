@@ -32,14 +32,14 @@ extension SessionStatus {
 
     var accessibilityDescription: String {
         switch self {
-        case .waitingPermission: return "waiting for permission"
-        case .waitingInput: return "waiting for input"
-        case .needsAttention: return "needs attention"
-        case .working: return "working"
-        case .background: return "working in background"
-        case .compacting: return "compacting context"
-        case .done: return "done"
-        case .idle: return "idle"
+        case .waitingPermission: return String(localized: "waiting for permission")
+        case .waitingInput: return String(localized: "waiting for input")
+        case .needsAttention: return String(localized: "needs attention")
+        case .working: return String(localized: "working")
+        case .background: return String(localized: "working in background")
+        case .compacting: return String(localized: "compacting context")
+        case .done: return String(localized: "done")
+        case .idle: return String(localized: "idle")
         }
     }
 }

@@ -44,7 +44,7 @@ struct WorktreeCleanupCardView: View {
                         Text("\u{00B7}")
                             .font(.system(size: 10))
                             .foregroundStyle(Color.textMuted.opacity(0.6))
-                        Text(candidate.branchName)
+                        Text(candidate.displayBranchName)
                             .font(.system(size: 10, design: .monospaced))
                             .foregroundStyle(Color.textMuted)
                             .lineLimit(1)
@@ -82,7 +82,7 @@ struct WorktreeCleanupCardView: View {
             HStack(spacing: 4) {
                 Image(systemName: isRemoving ? "hourglass" : "trash")
                     .font(.system(size: 9, weight: .semibold))
-                Text(isRemoving ? "Removing" : "Remove")
+                (isRemoving ? Text("Removing") : Text("Remove"))
                     .font(.system(size: 9, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)

@@ -75,6 +75,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         hasNotch = NSScreen.builtin?.hasPhysicalNotch == true
 
         seedPanelHeightLimit()
+        _ = AppLanguage.launchSelection
         let contentView = makePanelContentView()
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
@@ -118,7 +119,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 Task { @MainActor in self?.openUpdaterFromPanel() }
             },
             onSelectCleanupRemovalAction: { [weak self] candidate in
-                await self?.selectCleanupRemovalAction(candidate) ?? .blocked(candidate, "Cleanup is unavailable right now.")
+                await self?.selectCleanupRemovalAction(candidate) ?? .blocked(candidate, String(localized: "Cleanup is unavailable right now."))
             },
             onExecuteCleanupRemovalAction: { [weak self] action in
                 await self?.executeCleanupRemovalAction(action) ?? .refused(action.candidate)

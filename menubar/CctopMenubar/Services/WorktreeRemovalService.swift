@@ -263,23 +263,26 @@ private extension WorktreeCleanupCandidate {
 
     var blockedRemovalReason: String {
         if state.reasons.contains(Self.protectedFolderAccessReason) {
-            return "Grant file access in Settings before removing this protected worktree."
+            return String(localized: "Grant file access in Settings before removing this protected worktree.")
         }
         if state.reasons.contains(Self.statusUnreadableReason) {
-            return "Git status could not be read, so cctop cannot verify what removal would delete."
+            return String(localized: "Git status could not be read, so cctop cannot verify what removal would delete.")
         }
         if state.reasons.contains(Self.initializedSubmodulesReason) {
-            return "This worktree contains initialized submodules, which cctop cannot safely remove yet."
+            return String(localized: "This worktree contains initialized submodules, which cctop cannot safely remove yet.")
         }
         if state.reasons.contains(Self.indexHiddenTrackedFilesReason) {
-            return "This worktree has tracked files hidden by Git index flags, so cctop cannot verify local changes safely."
+            return String(
+                localized: "This worktree has tracked files hidden by Git index flags, so cctop cannot verify local changes safely."
+            )
         }
         if state.reasons.contains(Self.lockedReason) {
-            return "This worktree is locked. Unlock it before removing."
+            return String(localized: "This worktree is locked. Unlock it before removing.")
         }
         if state.reasons.contains(Self.mainWorktreePathUnverifiedReason) {
-            return "The main checkout path could not be verified, so cctop cannot run worktree removal safely."
+            return String(localized: "The main checkout path could not be verified, so cctop cannot run worktree removal safely.")
         }
-        return state.reasons.first ?? "Cleanup evidence changed. Review the updated worktree before removing."
+        return state.reasons.first.map(Self.displayReason)
+            ?? String(localized: "Cleanup evidence changed. Review the updated worktree before removing.")
     }
 }

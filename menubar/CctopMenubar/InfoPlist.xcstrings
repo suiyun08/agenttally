@@ -1,0 +1,24 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSAppleEventsUsageDescription": {
+      "comment": "Privacy - AppleEvents Sending Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "cctop needs to control terminal apps to focus the correct window when you click a session."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cctop 需要控制终端类 App，才能在你点击会话时跳到对应的窗口。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

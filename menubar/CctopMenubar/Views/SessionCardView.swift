@@ -48,7 +48,7 @@ struct SessionCardView: View {
 
             if session.subagentCount > 0 {
                 let count = session.subagentCount
-                Text("\(count) agent\(count == 1 ? "" : "s")")
+                (count == 1 ? Text("1 agent") : Text("\(count) agents"))
                     .font(.system(size: 10))
                     .foregroundStyle(Color.agentBadge)
             }
@@ -172,14 +172,14 @@ struct SessionCardView: View {
         }
     }
 
-    private func statusText(_ text: String, color: Color) -> some View {
+    private func statusText(_ text: LocalizedStringKey, color: Color) -> some View {
         Text(text)
             .font(.system(size: 10.5, weight: .medium))
             .foregroundStyle(color)
             .fixedSize(horizontal: true, vertical: false)
     }
 
-    private func statusDotLabel(_ text: String, dotColor: Color, textColor: Color? = nil) -> some View {
+    private func statusDotLabel(_ text: LocalizedStringKey, dotColor: Color, textColor: Color? = nil) -> some View {
         HStack(spacing: 4.5) {
             Circle()
                 .fill(dotColor)
@@ -240,9 +240,9 @@ struct SessionCardView: View {
     private var attentionNoteText: String? {
         switch session.status {
         case .waitingPermission:
-            return session.notificationMessage ?? "Permission needed"
+            return session.notificationMessage ?? String(localized: "Permission needed")
         case .waitingInput, .needsAttention:
-            return session.contextLine ?? "Waiting for input"
+            return session.contextLine ?? String(localized: "Waiting for input")
         case .done:
             return session.contextLine
         default:
@@ -265,15 +265,16 @@ struct SessionCardView: View {
     private var cardAccessibilityLabel: String {
         var parts: [String] = []
         if let idx = navigateIndex, idx <= 9 {
-            parts.append("Press \(idx) to jump to")
+            parts.append(String(localized: "Press \(idx) to jump to"))
         }
         parts += [
-            session.displayName, "on branch", session.branch,
+            session.displayName, String(localized: "on branch"), session.branch,
             session.status.accessibilityDescription
         ]
         if session.subagentCount > 0 {
+            let count = session.subagentCount
             parts.append(
-                "\(session.subagentCount) active subagent\(session.subagentCount == 1 ? "" : "s")"
+                count == 1 ? String(localized: "1 active subagent") : String(localized: "\(count) active subagents")
             )
         }
         if let context = session.contextLine {

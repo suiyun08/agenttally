@@ -61,15 +61,15 @@ struct EmptyStateView: View {
 
     private var subtitle: String {
         if setupComplete {
-            return "Start a session \u{2014} it will appear here automatically."
+            return String(localized: "Start a session \u{2014} it will appear here automatically.")
         }
         if codexHooksDisabled {
-            return "Codex hooks are disabled \u{2014} enable them before sessions can appear."
+            return String(localized: "Codex hooks are disabled \u{2014} enable them before sessions can appear.")
         }
         if codexHooksUntrusted {
-            return "cctop's hooks are installed, but Codex needs to trust them first."
+            return String(localized: "cctop's hooks are installed, but Codex needs to trust them first.")
         }
-        return "Install the plugin or hooks for your AI tool to see live status here."
+        return String(localized: "Install the plugin or hooks for your AI tool to see live status here.")
     }
 
     // MARK: - Agent card
@@ -151,7 +151,7 @@ struct EmptyStateView: View {
             .foregroundStyle(Color.textMuted)
     }
 
-    private func installButton(label: String, agent: AgentKind) -> some View {
+    private func installButton(label: LocalizedStringKey, agent: AgentKind) -> some View {
         AmberActionButton(label: label) {
             triggerInstall(for: agent)
         }
@@ -188,7 +188,7 @@ struct EmptyStateView: View {
     }
 
     private func hintRow(
-        icon: String, iconColor: Color, text: String, textColor: Color,
+        icon: String, iconColor: Color, text: LocalizedStringKey, textColor: Color,
         iconWeight: Font.Weight = .regular
     ) -> some View {
         HStack(spacing: 4) {
@@ -222,12 +222,12 @@ struct EmptyStateView: View {
 
     private var restartHintText: String {
         if codexHooksDisabled {
-            return "Enable Codex hooks, then start a new session"
+            return String(localized: "Enable Codex hooks, then start a new session")
         }
         if codexHooksUntrusted {
-            return "Start a Codex CLI session and trust the hooks when prompted"
+            return String(localized: "Start a Codex CLI session and trust the hooks when prompted")
         }
-        return "Restart sessions after installing to pick up hooks"
+        return String(localized: "Restart sessions after installing to pick up hooks")
     }
 
     // MARK: - Install actions

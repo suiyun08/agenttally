@@ -36,7 +36,7 @@ extension PopupView {
         )
     }
 
-    func emptyPlaceholder(systemImage: String, title: String, detail: String? = nil) -> some View {
+    func emptyPlaceholder(systemImage: String, title: LocalizedStringKey, detail: String? = nil) -> some View {
         VStack(spacing: 8) {
             Image(systemName: systemImage)
                 .font(.system(size: 20))

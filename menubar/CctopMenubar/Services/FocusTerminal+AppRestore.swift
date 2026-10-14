@@ -8,11 +8,11 @@ enum FocusFailure: Equatable {
     var message: String {
         switch self {
         case .codexAppNotInstalled:
-            return "cctop could not find the Codex app. Install Codex, then try again."
+            return String(localized: "cctop could not find the Codex app. Install Codex, then try again.")
         case .codexTaskIdentifierInvalid:
-            return "cctop could not open this task because its Codex identifier is invalid. Open Codex and select the task manually."
+            return String(localized: "cctop could not open this task because its Codex identifier is invalid. Open Codex and select the task manually.")
         case .codexTaskOpenFailed:
-            return "cctop could not open this task in Codex. Open Codex, then try again."
+            return String(localized: "cctop could not open this task in Codex. Open Codex, then try again.")
         }
     }
 }
@@ -89,7 +89,7 @@ func executeAppURLStrategy(url: URL, restoreBundleID: String?) -> Bool {
 func presentFocusFailure(_ failure: FocusFailure) {
     NSRunningApplication.current.activate(options: [.activateAllWindows])
     let alert = NSAlert()
-    alert.messageText = "Could Not Open Codex Task"
+    alert.messageText = String(localized: "Could Not Open Codex Task")
     alert.informativeText = failure.message
     alert.runModal()
 }

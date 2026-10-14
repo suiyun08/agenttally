@@ -91,8 +91,8 @@ extension SessionData {
     /// What a blocking tool is asking for, when the last tool was one.
     var awaitingUserToolLine: String? {
         switch lastTool {
-        case "AskUserQuestion": return "Asking you a question"
-        case "ExitPlanMode": return "Plan ready for your approval"
+        case "AskUserQuestion": return String(localized: "Asking you a question")
+        case "ExitPlanMode": return String(localized: "Plan ready for your approval")
         default: return nil
         }
     }
@@ -110,9 +110,17 @@ extension SessionData {
         var parts: [String] = []
         let tasks = backgroundTaskCount ?? 0
         let wakeups = scheduledWakeupCount ?? 0
-        if tasks > 0 { parts.append(tasks == 1 ? "1 background task" : "\(tasks) background tasks") }
-        if wakeups > 0 { parts.append(wakeups == 1 ? "1 scheduled wakeup" : "\(wakeups) scheduled wakeups") }
-        let summary = parts.isEmpty ? "Background work" : parts.joined(separator: ", ")
+        if tasks > 0 {
+            parts.append(tasks == 1 ? String(localized: "1 background task") : String(localized: "\(tasks) background tasks"))
+        }
+        if wakeups > 0 {
+            parts.append(
+                wakeups == 1 ? String(localized: "1 scheduled wakeup") : String(localized: "\(wakeups) scheduled wakeups")
+            )
+        }
+        let summary = parts.isEmpty
+            ? String(localized: "Background work")
+            : parts.joined(separator: String(localized: ", ", comment: "List separator"))
         guard let detail = backgroundTaskDetail else { return summary }
         return "\(summary): \(detail.prefix(40))"
     }

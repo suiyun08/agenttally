@@ -53,7 +53,7 @@ extension PopupView {
                 switch action {
                 case .blocked(_, let reason):
                     cleanupRemovalNotice = WorktreeRemovalNotice(
-                        title: "Removal Blocked",
+                        title: String(localized: "Removal Blocked"),
                         message: reason,
                         blocksRemoval: true
                     )
@@ -131,8 +131,9 @@ extension PopupView {
                 selectedCleanupCandidate = latestCandidate
             }
             cleanupRemovalNotice = WorktreeRemovalNotice(
-                title: "Removal Blocked",
-                message: latestCandidate.state.reasons.first ?? "Cleanup cannot confidently remove this worktree right now.",
+                title: String(localized: "Removal Blocked"),
+                message: latestCandidate.state.reasons.first.map(WorktreeCleanupCandidate.displayReason)
+                    ?? String(localized: "Cleanup cannot confidently remove this worktree right now."),
                 blocksRemoval: true
             )
         case .failed(let gitResult):
@@ -140,7 +141,7 @@ extension PopupView {
                 selectedCleanupCandidate = originalCandidate
             }
             cleanupRemovalNotice = WorktreeRemovalNotice(
-                title: "Remove Failed",
+                title: String(localized: "Remove Failed"),
                 message: cleanupFailureMessage(from: gitResult)
             )
         }
@@ -149,7 +150,7 @@ extension PopupView {
     func cleanupFailureMessage(from result: GitCommandResult) -> String {
         Config.nonEmpty(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines))
             ?? Config.nonEmpty(result.stdout.trimmingCharacters(in: .whitespacesAndNewlines))
-            ?? "git exited with status \(result.exitCode)"
+            ?? String(localized: "git exited with status \(result.exitCode)")
     }
 
     func removalAlert(for confirmation: WorktreeRemovalConfirmation) -> Alert {

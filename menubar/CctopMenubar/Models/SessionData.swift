@@ -5,11 +5,11 @@ import Foundation
 extension Date {
     func relativeDescription(asOf now: Date = Date()) -> String {
         let seconds = Int(now.timeIntervalSince(self))
-        if seconds <= 0 { return "just now" }
-        if seconds >= 86400 { return "\(seconds / 86400)d ago" }
-        if seconds >= 3600 { return "\(seconds / 3600)h ago" }
-        if seconds >= 60 { return "\(seconds / 60)m ago" }
-        return "\(seconds)s ago"
+        if seconds <= 0 { return String(localized: "just now") }
+        if seconds >= 86400 { return String(localized: "\(seconds / 86400)d ago") }
+        if seconds >= 3600 { return String(localized: "\(seconds / 3600)h ago") }
+        if seconds >= 60 { return String(localized: "\(seconds / 60)m ago") }
+        return String(localized: "\(seconds)s ago")
     }
 
     var relativeDescription: String {
@@ -437,9 +437,9 @@ extension SessionData {
     var contextLine: String? {
         switch status {
         case .idle: return nil
-        case .compacting: return "Compacting context..."
+        case .compacting: return String(localized: "Compacting context...")
         case .waitingPermission:
-            return notificationMessage ?? "Permission needed"
+            return notificationMessage ?? String(localized: "Permission needed")
         case .waitingInput:
             return notificationMessage ?? awaitingUserToolLine ?? promptSnippet
         case .done:
@@ -447,7 +447,7 @@ extension SessionData {
         case .background:
             return backgroundWorkLine
         case .needsAttention:
-            return notificationMessage ?? promptSnippet ?? "Needs attention"
+            return notificationMessage ?? promptSnippet ?? String(localized: "Needs attention")
         case .working:
             if let tool = lastTool {
                 return formatToolDisplay(tool: tool, detail: lastToolDetail)
@@ -461,23 +461,24 @@ extension SessionData {
     }
 
     private func formatToolDisplay(tool: String, detail: String?) -> String {
-        guard let detail else { return "\(tool)..." }
+        guard let detail else { return String(localized: "\(tool)...") }
         let fileName = URL(fileURLWithPath: detail).lastPathComponent
+        let short = String(detail.prefix(30))
         switch tool.lowercased() {
         // "local_shell" is Codex's equivalent of Claude Code's Bash tool —
         // route both through the same "Running: ..." formatting so Codex
         // sessions don't show a raw "local_shell: ..." in the meta row.
-        case "bash", "local_shell": return "Running: \(detail.prefix(30))"
-        case "edit": return "Editing \(fileName)"
-        case "write": return "Writing \(fileName)"
-        case "read": return "Reading \(fileName)"
-        case "grep": return "Searching: \(detail.prefix(30))"
-        case "glob": return "Finding: \(detail.prefix(30))"
-        case "webfetch": return "Fetching: \(detail.prefix(30))"
-        case "websearch": return "Searching: \(detail.prefix(30))"
-        case "task": return "Task: \(detail.prefix(30))"
-        case "agent": return "Spawning: \(detail.prefix(30))"
-        default: return "\(tool): \(detail.prefix(30))"
+        case "bash", "local_shell": return String(localized: "Running: \(short)")
+        case "edit": return String(localized: "Editing \(fileName)")
+        case "write": return String(localized: "Writing \(fileName)")
+        case "read": return String(localized: "Reading \(fileName)")
+        case "grep": return String(localized: "Searching: \(short)")
+        case "glob": return String(localized: "Finding: \(short)")
+        case "webfetch": return String(localized: "Fetching: \(short)")
+        case "websearch": return String(localized: "Searching: \(short)")
+        case "task": return String(localized: "Task: \(short)")
+        case "agent": return String(localized: "Spawning: \(short)")
+        default: return "\(tool): \(short)"
         }
     }
 }

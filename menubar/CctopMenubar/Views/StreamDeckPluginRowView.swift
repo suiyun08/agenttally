@@ -96,7 +96,7 @@ struct StreamDeckPluginRowView: View {
         }
     }
 
-    private func installButton(_ label: String) -> some View {
+    private func installButton(_ label: LocalizedStringKey) -> some View {
         AmberActionButton(label: label) {
             if pluginManager.installStreamDeckPlugin() {
                 justInstalled = true
@@ -116,7 +116,7 @@ struct StreamDeckPluginRowView: View {
     }
 
     private func statusRow(
-        _ text: String,
+        _ text: LocalizedStringKey,
         icon: String,
         iconColor: Color,
         textColor: Color

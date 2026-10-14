@@ -115,7 +115,7 @@ enum RecentResumeTarget: Identifiable, Equatable {
         case .project(let project):
             return project.openActionLabel
         case .desktopThread:
-            return "Open Claude Desktop"
+            return String(localized: "Open Claude Desktop")
         }
     }
 
@@ -124,7 +124,7 @@ enum RecentResumeTarget: Identifiable, Equatable {
         case .project:
             return nil
         case .desktopThread:
-            return "Open Claude"
+            return String(localized: "Open Claude")
         }
     }
 
@@ -133,7 +133,7 @@ enum RecentResumeTarget: Identifiable, Equatable {
         case .project(let project):
             return project.openHelpText
         case .desktopThread:
-            return "Open Claude Desktop; archived sessions may need manual lookup"
+            return String(localized: "Open Claude Desktop; archived sessions may need manual lookup")
         }
     }
 
@@ -142,7 +142,7 @@ enum RecentResumeTarget: Identifiable, Equatable {
         case .project(let project):
             return Self.joinedMetadata([project.metadataEvidenceText, project.pathContext])
         case .desktopThread(let thread):
-            return Self.joinedMetadata(["Archived", "Claude", RecentProject.compactProjectPath(thread.projectPath)])
+            return Self.joinedMetadata([String(localized: "Archived"), "Claude", RecentProject.compactProjectPath(thread.projectPath)])
         }
     }
 

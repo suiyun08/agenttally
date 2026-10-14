@@ -24,8 +24,8 @@ enum DisabledReason {
 
     var reasonText: String {
         switch self {
-        case .development: return "Updates unavailable in development builds."
-        case .unsigned: return "Updates unavailable in this build."
+        case .development: return String(localized: "Updates unavailable in development builds.")
+        case .unsigned: return String(localized: "Updates unavailable in this build.")
         }
     }
 }

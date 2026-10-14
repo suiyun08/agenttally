@@ -4,46 +4,46 @@ extension FocusStrategy {
     var actionTitle: String {
         switch self {
         case .openWithApp(let bundleID, _):
-            let name = HostApp.from(bundleIdentifier: bundleID)?.displayName ?? "App"
-            return "Open Project in \(name)"
+            let name = HostApp.from(bundleIdentifier: bundleID)?.displayName ?? String(localized: "App")
+            return String(localized: "Open Project in \(name)")
         case .iTerm2:
-            return "Focus iTerm2 Pane"
+            return String(localized: "Focus iTerm2 Pane")
         case .kitty:
-            return "Focus Kitty Window"
+            return String(localized: "Focus Kitty Window")
         case .ghostty:
-            return "Focus Ghostty Terminal"
+            return String(localized: "Focus Ghostty Terminal")
         case .appleTerminal:
-            return "Focus Terminal Tab"
+            return String(localized: "Focus Terminal Tab")
         case .activateByName(let name):
             let host = HostApp.from(editorName: name)
-            if host == .cmux { return "Focus cmux" }
+            if host == .cmux { return String(localized: "Focus cmux") }
             let displayName = host == .unknown ? name : host.displayName
-            return "Bring \(displayName) Forward"
+            return String(localized: "Bring \(displayName) Forward")
         case .activateByBundleID(let bundleID):
             let host = HostApp.from(bundleIdentifier: bundleID)
-            if host == .cmux { return "Focus cmux" }
-            if host == .claudeDesktop { return "Open Claude Session" }
-            let name = host?.displayName ?? "App"
-            return "Bring \(name) Forward"
+            if host == .cmux { return String(localized: "Focus cmux") }
+            if host == .claudeDesktop { return String(localized: "Open Claude Session") }
+            let name = host?.displayName ?? String(localized: "App")
+            return String(localized: "Bring \(name) Forward")
         case .openURL(let url, _):
             if url.scheme?.lowercased() == "codex" {
-                return "Focus Codex Task"
+                return String(localized: "Focus Codex Task")
             }
             if url.scheme?.lowercased() == "claude" {
-                return "Open Claude Session"
+                return String(localized: "Open Claude Session")
             }
             if WarpFocusLink.isChannelScheme(url.scheme) {
-                return "Focus Warp Pane"
+                return String(localized: "Focus Warp Pane")
             }
             if url.scheme?.lowercased() == "cmux" {
-                let target = url.pathComponents.contains("surface") ? "Surface" : "Pane"
-                return "Focus cmux \(target)"
+                let target = url.pathComponents.contains("surface") ? String(localized: "Surface") : String(localized: "Pane")
+                return String(localized: "Focus cmux \(target)")
             }
-            return "Open Session"
+            return String(localized: "Open Session")
         case .openInFinder:
-            return "Open Project in Finder"
+            return String(localized: "Open Project in Finder")
         case .unavailable:
-            return "Why Focus Is Unavailable"
+            return String(localized: "Why Focus Is Unavailable")
         }
     }
 }

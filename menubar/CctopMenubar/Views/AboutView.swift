@@ -59,7 +59,7 @@ struct AboutView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func linkButton(_ label: String, url: String) -> some View {
+    private func linkButton(_ label: LocalizedStringKey, url: String) -> some View {
         HoverLinkButton(
             label: label,
             url: url,

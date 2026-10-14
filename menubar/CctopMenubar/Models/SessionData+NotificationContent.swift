@@ -65,13 +65,13 @@ extension SessionData {
     private func notificationSubtitle(sender: String) -> String {
         switch status {
         case .waitingPermission:
-            return "\(sender) needs permission"
+            return String(localized: "\(sender) needs permission")
         case .waitingInput:
-            return "\(sender) is waiting for input"
+            return String(localized: "\(sender) is waiting for input")
         case .done:
-            return "\(sender) finished"
+            return String(localized: "\(sender) finished")
         default:
-            return "\(sender) needs attention"
+            return String(localized: "\(sender) needs attention")
         }
     }
 
@@ -79,14 +79,14 @@ extension SessionData {
         let detail: String?
         switch status {
         case .waitingPermission:
-            detail = Self.cleanOptionalNotificationBodyText(notificationMessage) ?? "Permission needed"
+            detail = Self.cleanOptionalNotificationBodyText(notificationMessage) ?? String(localized: "Permission needed")
         case .done:
             detail = Self.cleanOptionalNotificationBodyText(assistantSnippet)
                 ?? Self.cleanOptionalPromptFallbackText(
                     lastPrompt,
                     usesCodexPromptFallbackPolicy: usesCodexPromptFallbackPolicy
                 )
-                ?? "Finished"
+                ?? String(localized: "Finished")
         case .waitingInput:
             detail = Self.cleanOptionalNotificationBodyText(notificationMessage)
                 ?? awaitingUserToolLine
@@ -94,11 +94,11 @@ extension SessionData {
                     lastPrompt,
                     usesCodexPromptFallbackPolicy: usesCodexPromptFallbackPolicy
                 )
-                ?? "Waiting for input"
+                ?? String(localized: "Waiting for input")
         default:
-            detail = Self.cleanOptionalNotificationBodyText(notificationMessage) ?? "Needs attention"
+            detail = Self.cleanOptionalNotificationBodyText(notificationMessage) ?? String(localized: "Needs attention")
         }
-        return Self.truncateNotificationBody(detail ?? "Needs attention")
+        return Self.truncateNotificationBody(detail ?? String(localized: "Needs attention"))
     }
 
     private static func title(_ title: String, alreadyContainsProject project: String) -> Bool {

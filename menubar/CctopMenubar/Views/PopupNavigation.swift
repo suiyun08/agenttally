@@ -5,10 +5,10 @@ enum PopupTab: CaseIterable, Hashable {
 
     var label: String {
         switch self {
-        case .active: return "Active"
-        case .idle: return "Idle"
-        case .recent: return "Recent"
-        case .cleanup: return "Cleanup"
+        case .active: return String(localized: "Active")
+        case .idle: return String(localized: "Idle")
+        case .recent: return String(localized: "Recent")
+        case .cleanup: return String(localized: "Cleanup")
         }
     }
 
@@ -16,31 +16,31 @@ enum PopupTab: CaseIterable, Hashable {
         let staleIdleDuration = Self.staleIdleDurationText
         switch self {
         case .active:
-            return "Current sessions; idle moves after \(staleIdleDuration)."
+            return String(localized: "Current sessions; idle moves after \(staleIdleDuration).")
         case .idle:
-            return "Dormant sessions and idle sessions over \(staleIdleDuration)."
+            return String(localized: "Dormant sessions and idle sessions over \(staleIdleDuration).")
         case .recent:
-            return "Finished work and archived desktop sessions. Rows open the project or app when possible."
+            return String(localized: "Finished work and archived desktop sessions. Rows open the project or app when possible.")
         case .cleanup:
-            return "Ended-session worktrees checked before removal."
+            return String(localized: "Ended-session worktrees checked before removal.")
         }
     }
 
     var emptyStateDetail: String {
         switch self {
         case .active:
-            return "Current and recently idle sessions appear here."
+            return String(localized: "Current and recently idle sessions appear here.")
         case .idle:
-            return "Dormant and long-idle sessions appear here."
+            return String(localized: "Dormant and long-idle sessions appear here.")
         case .recent:
-            return "Finished work and archived desktop sessions appear here."
+            return String(localized: "Finished work and archived desktop sessions appear here.")
         case .cleanup:
-            return "Ended-session worktrees appear here after checks."
+            return String(localized: "Ended-session worktrees appear here after checks.")
         }
     }
 
     static var cleanupScanningDetail: String {
-        "Checking ended-session worktrees."
+        String(localized: "Checking ended-session worktrees.")
     }
 
     static func switched(
@@ -63,7 +63,7 @@ enum PopupTab: CaseIterable, Hashable {
 
     private static var staleIdleDurationText: String {
         let hours = Int(SessionDisplayPolicy.staleIdleInterval / 3_600)
-        return "\(hours) hours"
+        return String(localized: "\(hours) hours")
     }
 }
 

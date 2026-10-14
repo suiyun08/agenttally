@@ -16,14 +16,16 @@ struct ManualSessionHideConfirmation: Identifiable, Equatable {
     }
 
     var title: String {
-        "Hide “\(displayName)” from cctop?"
+        String(localized: "Hide “\(displayName)” from cctop?")
     }
 
-    let message = "It will disappear from the panel, notifications, Navigate mode, and Stream Deck. "
-        + "This does not stop or delete the underlying session; cctop will keep it available for lifecycle and Cleanup. "
-        + "You cannot show it again while its local session record exists."
+    let message = String(localized: """
+        It will disappear from the panel, notifications, Navigate mode, and Stream Deck. \
+        This does not stop or delete the underlying session; cctop will keep it available for lifecycle and Cleanup. \
+        You cannot show it again while its local session record exists.
+        """)
 
-    let primaryButtonTitle = "Hide Session"
+    let primaryButtonTitle = String(localized: "Hide Session")
 }
 
 enum PopupConfirmation: Identifiable, Equatable {

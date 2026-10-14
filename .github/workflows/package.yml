@@ -22,6 +22,20 @@ jobs:
       - name: Build and bundle
         run: ./scripts/bundle-macos.sh --arch arm64
 
+      - name: Collect extracted strings
+        run: |
+          mkdir -p dist
+          find menubar/build -name '*.stringsdata' > dist/stringsdata-files.txt
+          wc -l < dist/stringsdata-files.txt
+          tar -cf dist/stringsdata.tar -T dist/stringsdata-files.txt
+
+      - name: Upload extracted strings
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stringsdata
+          path: dist/stringsdata.tar
+          retention-days: 7
+
       - name: Upload zip artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

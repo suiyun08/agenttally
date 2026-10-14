@@ -26,7 +26,7 @@ struct SettingsSecondaryRow<Content: View>: View {
 }
 
 struct StatusDotBadge: View {
-    let text: String
+    let text: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 4) {
@@ -144,5 +144,40 @@ struct ShortcutBadge: View {
             KeyboardShortcuts.Recorder("", name: name)
                 .padding(8)
         }
+    }
+}
+
+/// Language picker for the Appearance group. The choice takes effect after a relaunch.
+struct LanguageSettingsRow: View {
+    @State private var selection = AppLanguage.current(in: .standard)
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Text("Language")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 8)
+                AmberSegmentedPicker(
+                    options: AppLanguage.allCases.map { ($0, $0.label) },
+                    selection: $selection
+                )
+            }
+            .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
+            .padding(.vertical, 4)
+            .frame(minHeight: 25)
+            if selection != AppLanguage.launchSelection {
+                SettingsSecondaryRow {
+                    Text("Restart cctop to apply the language")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.textMuted)
+                    Spacer()
+                    AmberActionButton(label: "Restart Now") { AppLanguage.relaunchApp() }
+                }
+            }
+        }
+        .onChange(of: selection) { $0.apply() }
     }
 }

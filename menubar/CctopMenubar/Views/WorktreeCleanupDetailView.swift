@@ -56,7 +56,7 @@ struct WorktreeCleanupDetailView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                Text("\(candidate.worktreeName) \u{00B7} \(candidate.branchName)")
+                Text(verbatim: "\(candidate.worktreeName) \u{00B7} \(candidate.displayBranchName)")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(Color.textMuted)
                     .lineLimit(1)
@@ -108,8 +108,13 @@ struct WorktreeCleanupDetailView: View {
                     reviewReasonRow(reason)
                 }
                 if remainingReasonCount > 0 {
-                    let noun = remainingReasonCount == 1 ? "item" : "items"
-                    evidenceRow("\(remainingReasonCount) more review \(noun)", systemImage: "ellipsis.circle", color: candidate.state.accentColor)
+                    evidenceRow(
+                        remainingReasonCount == 1
+                            ? String(localized: "1 more review item")
+                            : String(localized: "\(remainingReasonCount) more review items"),
+                        systemImage: "ellipsis.circle",
+                        color: candidate.state.accentColor
+                    )
                 }
             }
         }
@@ -117,7 +122,11 @@ struct WorktreeCleanupDetailView: View {
 
     private func reviewReasonRow(_ reason: String) -> some View {
         VStack(alignment: .leading, spacing: reviewReasonRowSpacing) {
-            evidenceRow(reason, systemImage: "exclamationmark.triangle", color: candidate.state.accentColor)
+            evidenceRow(
+                WorktreeCleanupCandidate.displayReason(reason),
+                systemImage: "exclamationmark.triangle",
+                color: candidate.state.accentColor
+            )
             if reason == WorktreeCleanupCandidate.untrackedFilesReason,
                let preview = candidate.reviewEvidence.untrackedPreview {
                 CleanupUntrackedPreviewBlock(preview: preview, isCompact: usesCompactUntrackedPreviewLayout)
@@ -132,9 +141,9 @@ struct WorktreeCleanupDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionLabel(nonOKChecks.isEmpty ? "Evidence" : "Checks")
             if nonOKChecks.isEmpty {
-                evidenceRow("\(passedCheckCount) checks passed", systemImage: "checkmark.circle", color: Color.statusGreen)
+                evidenceRow(String(localized: "\(passedCheckCount) checks passed"), systemImage: "checkmark.circle", color: Color.statusGreen)
             } else {
-                evidenceRow("\(nonOKChecks.count) checks need review", systemImage: "exclamationmark.circle", color: candidate.state.accentColor)
+                evidenceRow(String(localized: "\(nonOKChecks.count) checks need review"), systemImage: "exclamationmark.circle", color: candidate.state.accentColor)
             }
         }
     }
@@ -202,7 +211,7 @@ struct WorktreeCleanupDetailView: View {
             .fixedSize(horizontal: true, vertical: false)
     }
 
-    private func summaryMetric(label: String, value: String) -> some View {
+    private func summaryMetric(label: LocalizedStringKey, value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
                 .font(.system(size: 9, weight: .medium))
@@ -223,7 +232,7 @@ struct WorktreeCleanupDetailView: View {
             .frame(width: 1, height: 22)
     }
 
-    private func sectionLabel(_ title: String) -> some View {
+    private func sectionLabel(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(Color.textMuted)
@@ -268,8 +277,8 @@ struct WorktreeCleanupDetailView: View {
     }
 
     private var checksSummary: String {
-        if nonOKChecks.isEmpty { return "\(passedCheckCount) passed" }
-        return "\(nonOKChecks.count) review"
+        if nonOKChecks.isEmpty { return String(localized: "\(passedCheckCount) passed") }
+        return String(localized: "\(nonOKChecks.count) review")
     }
 
     private var usesCompactUntrackedPreviewLayout: Bool {
@@ -307,13 +316,13 @@ struct WorktreeCleanupDetailView: View {
 private extension WorktreeCleanupDetailView {
     var removeHelp: String {
         if candidate.state.isClean {
-            return "Run git worktree remove"
+            return String(localized: "Run git worktree remove")
         }
-        return "Review the cleanup evidence before removing this worktree"
+        return String(localized: "Review the cleanup evidence before removing this worktree")
     }
 
     var actionTitle: String {
-        isRemoving ? "Removing..." : "Remove"
+        isRemoving ? String(localized: "Removing...") : String(localized: "Remove")
     }
 
     var showsNoticeLocalFileEvidence: Bool {
@@ -328,10 +337,10 @@ private struct CleanupForceRemovalEvidenceBlock: View {
         if evidence.hasLocalFilePreview {
             VStack(alignment: .leading, spacing: 4) {
                 if let preview = evidence.untrackedPreview {
-                    previewBlock(label: "Untracked files", preview: preview)
+                    previewBlock(label: String(localized: "Untracked files"), preview: preview)
                 }
                 if let preview = evidence.ignoredPreview {
-                    previewBlock(label: "Ignored files", preview: preview)
+                    previewBlock(label: String(localized: "Ignored files"), preview: preview)
                 }
             }
             .padding(.top, 2)

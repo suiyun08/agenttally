@@ -140,7 +140,7 @@ struct CodexPluginRowView: View {
     }
 
     private func settingsHint(
-        icon: String, iconColor: Color, text: String, textColor: Color,
+        icon: String, iconColor: Color, text: LocalizedStringKey, textColor: Color,
         iconWeight: Font.Weight = .regular
     ) -> some View {
         SettingsSecondaryRow(spacing: 4) {
@@ -178,7 +178,7 @@ struct CodexInstallingIndicator: View {
 /// The parent owns `isPresented` so it can open the walkthrough itself
 /// right after an install completes.
 struct CodexHookTrustButton: View {
-    var label: String
+    var label: LocalizedStringKey
     @Binding var isPresented: Bool
     var refresh: (() -> Void)?
 
@@ -252,7 +252,7 @@ private struct CodexHookTrustInstructions: View {
         .frame(width: 260)
     }
 
-    private func instructionStep(number: String, text: String) -> some View {
+    private func instructionStep(number: String, text: LocalizedStringKey) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(number)
                 .font(.system(size: 9, weight: .semibold, design: .monospaced))

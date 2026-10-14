@@ -26,13 +26,13 @@ struct RecentProject: Identifiable, Equatable {
     }
 
     var openActionLabel: String {
-        guard let openerName else { return "Open Project Folder" }
-        return "Open in \(openerName)"
+        guard let openerName else { return String(localized: "Open Project Folder") }
+        return String(localized: "Open in \(openerName)")
     }
 
     var openHelpText: String {
-        guard let openerName else { return "Click to open project folder" }
-        return "Click to open project in \(openerName)"
+        guard let openerName else { return String(localized: "Click to open project folder") }
+        return String(localized: "Click to open project in \(openerName)")
     }
 
     var metadataText: String {
@@ -55,7 +55,7 @@ struct RecentProject: Identifiable, Equatable {
         var parts: [String] = []
         if let displayBranch { parts.append(displayBranch) }
         if let lastAgent { parts.append(lastAgent) }
-        parts.append("\(sessionCount) session\(sessionCount == 1 ? "" : "s")")
+        parts.append(sessionCount == 1 ? String(localized: "1 session") : String(localized: "\(sessionCount) sessions"))
         return parts
     }
 

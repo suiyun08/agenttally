@@ -63,6 +63,8 @@ struct SettingsSection: View {
                     AmberSegmentedPicker(options: AppearanceMode.allCases.map { ($0.rawValue, $0.label) }, selection: $appearanceMode)
                 }
                 .onChange(of: appearanceMode) { _ in UserDefaults.standard.synchronize() }
+                groupedDivider
+                LanguageSettingsRow()
             }
 
             sectionHeader("Shortcuts")
@@ -101,7 +103,7 @@ struct SettingsSection: View {
         .padding(AppChrome.settingsContentPadding)
     }
 
-    private func sectionHeader(_ title: String) -> some View {
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(.system(size: 9.5, weight: .semibold))
             .foregroundStyle(Color.textMuted)
@@ -122,7 +124,7 @@ struct SettingsSection: View {
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.groupCornerRadius, style: .continuous))
     }
 
-    private func settingsRow<Content: View>(_ label: String, @ViewBuilder trailing: () -> Content) -> some View {
+    private func settingsRow<Content: View>(_ label: LocalizedStringKey, @ViewBuilder trailing: () -> Content) -> some View {
         HStack(spacing: 8) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))
@@ -351,7 +353,7 @@ private struct MonitoredToolsView: View {
 
 private struct PluginRowView: View {
     let name: String; let installed: Bool; var needsUpdate: Bool = false
-    var installLabel = "Install Plugin"; var updateLabel = "Update Plugin"
+    var installLabel: LocalizedStringKey = "Install Plugin"; var updateLabel: LocalizedStringKey = "Update Plugin"
     let install: () -> Bool; let remove: () -> Bool
     @State private var justInstalled = false
     @State private var installFailed = false
@@ -398,7 +400,7 @@ private struct PluginRowView: View {
     }
     private var updateButton: some View { actionButton(updateLabel) }
     private var installButton: some View { actionButton(installLabel) }
-    private func actionButton(_ label: String) -> some View {
+    private func actionButton(_ label: LocalizedStringKey) -> some View {
         AmberActionButton(label: label) {
             if install() {
                 justInstalled = true; installFailed = false
@@ -480,7 +482,7 @@ struct ClaudeCodeInstallButton: View {
 }
 /// Amber pill action button shared by the plugin rows and the empty state.
 struct AmberActionButton: View {
-    let label: String
+    let label: LocalizedStringKey
     let action: () -> Void
     var body: some View {
         Button(action: action) {

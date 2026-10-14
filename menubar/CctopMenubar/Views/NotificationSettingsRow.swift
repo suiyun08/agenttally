@@ -54,13 +54,13 @@ struct NotificationSettingsRow: View {
         case .off, .enabled:
             return nil
         case .enabling:
-            return "Checking macOS permission"
+            return String(localized: "Checking macOS permission")
         case .pendingSystemPermission:
-            return "Will ask on first notification"
+            return String(localized: "Will ask on first notification")
         case .needsSystemPermission:
-            return "Enable in System Settings"
+            return String(localized: "Enable in System Settings")
         case .failed:
-            return "Could not enable"
+            return String(localized: "Could not enable")
         }
     }
 
@@ -71,17 +71,17 @@ struct NotificationSettingsRow: View {
     private var accessibilityValue: String {
         switch notificationPermission.state {
         case .off:
-            return "Off"
+            return String(localized: "Off")
         case .enabling:
-            return "Checking macOS permission"
+            return String(localized: "Checking macOS permission")
         case .enabled:
-            return "On"
+            return String(localized: "On")
         case .pendingSystemPermission:
-            return "On, will ask on first notification"
+            return String(localized: "On, will ask on first notification")
         case .needsSystemPermission:
-            return "Off, enable in System Settings"
+            return String(localized: "Off, enable in System Settings")
         case .failed:
-            return "Off, could not enable"
+            return String(localized: "Off, could not enable")
         }
     }
 

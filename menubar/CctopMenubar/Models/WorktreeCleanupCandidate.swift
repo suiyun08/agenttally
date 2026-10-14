@@ -22,9 +22,9 @@ struct WorktreeCleanupCandidate: Identifiable, Equatable {
 
         var label: String {
             switch self {
-            case .clean: return "Clean"
-            case .review: return "Review"
-            case .ignored: return "Ignored"
+            case .clean: return String(localized: "Clean")
+            case .review: return String(localized: "Review")
+            case .ignored: return String(localized: "Ignored")
             }
         }
 
@@ -121,8 +121,55 @@ struct WorktreeCleanupCandidate: Identifiable, Equatable {
         max(state.reasons.count - visibleReviewReasons(limit: limit).count, 0)
     }
 
+    /// Reasons stay English inside cleanup logic (they are compared and matched); translate them
+    /// only where they are shown.
+    static func displayReason(_ reason: String) -> String {
+        switch reason {
+        case untrackedFilesReason: return String(localized: "Worktree has untracked files")
+        case ignoredFilesReason: return String(localized: "Worktree has ignored files")
+        case trackedChangesReason: return String(localized: "Worktree has uncommitted tracked changes")
+        case lockedReason: return String(localized: "Worktree is locked")
+        case initializedSubmodulesReason: return String(localized: "Worktree contains initialized submodules")
+        case indexHiddenTrackedFilesReason:
+            return String(localized: "Worktree has tracked files hidden by Git index flags")
+        case statusUnreadableReason: return String(localized: "Git status could not be read")
+        case branchUnknownReason:
+            return String(localized: "Branch safety cannot be verified because the branch is unknown or detached")
+        case mainWorktreePathUnverifiedReason: return String(localized: "Main checkout path could not be verified")
+        case commitSafetyUnknownReason: return String(localized: "Branch upstream or commit safety could not be verified")
+        case protectedFolderAccessReason:
+            return String(localized: "File access is needed to inspect this protected worktree")
+        case "Path is not a registered Git worktree": return String(localized: "Path is not a registered Git worktree")
+        case "Path is not listed by Git worktree metadata":
+            return String(localized: "Path is not listed by Git worktree metadata")
+        case "No upstream branch": return String(localized: "No upstream branch")
+        case "Branch unique commits could not be verified":
+            return String(localized: "Branch unique commits could not be verified")
+        default:
+            return uniqueCommitDisplayReason(reason) ?? reason
+        }
+    }
+
+    private static func uniqueCommitDisplayReason(_ reason: String) -> String? {
+        guard let match = reason.range(of: #"^Branch has (\d+) unique local commits?$"#, options: .regularExpression),
+              match == reason.startIndex..<reason.endIndex,
+              let count = Int(reason.dropFirst("Branch has ".count).prefix { $0.isNumber }) else { return nil }
+        return count == 1
+            ? String(localized: "Branch has 1 unique local commit")
+            : String(localized: "Branch has \(count) unique local commits")
+    }
+
+    static var unknownBranchDisplayText: String {
+        String(localized: "unknown / detached")
+    }
+
+    /// `branchName` stores the English sentinel for unknown branches; show it translated.
+    var displayBranchName: String {
+        branchName == Self.unknownBranchDisplayName ? Self.unknownBranchDisplayText : branchName
+    }
+
     static func formatStorage(bytes: Int64?) -> String {
-        guard let bytes else { return "Unknown" }
+        guard let bytes else { return String(localized: "Unknown") }
         if bytes < 1_024 { return "\(bytes) B" }
         let kilobytes = Double(bytes) / 1_024.0
         if kilobytes < 1_024 { return "\(Int(kilobytes.rounded())) KB" }
@@ -174,7 +221,7 @@ struct WorktreeCleanupUntrackedPreview: Equatable {
     var decisionEvidenceText: String {
         var evidenceItems = items
         if remainingCount > 0 {
-            evidenceItems.append("and \(remainingCount) more")
+            evidenceItems.append(String(localized: "and \(remainingCount) more"))
         }
         return evidenceItems.joined(separator: ", ")
     }
@@ -238,7 +285,9 @@ struct WorktreeCleanupCheck: Equatable {
 enum WorktreeRemovalConfirmation: Identifiable, Equatable {
     case review(WorktreeRemovalService.RemovalAction)
 
-    private static let branchRetentionCopy = "Removing the worktree does not delete the branch."
+    private static var branchRetentionCopy: String {
+        String(localized: "Removing the worktree does not delete the branch.")
+    }
 
     var id: String {
         switch self {
@@ -257,28 +306,30 @@ enum WorktreeRemovalConfirmation: Identifiable, Equatable {
     var title: String {
         switch self {
         case .review(let action):
-            return action.isForce ? "Force Remove Worktree?" : "Remove Review Worktree?"
+            return action.isForce ? String(localized: "Force Remove Worktree?") : String(localized: "Remove Review Worktree?")
         }
     }
 
     var message: String {
         switch self {
         case .review(.normalRemove(let candidate)):
-            return "Runs git worktree remove for \(candidate.worktreeName). "
+            return String(localized: "Runs git worktree remove for \(candidate.worktreeName).") + " "
                 + "\(Self.reviewEvidenceCopy(for: candidate)) \(Self.branchRetentionCopy)"
         case .review(.forceRemove(let candidate)):
             let command = candidate.requiresGitForceRemoval ? "git worktree remove --force" : "git worktree remove"
             let fileRiskCopy = candidate.requiresGitForceRemoval
-                ? "This removes local file changes and files in that worktree."
+                ? String(localized: "This removes local file changes and files in that worktree.")
                 : ""
             let lateChangeGuard = candidate.requiresGitForceRemoval
                 ? ""
-                : "Git will refuse removal if tracked changes or non-ignored untracked files appeared after this review."
+                : String(
+                    localized: "Git will refuse removal if tracked changes or non-ignored untracked files appeared after this review."
+                )
             let branchRetention = candidate.state.reasons.contains(WorktreeCleanupCandidate.branchUnknownReason)
                 ? ""
                 : Self.branchRetentionCopy
             return [
-                "Runs \(command) for \(candidate.worktreeName).",
+                String(localized: "Runs \(command) for \(candidate.worktreeName)."),
                 Self.reviewEvidenceCopy(for: candidate),
                 fileRiskCopy,
                 lateChangeGuard,
@@ -292,7 +343,7 @@ enum WorktreeRemovalConfirmation: Identifiable, Equatable {
     var primaryButtonTitle: String {
         switch self {
         case .review(let action):
-            return action.isForce ? "Force Remove" : "Remove"
+            return action.isForce ? String(localized: "Force Remove") : String(localized: "Remove")
         }
     }
 
@@ -309,22 +360,25 @@ enum WorktreeRemovalConfirmation: Identifiable, Equatable {
 
     private static func reviewEvidenceCopy(for candidate: WorktreeCleanupCandidate) -> String {
         var parts: [String] = []
-        let reasons = candidate.visibleReviewReasons()
+        let reasons = candidate.visibleReviewReasons().map(WorktreeCleanupCandidate.displayReason)
         if !reasons.isEmpty {
-            var reasonCopy = "Reasons: " + reasons.joined(separator: "; ")
+            let joinedReasons = reasons.joined(separator: "; ")
+            var reasonCopy = String(localized: "Reasons: \(joinedReasons)")
             let remainingCount = candidate.remainingReviewReasonCount()
             if remainingCount > 0 {
-                reasonCopy += "; and \(remainingCount) more"
+                reasonCopy += String(localized: "; and \(remainingCount) more")
             }
             parts.append(reasonCopy + ".")
         }
 
         if let preview = candidate.reviewEvidence.untrackedPreview {
-            parts.append("Untracked files: \(preview.decisionEvidenceText).")
+            let files = preview.decisionEvidenceText
+            parts.append(String(localized: "Untracked files: \(files)."))
         }
         if let preview = candidate.reviewEvidence.ignoredPreview {
-            parts.append("Ignored files: \(preview.decisionEvidenceText).")
-            parts.append("Ignored files will be removed with this worktree.")
+            let files = preview.decisionEvidenceText
+            parts.append(String(localized: "Ignored files: \(files)."))
+            parts.append(String(localized: "Ignored files will be removed with this worktree."))
         }
 
         return parts.joined(separator: " ")

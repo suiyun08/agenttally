@@ -55,7 +55,7 @@ struct WorktreeCleanupTabView: View {
                         .font(.system(size: 20))
                         .foregroundStyle(Color.textMuted)
                 }
-                Text(isScanning ? "Scanning worktrees..." : "No cleanup candidates")
+                (isScanning ? Text("Scanning worktrees...") : Text("No cleanup candidates"))
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textMuted)
                     .multilineTextAlignment(.center)

@@ -27,6 +27,8 @@
 		TOMLDEC0100000000000002 /* TOMLDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = TOMLDEC0300000000000002 /* TOMLDecoder */; };
 		A10000010000000000000001 /* CctopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000001 /* CctopApp.swift */; };
 		AC0000010000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AC0000020000000000000001 /* Assets.xcassets */; };
+		L10N00010000000000000001 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = L10N00020000000000000001 /* Localizable.xcstrings */; };
+		L10N00030000000000000001 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = L10N00040000000000000001 /* InfoPlist.xcstrings */; };
 		B10000010000000000000001 /* SessionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000020000000000000001 /* SessionData.swift */; };
 		SNC000010000000000000001 /* SessionData+NotificationContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SNC000020000000000000001 /* SessionData+NotificationContent.swift */; };
 		B10000030000000000000001 /* SessionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000040000000000000001 /* SessionStatus.swift */; };
@@ -214,6 +216,8 @@
 		A10000020000000000000001 /* CctopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CctopApp.swift; sourceTree = "<group>"; };
 		A10000030000000000000001 /* CctopMenubar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CctopMenubar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC0000020000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		L10N00020000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		L10N00040000000000000001 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		B10000020000000000000001 /* SessionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionData.swift; sourceTree = "<group>"; };
 		SNC000020000000000000001 /* SessionData+NotificationContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionData+NotificationContent.swift"; sourceTree = "<group>"; };
 		B10000040000000000000001 /* SessionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStatus.swift; sourceTree = "<group>"; };
@@ -461,6 +465,8 @@
 			isa = PBXGroup;
 			children = (
 				AC0000020000000000000001 /* Assets.xcassets */,
+				L10N00020000000000000001 /* Localizable.xcstrings */,
+				L10N00040000000000000001 /* InfoPlist.xcstrings */,
 				M10000010000000000000001 /* CctopMenubar.entitlements */,
 				A10000020000000000000001 /* CctopApp.swift */,
 				G10000040000000000000001 /* AppDelegate.swift */,
@@ -707,6 +713,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = A10000050000000000000001;
 			packageReferences = (
@@ -731,6 +738,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AC0000010000000000000001 /* Assets.xcassets in Resources */,
+				L10N00010000000000000001 /* Localizable.xcstrings in Resources */,
+				L10N00030000000000000001 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

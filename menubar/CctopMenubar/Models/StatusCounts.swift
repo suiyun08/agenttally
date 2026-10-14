@@ -118,16 +118,21 @@ struct StatusCounts: Equatable {
 
     /// Human-readable summary for VoiceOver / accessibility labels.
     var accessibilityLabel: String {
-        guard total > 0 else { return "cctop, no sessions" }
+        guard total > 0 else { return String(localized: "cctop, no sessions") }
         var parts: [String] = []
         if permission > 0 {
-            parts.append("\(permission) \(permission == 1 ? "needs" : "need") permission")
+            parts.append(
+                permission == 1 ? String(localized: "1 needs permission") : String(localized: "\(permission) need permission")
+            )
         }
         if attention > 0 {
-            parts.append("\(attention) \(attention == 1 ? "needs" : "need") attention")
+            parts.append(
+                attention == 1 ? String(localized: "1 needs attention") : String(localized: "\(attention) need attention")
+            )
         }
-        if working > 0 { parts.append("\(working) working") }
-        if idle > 0 { parts.append("\(idle) idle") }
-        return "cctop, " + parts.joined(separator: ", ")
+        if working > 0 { parts.append(String(localized: "\(working) working")) }
+        if idle > 0 { parts.append(String(localized: "\(idle) idle")) }
+        let summary = parts.joined(separator: ", ")
+        return String(localized: "cctop, \(summary)")
     }
 }
