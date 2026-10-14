@@ -549,6 +549,34 @@ final class SnapshotTests: XCTestCase {
     }
 
     @discardableResult
+    func testGenerateStatusDotsScreenshot() throws {
+        let typical = StatusCounts(permission: 1, attention: 0, working: 3, idle: 4, dotGroups: [
+            StatusDotGroup(family: .claude, dots: [.permission, .working, .working, .unreadDone, .unreadDone]),
+            StatusDotGroup(family: .codex, dots: [.working, .unreadDone, .unreadDone]),
+        ])
+        let crowded = StatusCounts(permission: 0, attention: 1, working: 8, idle: 0, dotGroups: [
+            StatusDotGroup(family: .claude, dots: [.attention] + Array(repeating: .working, count: 8)),
+            StatusDotGroup(family: .codex, dots: [.working]),
+        ])
+        let view = VStack(alignment: .leading, spacing: 10) {
+            ForEach(Array([typical, crowded, .zero].enumerated()), id: \.offset) { _, counts in
+                HStack(spacing: 14) {
+                    ForEach([ColorScheme.light, .dark], id: \.self) { scheme in
+                        Image(nsImage: MenubarIconRenderer.render(counts: counts))
+                            .padding(.horizontal, 8)
+                            .frame(height: 24)
+                            .background(scheme == .dark ? Color.black : Color(white: 0.93))
+                            .environment(\.colorScheme, scheme)
+                    }
+                    NotchStatusView(counts: counts)
+                        .frame(width: NotchStatusController.pillWidth(for: counts), height: 20)
+                }
+            }
+        }
+        .padding(12)
+        try renderScreenshot(view: view, colorScheme: .light, filename: "status-dots.png")
+    }
+
     private func renderScreenshot(
         view: some View, colorScheme: ColorScheme, filename: String, width: CGFloat = 320
     ) throws -> NSSize {

@@ -4,19 +4,36 @@ struct NotchStatusView: View {
     let counts: StatusCounts
     var themeId: String = ""
 
+    static let leadingPadding: CGFloat = 5
+    static let trailingPadding: CGFloat = 2
+    private static let emptyLineWidth: CGFloat = 14
+
+    /// Width of the dots (or the empty line) for a pill whose content may not exceed `maxWidth`.
+    static func contentWidth(for counts: StatusCounts, maxWidth: CGFloat) -> CGFloat {
+        guard !counts.dotGroups.isEmpty else { return emptyLineWidth }
+        return StatusDotLayout(groups: counts.dotGroups, metrics: .notch, maxWidth: maxWidth).width
+    }
+
     var body: some View {
         Group {
-            if counts.total > 0 {
-                StatusBar(counts: counts)
-            } else {
+            if counts.dotGroups.isEmpty {
                 Capsule().fill(Color.white.opacity(0.52))
+                    .frame(width: Self.emptyLineWidth, height: 3)
+            } else {
+                NotchStatusDots(
+                    layout: StatusDotLayout(
+                        groups: counts.dotGroups,
+                        metrics: .notch,
+                        maxWidth: NotchStatusController.maxContentWidth
+                    ),
+                    metrics: .notch
+                )
             }
         }
-        .frame(width: 36, height: 4)
         .frame(height: 11)
         .id(themeId)
-        .padding(.leading, 5)
-        .padding(.trailing, 2)
+        .padding(.leading, Self.leadingPadding)
+        .padding(.trailing, Self.trailingPadding)
         .padding(.top, 4)
         .padding(.bottom, 5)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -27,26 +44,44 @@ struct NotchStatusView: View {
     }
 }
 
-private struct StatusBar: View {
-    let counts: StatusCounts
+private struct NotchStatusDots: View {
+    let layout: StatusDotLayout
+    let metrics: StatusDotMetrics
 
     var body: some View {
-        GeometryReader { geo in
-            let segments = counts.barSegments(forWidth: Double(geo.size.width))
-            HStack(spacing: 0) {
-                ForEach(
-                    Array(segments.enumerated()), id: \.offset
-                ) { index, seg in
-                    if index == segments.count - 1 {
-                        // Last segment fills remaining space to avoid float rounding gaps
-                        StatusColors.notchColor(for: seg.kind)
-                    } else {
-                        StatusColors.notchColor(for: seg.kind).frame(width: geo.size.width * seg.proportion)
-                    }
+        ZStack(alignment: .leading) {
+            ForEach(Array(layout.items.enumerated()), id: \.offset) { _, item in
+                switch item {
+                case .dot(let dot, let xPos):
+                    dotView(dot)
+                        .frame(width: metrics.dotDiameter, height: metrics.dotDiameter)
+                        .offset(x: xPos)
+                case .separator(let xPos):
+                    Rectangle()
+                        .fill(Color.white.opacity(0.35))
+                        .frame(width: metrics.separatorWidth, height: 8)
+                        .offset(x: xPos)
+                case .overflow(let text, let xPos, let width):
+                    Text(verbatim: text)
+                        .font(Font(metrics.overflowFont as CTFont))
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .fixedSize()
+                        .frame(width: width, alignment: .leading)
+                        .offset(x: xPos)
                 }
             }
         }
-        .clipShape(Capsule())
+        .frame(width: layout.width, height: 11, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func dotView(_ dot: StatusDotGroup.Dot) -> some View {
+        switch dot {
+        case .unreadDone:
+            Circle().strokeBorder(Color.accentColor, lineWidth: 1.1)
+        case .permission, .attention, .working:
+            Circle().fill(StatusColors.notchColor(for: dot.segmentKind))
+        }
     }
 }
 

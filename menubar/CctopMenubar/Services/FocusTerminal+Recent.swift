@@ -25,5 +25,7 @@ func resolveRecentResumeTargetOpenStrategy(target: RecentResumeTarget) -> FocusS
     case .desktopThread:
         // Archived Claude Desktop rows are manual find/unarchive aids.
         return .activateByBundleID(HostAppBundleID.claudeDesktop)
+    case .session(let session):
+        return resolveFocusStrategy(session: session)
     }
 }

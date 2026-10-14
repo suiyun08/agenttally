@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// Aggregated session status counts used by the menubar icon, notch pill, and accessibility labels.
 struct StatusCounts: Equatable {
@@ -18,16 +18,21 @@ struct StatusCounts: Equatable {
 
     static let zero = StatusCounts(permission: 0, attention: 0, working: 0, idle: 0)
 
-    init(permission: Int, attention: Int, working: Int, idle: Int) {
+    /// One dot per session worth a look, grouped by agent for the menubar and notch.
+    let dotGroups: [StatusDotGroup]
+
+    init(permission: Int, attention: Int, working: Int, idle: Int, dotGroups: [StatusDotGroup] = []) {
         self.permission = permission
         self.attention = attention
         self.working = working
         self.idle = idle
+        self.dotGroups = dotGroups
     }
 
     /// Create counts by aggregating user-session statuses.
     init(userSessions: [UserSession], now: Date = Date()) {
         var perm = 0, attn = 0, work = 0, idleCount = 0
+        var dotsByFamily: [StatusDotGroup.Family: [StatusDotGroup.Dot]] = [:]
         // Only presentation-active sessions drive the menubar badge. Dormant and stale-idle
         // cards are retained for reachability, not live work, so they never inflate counts.
         for userSession in SessionDisplayPolicy.activeSessions(from: userSessions, now: now) {
@@ -37,6 +42,14 @@ struct StatusCounts: Equatable {
             case .waitingPermission: perm += 1
             case .waitingInput, .needsAttention: attn += 1
             }
+            if let dot = StatusDotGroup.Dot(status: userSession.status) {
+                let family = StatusDotGroup.Family(userSession.displayRecord.data.agentBadge)
+                dotsByFamily[family, default: []].append(dot)
+            }
+        }
+        self.dotGroups = StatusDotGroup.Family.allCases.compactMap { family in
+            guard let dots = dotsByFamily[family], !dots.isEmpty else { return nil }
+            return StatusDotGroup(family: family, dots: dots)
         }
         self.permission = perm
         self.attention = attn
@@ -136,3 +149,128 @@ struct StatusCounts: Equatable {
         return String(localized: "cctop, \(summary)")
     }
 }
+
+// MARK: - Menubar dots
+
+/// The sessions of one agent family as dots: what needs the user first, then running work,
+/// then unread results. Read results and idle sessions get no dot.
+struct StatusDotGroup: Equatable {
+    enum Family: Int, CaseIterable, Comparable {
+        case claude, codex, other
+
+        init(_ badge: AgentBadge) {
+            switch badge {
+            case .cc, .claudeDesktop: self = .claude
+            case .codex: self = .codex
+            case .opencode, .pi: self = .other
+            }
+        }
+
+        static func < (lhs: Family, rhs: Family) -> Bool { lhs.rawValue < rhs.rawValue }
+    }
+
+    enum Dot: Int, Equatable, Comparable {
+        case permission, attention, working, unreadDone
+
+        /// `done` reaches the dots only when unread: the active list holds no read results.
+        init?(status: SessionStatus) {
+            switch status {
+            case .waitingPermission: self = .permission
+            case .waitingInput, .needsAttention: self = .attention
+            case .working, .compacting, .background: self = .working
+            case .done: self = .unreadDone
+            case .idle: return nil
+            }
+        }
+
+        static func < (lhs: Dot, rhs: Dot) -> Bool { lhs.rawValue < rhs.rawValue }
+    }
+
+    static let defaultMaxVisibleDots = 6
+
+    let family: Family
+    /// All dots, most urgent first.
+    let dots: [Dot]
+
+    init(family: Family, dots: [Dot]) {
+        self.family = family
+        self.dots = dots.sorted()
+    }
+}
+
+/// Sizes shared by the menubar image (AppKit) and the notch pill (SwiftUI).
+struct StatusDotMetrics {
+    let dotDiameter: CGFloat
+    let dotGap: CGFloat
+    let separatorMargin: CGFloat
+    let separatorWidth: CGFloat
+    let overflowGap: CGFloat
+    let overflowFont: NSFont
+
+    static let menubar = StatusDotMetrics(
+        dotDiameter: 6, dotGap: 3, separatorMargin: 4, separatorWidth: 1, overflowGap: 2,
+        overflowFont: .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
+    )
+    static let notch = StatusDotMetrics(
+        dotDiameter: 5, dotGap: 3, separatorMargin: 4, separatorWidth: 1, overflowGap: 2,
+        overflowFont: .monospacedDigitSystemFont(ofSize: 8, weight: .medium)
+    )
+}
+
+/// Horizontal positions of every dot, separator, and "+N" label, plus the total width.
+struct StatusDotLayout: Equatable {
+    enum Item: Equatable {
+        case dot(StatusDotGroup.Dot, x: CGFloat)
+        case separator(x: CGFloat)
+        case overflow(String, x: CGFloat, width: CGFloat)
+    }
+
+    let items: [Item]
+    let width: CGFloat
+
+    /// With `maxWidth`, each group shows fewer dots (the rest move into "+N") until it fits.
+    init(groups: [StatusDotGroup], metrics: StatusDotMetrics, maxWidth: CGFloat? = nil) {
+        var cap = StatusDotGroup.defaultMaxVisibleDots
+        var layout = Self.layout(groups: groups, metrics: metrics, maxVisibleDots: cap)
+        if let maxWidth {
+            while layout.width > maxWidth, cap > 1 {
+                cap -= 1
+                layout = Self.layout(groups: groups, metrics: metrics, maxVisibleDots: cap)
+            }
+        }
+        items = layout.items
+        width = layout.width
+    }
+
+    private static func layout(
+        groups: [StatusDotGroup], metrics: StatusDotMetrics, maxVisibleDots: Int
+    ) -> (items: [Item], width: CGFloat) {
+        var items: [Item] = []
+        var xPos: CGFloat = 0
+        for (index, group) in groups.enumerated() {
+            if index > 0 {
+                xPos += metrics.separatorMargin
+                items.append(.separator(x: xPos))
+                xPos += metrics.separatorWidth + metrics.separatorMargin
+            }
+            let visible = group.dots.prefix(maxVisibleDots)
+            for (dotIndex, dot) in visible.enumerated() {
+                if dotIndex > 0 { xPos += metrics.dotGap }
+                items.append(.dot(dot, x: xPos))
+                xPos += metrics.dotDiameter
+            }
+            let hidden = group.dots.count - visible.count
+            if hidden > 0 {
+                let text = "+\(hidden)"
+                let textWidth = ceil(NSAttributedString(
+                    string: text, attributes: [.font: metrics.overflowFont]
+                ).size().width)
+                xPos += metrics.overflowGap
+                items.append(.overflow(text, x: xPos, width: textWidth))
+                xPos += textWidth
+            }
+        }
+        return (items, xPos)
+    }
+}
+

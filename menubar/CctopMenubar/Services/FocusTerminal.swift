@@ -468,5 +468,10 @@ private func executeKittyFocusWindow(binaryPath: String, socket: String, windowI
 }
 
 func openRecentResumeTarget(_ target: RecentResumeTarget) {
+    // A disconnected session reopens through the full focus path (exact Claude Desktop link).
+    if case .session(let session) = target {
+        focusTerminal(session: session)
+        return
+    }
     executeFocusStrategy(resolveRecentResumeTargetOpenStrategy(target: target))
 }

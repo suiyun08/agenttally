@@ -2733,15 +2733,43 @@ final class SessionTurnEndStatusTests: XCTestCase {
         XCTAssertEqual(background.contextLine, "2 background tasks")
     }
 
-    func testIdleTimeoutIdlesDoneButNotBackground() {
+    func testIdleTimeoutSparesUnreadDoneAndBackground() {
         let now = Date()
         var done = doneSession(finishedAt: now.addingTimeInterval(-7_200))
         done.lastActivity = now.addingTimeInterval(-7_200)
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(done, now: now).status, .idle)
+        // A finished turn stays unread until the user looks; only an old question goes idle.
+        XCTAssertEqual(SessionManager.adjustIdleTimeout(done, now: now).status, .done)
 
         var background = done
         background.status = .background
         XCTAssertEqual(SessionManager.adjustIdleTimeout(background, now: now).status, .background)
+
+        var question = done
+        question.status = .waitingInput
+        XCTAssertEqual(SessionManager.adjustIdleTimeout(question, now: now).status, .idle)
+    }
+
+    func testRecentListsDisconnectedSessionsFromTheLastSevenDays() {
+        let now = Date()
+        var recent = SessionData.mock(id: "recent", sessionName: "Fix login", status: .idle, source: SessionData.codexSource)
+        recent.lifecycle = .dormant
+        recent.lastActivity = now.addingTimeInterval(-86_400)
+        var old = SessionData.mock(id: "old", status: .idle, source: SessionData.codexSource)
+        old.lifecycle = .dormant
+        old.lastActivity = now.addingTimeInterval(-RecentResumeTarget.window - 60)
+        let classification = SessionManager.sessionClassificationSnapshot(
+            in: [], claudeMetadata: nil, codexThreads: StubCodexThreadState(archived: [])
+        )
+
+        let targets = RecentResumeTarget.build(
+            projects: [], classification: classification, dormantSessions: [old, recent], now: now
+        )
+
+        XCTAssertEqual(targets, [.session(recent)])
+        XCTAssertEqual(targets.first?.title, "Fix login")
+        XCTAssertEqual(targets.first?.metadataText, "Codex \u{00B7} cctop")
+        XCTAssertEqual(targets.first?.openActionLabel, "Open Session")
+        XCTAssertEqual(resolveRecentResumeTargetOpenStrategy(target: .session(recent)), resolveFocusStrategy(session: recent))
     }
 
     func testCountsTreatDoneAsIdleAndBackgroundAsWorking() {

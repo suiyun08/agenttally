@@ -1382,20 +1382,17 @@ final class WorktreeCleanupTests: XCTestCase {
     }
 
     func testPopupTabHelpTextDescribesCurrentBuckets() {
-        let staleIdleHours = Int(SessionDisplayPolicy.staleIdleInterval / 3_600)
-
         XCTAssertEqual(
             PopupTab.active.helpText,
-            "Current sessions; idle moves after \(staleIdleHours) hours."
+            "Sessions that are working or waiting for you, including unread results."
         )
         XCTAssertEqual(
             PopupTab.idle.helpText,
-            "Dormant sessions and idle sessions over \(staleIdleHours) hours."
+            "Open sessions with nothing to do: read results and sessions not started yet."
         )
         let recentHelpText = PopupTab.recent.helpText
-        XCTAssertTrue(recentHelpText.contains("Finished work"))
-        XCTAssertTrue(recentHelpText.contains("archived desktop sessions"))
-        XCTAssertTrue(recentHelpText.contains("Rows open"))
+        XCTAssertTrue(recentHelpText.contains("Disconnected sessions"))
+        XCTAssertTrue(recentHelpText.contains("last 7 days"))
         XCTAssertTrue(recentHelpText.contains("when possible"))
         XCTAssertFalse(recentHelpText.localizedCaseInsensitiveContains("return"))
         XCTAssertFalse(recentHelpText.localizedCaseInsensitiveContains("resume"))
@@ -1408,15 +1405,14 @@ final class WorktreeCleanupTests: XCTestCase {
     func testPopupTabEmptyStateDetailsTeachBuckets() {
         XCTAssertEqual(
             PopupTab.active.emptyStateDetail,
-            "Current and recently idle sessions appear here."
+            "Working sessions and unread results appear here."
         )
         XCTAssertEqual(
             PopupTab.idle.emptyStateDetail,
-            "Dormant and long-idle sessions appear here."
+            "Read results and sessions not started yet appear here."
         )
         let recentEmptyStateDetail = PopupTab.recent.emptyStateDetail
-        XCTAssertTrue(recentEmptyStateDetail.contains("Finished work"))
-        XCTAssertTrue(recentEmptyStateDetail.contains("archived desktop sessions"))
+        XCTAssertTrue(recentEmptyStateDetail.contains("Disconnected sessions"))
         XCTAssertFalse(recentEmptyStateDetail.localizedCaseInsensitiveContains("return"))
         XCTAssertFalse(recentEmptyStateDetail.localizedCaseInsensitiveContains("resume"))
         XCTAssertEqual(

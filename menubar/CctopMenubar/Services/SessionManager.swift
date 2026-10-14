@@ -158,7 +158,9 @@ class SessionManager: ObservableObject {
             publishRecentResumeTargets(RecentResumeTarget.build(
                 projects: historyManager.recentProjects,
                 classification: classification,
-                excludingDesktopSessionIDs: hiddenSessionIDs.union(publishedSessionIDs)
+                dormantSessions: SessionDisplayPolicy.dormantSessions(from: newUserSessions).map(\.displayRecord.data),
+                excludingDesktopSessionIDs: hiddenSessionIDs.union(publishedSessionIDs),
+                now: now
             ))
             refreshCleanupSources(from: observedCleanupSources, activeProjectPaths: activeProjectPaths)
         } else { // Freeze existing items, add unresolved finished evidence, and only grow path protection.
@@ -359,10 +361,10 @@ class SessionManager: ObservableObject {
 
     private static let idleTimeoutSeconds: TimeInterval = 3600 // 60 minutes
 
-    /// If a session has been in `waitingInput` or `done` for over 60 minutes, treat it as
-    /// `idle` for display. The user likely walked away.
+    /// If a session has been in `waitingInput` for over 60 minutes, treat it as `idle` for
+    /// display. A `done` turn is exempt: it stays unread until the user looks at it.
     nonisolated static func adjustIdleTimeout(_ session: SessionData, now: Date) -> SessionData {
-        guard session.status == .waitingInput || session.status == .done,
+        guard session.status == .waitingInput,
               now.timeIntervalSince(session.lastActivity) > Self.idleTimeoutSeconds else {
             return session
         }

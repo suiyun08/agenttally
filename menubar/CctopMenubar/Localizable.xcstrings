@@ -131,16 +131,6 @@
         }
       }
     },
-    "%lld hours": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld 小时"
-          }
-        }
-      }
-    },
     "%lld idle": {
       "localizations": {
         "zh-Hans": {
@@ -721,6 +711,16 @@
         }
       }
     },
+    "Click to reopen this session": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击重新打开这个会话"
+          }
+        }
+      }
+    },
     "Click to review cleanup details": {
       "localizations": {
         "zh-Hans": {
@@ -901,26 +901,6 @@
         }
       }
     },
-    "Current and recently idle sessions appear here.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前会话和刚空闲的会话会显示在这里。"
-          }
-        }
-      }
-    },
-    "Current sessions; idle moves after %@.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前会话；空闲超过 %@ 后移到「闲置」。"
-          }
-        }
-      }
-    },
     "Dark": {
       "localizations": {
         "zh-Hans": {
@@ -951,6 +931,26 @@
         }
       }
     },
+    "Disconnected sessions from the last 7 days appear here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 7 天已断开的会话会显示在这里。"
+          }
+        }
+      }
+    },
+    "Disconnected sessions from the last 7 days. Rows reopen the session or project when possible.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 7 天已断开的会话。点击时尽量重新打开会话或项目。"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "zh-Hans": {
@@ -977,26 +977,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "休眠"
-          }
-        }
-      }
-    },
-    "Dormant and long-idle sessions appear here.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "休眠和长时间空闲的会话会显示在这里。"
-          }
-        }
-      }
-    },
-    "Dormant sessions and idle sessions over %@.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "休眠的会话，以及空闲超过 %@ 的会话。"
           }
         }
       }
@@ -1207,26 +1187,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已完成"
-          }
-        }
-      }
-    },
-    "Finished work and archived desktop sessions appear here.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已结束的工作和已归档的桌面会话会显示在这里。"
-          }
-        }
-      }
-    },
-    "Finished work and archived desktop sessions. Rows open the project or app when possible.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已结束的工作和已归档的桌面会话。点击时尽量打开对应的项目或 App。"
           }
         }
       }
@@ -2071,6 +2031,16 @@
         }
       }
     },
+    "Open sessions with nothing to do: read results and sessions not started yet.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还开着但没事可做的会话：已经看过的结果，以及还没开始的会话。"
+          }
+        }
+      }
+    },
     "Open Settings": {
       "localizations": {
         "zh-Hans": {
@@ -2227,6 +2197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "退出 cctop"
+          }
+        }
+      }
+    },
+    "Read results and sessions not started yet appear here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "看过的结果和还没开始的会话会显示在这里。"
           }
         }
       }
@@ -2537,6 +2517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "搜索：%@"
+          }
+        }
+      }
+    },
+    "Sessions that are working or waiting for you, including unread results.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在工作或等你处理的会话，包括还没看过的结果。"
           }
         }
       }
@@ -2944,6 +2934,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "后台运行中"
+          }
+        }
+      }
+    },
+    "Working sessions and unread results appear here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在工作的会话和还没看过的结果会显示在这里。"
           }
         }
       }

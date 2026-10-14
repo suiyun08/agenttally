@@ -28,6 +28,11 @@ enum RecentResumeTarget: Identifiable, Equatable {
 
     case project(RecentProject)
     case desktopThread(DesktopThread)
+    /// A disconnected (dormant) session whose host can still reopen it.
+    case session(SessionData)
+
+    /// Recent covers the last 7 days.
+    static let window: TimeInterval = 7 * 86_400
 
     var id: String {
         switch self {
@@ -39,6 +44,8 @@ enum RecentResumeTarget: Identifiable, Equatable {
                 return "desktop:\(cctopSessionID)"
             }
             return "desktop:Claude Desktop:\(thread.sessionId)"
+        case .session(let session):
+            return "session:\(session.cctopSessionId ?? session.id)"
         }
     }
 
@@ -48,6 +55,8 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.projectName
         case .desktopThread(let thread):
             return thread.title
+        case .session(let session):
+            return session.displayName
         }
     }
 
@@ -57,12 +66,17 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.projectPath
         case .desktopThread(let thread):
             return thread.projectPath
+        case .session(let session):
+            return session.projectPath
         }
     }
 
     var cctopSessionId: String? {
-        guard case .desktopThread(let thread) = self else { return nil }
-        return thread.cctopSessionId
+        switch self {
+        case .project: return nil
+        case .desktopThread(let thread): return thread.cctopSessionId
+        case .session(let session): return session.cctopSessionId
+        }
     }
 
     var lastSessionAt: Date {
@@ -71,6 +85,8 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.lastSessionAt
         case .desktopThread(let thread):
             return thread.lastActiveAt
+        case .session(let session):
+            return session.effectiveEndDate
         }
     }
 
@@ -80,6 +96,8 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.editorIcon
         case .desktopThread:
             return HostApp.claudeDesktop.sfSymbol
+        case .session(let session):
+            return (session.trustedHostApp ?? (session.isCodex ? .codexDesktop : .unknown)).sfSymbol
         }
     }
 
@@ -87,7 +105,7 @@ enum RecentResumeTarget: Identifiable, Equatable {
         switch self {
         case .project(let project):
             return project.opensWithProjectApp
-        case .desktopThread:
+        case .desktopThread, .session:
             return false
         }
     }
@@ -96,14 +114,14 @@ enum RecentResumeTarget: Identifiable, Equatable {
         switch self {
         case .project:
             return opensProjectInApp
-        case .desktopThread:
+        case .desktopThread, .session:
             return false
         }
     }
 
     var showsCopyPathAction: Bool {
         switch self {
-        case .project:
+        case .project, .session:
             return true
         case .desktopThread:
             return false
@@ -116,12 +134,14 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.openActionLabel
         case .desktopThread:
             return String(localized: "Open Claude Desktop")
+        case .session:
+            return String(localized: "Open Session")
         }
     }
 
     var inlineActionLabel: String? {
         switch self {
-        case .project:
+        case .project, .session:
             return nil
         case .desktopThread:
             return String(localized: "Open Claude")
@@ -134,6 +154,8 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return project.openHelpText
         case .desktopThread:
             return String(localized: "Open Claude Desktop; archived sessions may need manual lookup")
+        case .session:
+            return String(localized: "Click to reopen this session")
         }
     }
 
@@ -143,21 +165,31 @@ enum RecentResumeTarget: Identifiable, Equatable {
             return Self.joinedMetadata([project.metadataEvidenceText, project.pathContext])
         case .desktopThread(let thread):
             return Self.joinedMetadata([String(localized: "Archived"), "Claude", RecentProject.compactProjectPath(thread.projectPath)])
+        case .session(let session):
+            return Self.joinedMetadata([
+                session.agentBadge.label,
+                session.desktopProjectName ?? session.projectName,
+            ])
         }
     }
 
     static func build(
         projects: [RecentProject],
         classification: SessionClassificationSnapshot,
+        dormantSessions: [SessionData] = [],
         excludingDesktopSessionIDs: Set<String> = [],
-        limit: Int = 10
+        now: Date = Date(),
+        limit: Int = 30
     ) -> [RecentResumeTarget] {
         let projectTargets = projects.map(RecentResumeTarget.project)
         let desktopTargets = desktopThreadTargets(
             from: classification,
             excludingSessionIDs: excludingDesktopSessionIDs
         )
-        return Array((projectTargets + desktopTargets)
+        let sessionTargets = dormantSessions.map(RecentResumeTarget.session)
+        let cutoff = now.addingTimeInterval(-window)
+        return Array((projectTargets + desktopTargets + sessionTargets)
+            .filter { $0.lastSessionAt >= cutoff }
             .sorted { $0.lastSessionAt > $1.lastSessionAt }
             .prefix(limit))
     }

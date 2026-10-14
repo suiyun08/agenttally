@@ -2,29 +2,33 @@ import XCTest
 @testable import CctopMenubar
 
 final class SessionDisplayPolicyTests: XCTestCase {
-    func testActiveSessionsExcludesDormantAndStaleActiveIdle() {
+    func testActiveSessionsHoldOnlySessionsWorthALook() {
         let now = Date()
         let sessions = [
-            activeIdle(id: "fresh", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval + 60)),
-            activeIdle(id: "stale", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)),
+            activeIdle(id: "idle", lastActivity: now),
             dormant(id: "dormant"),
-            activeWaiting(id: "waiting", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)),
+            activeWaiting(id: "waiting", lastActivity: now.addingTimeInterval(-3_600)),
+            activeStatus(id: "working", .working),
+            activeStatus(id: "background", .background),
+            activeDone(id: "unread", unseen: true),
+            activeDone(id: "read", unseen: false),
         ]
-        let userSessions = userSessions(fromDataFixtures: sessions)
 
         XCTAssertEqual(
-            SessionDisplayPolicy.activeSessions(from: userSessions, now: now).map(\.displayRecord.data.id),
-            ["fresh", "waiting"]
+            SessionDisplayPolicy.activeSessions(from: userSessions(fromDataFixtures: sessions), now: now)
+                .map(\.displayRecord.data.id),
+            ["waiting", "working", "background", "unread"]
         )
     }
 
-    func testIdleSessionsIncludesDormantAndStaleActiveIdleOnly() {
+    func testIdleSessionsHoldConnectedSessionsWithNothingToDo() {
         let now = Date()
         let sessions = [
-            activeIdle(id: "fresh", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval + 60)),
-            activeIdle(id: "stale", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)),
+            activeIdle(id: "idle", lastActivity: now.addingTimeInterval(-5 * 86_400)),
             dormant(id: "dormant"),
-            activeWaiting(id: "waiting", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)),
+            activeWaiting(id: "waiting", lastActivity: now),
+            activeDone(id: "unread", unseen: true),
+            activeDone(id: "read", unseen: false),
         ]
         let userSessions = sessions.map {
             userSession(identity: SessionIdentityPolicy.logicalIdentity(for: $0), display: $0, records: [$0])
@@ -32,16 +36,18 @@ final class SessionDisplayPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             SessionDisplayPolicy.idleSessions(from: userSessions, now: now).map(\.displayRecord.data.id),
-            ["stale", "dormant"]
+            ["idle", "read"]
+        )
+        XCTAssertEqual(
+            SessionDisplayPolicy.dormantSessions(from: userSessions).map(\.displayRecord.data.id),
+            ["dormant"]
         )
     }
 
     func testReconciledOrderOwnsIdleRecencyOrder() {
         let now = Date(timeIntervalSince1970: 5_000)
-        var older = dormant(id: "a-older")
-        older.lastActivity = now.addingTimeInterval(-300)
-        var newer = dormant(id: "z-newer")
-        newer.lastActivity = now.addingTimeInterval(-10)
+        let older = activeIdle(id: "a-older", lastActivity: now.addingTimeInterval(-300))
+        let newer = activeIdle(id: "z-newer", lastActivity: now.addingTimeInterval(-10))
 
         let result = SessionDisplayPolicy.reconcilingOrder(
             in: userSessions(fromDataFixtures: [older, newer]),
@@ -59,8 +65,8 @@ final class SessionDisplayPolicyTests: XCTestCase {
     func testSignatureTracksDisplayBuckets() {
         let now = Date()
         let sessions = [
-            activeIdle(id: "fresh", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval + 60)),
-            activeIdle(id: "stale", lastActivity: now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)),
+            activeStatus(id: "working", .working),
+            activeIdle(id: "idle", lastActivity: now),
             dormant(id: "dormant"),
         ]
         let userSessions = sessions.map {
@@ -69,10 +75,7 @@ final class SessionDisplayPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             SessionDisplayPolicy.signature(for: userSessions, now: now),
-            .init(
-                activeIDs: [userSessions[0].identity],
-                idleIDs: Array(userSessions[1...]).map(\.identity)
-            )
+            .init(activeIDs: [userSessions[0].identity], idleIDs: [userSessions[1].identity])
         )
     }
 
@@ -232,11 +235,11 @@ final class SessionDisplayPolicyTests: XCTestCase {
         XCTAssertEqual(result.map(\.displayRecord.data.id), ["b-wait", "a-work", "c-work", "d-idle"])
     }
 
-    func testReconciledOrderTreatsStaleIdleReentryAsGroupEntrant() {
+    func testReconciledOrderTreatsIdleReentryAsGroupEntrant() {
         let now = Date(timeIntervalSince1970: 80_000)
         let survivor = SessionData.mock(id: "survivor", status: .working)
         var returning = SessionData.mock(id: "returning", status: .idle)
-        returning.lastActivity = now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 1)
+        returning.lastActivity = now.addingTimeInterval(-60)
         let previous = [returning, survivor]
 
         returning.status = .working
@@ -346,6 +349,18 @@ final class SessionDisplayPolicyTests: XCTestCase {
         var session = SessionData.mock(id: id, status: .waitingInput)
         session.lifecycle = .active
         session.lastActivity = lastActivity
+        return session
+    }
+
+    private func activeStatus(id: String, _ status: SessionStatus) -> SessionData {
+        var session = SessionData.mock(id: id, status: status)
+        session.lifecycle = .active
+        return session
+    }
+
+    private func activeDone(id: String, unseen: Bool) -> SessionData {
+        var session = activeStatus(id: id, .done)
+        session.isUnseenDone = unseen
         return session
     }
 

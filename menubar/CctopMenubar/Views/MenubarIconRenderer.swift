@@ -1,63 +1,90 @@
 import AppKit
 
-/// Renders the menubar item as the same hairline status bar used throughout cctop.
-/// With no sessions it becomes a monochrome template bar.
+/// Renders the menubar item as per-agent groups of session dots (see `StatusDotLayout`).
+/// With nothing worth a look it becomes a short monochrome template line.
 @MainActor
 enum MenubarIconRenderer {
-    private static let size = NSSize(width: 36, height: 18)
-    private static let barRect = NSRect(x: 0, y: 6, width: 36, height: 6)
+    private static let height: CGFloat = 18
+    private static let emptyLine = NSSize(width: 14, height: 3)
+    private static let separatorHeight: CGFloat = 10
+    private static let ringWidth: CGFloat = 1.2
 
     static func render(counts: StatusCounts) -> NSImage {
-        let image = NSImage(size: size, flipped: false) { _ in
-            if counts.total == 0 {
-                NSColor.labelColor.setFill()
-                NSBezierPath(
-                    roundedRect: barRect,
-                    xRadius: barRect.height / 2,
-                    yRadius: barRect.height / 2
-                ).fill()
-            } else {
-                // AppKit makes the status item's effective appearance current here,
-                // so one live image follows menu-bar light/dark changes immediately.
-                drawSegmentedBar(
-                    in: barRect,
-                    counts: counts,
-                    appearance: NSAppearance.current
-                )
-            }
+        guard !counts.dotGroups.isEmpty else { return emptyImage() }
+        let layout = StatusDotLayout(groups: counts.dotGroups, metrics: .menubar)
+        let image = NSImage(size: NSSize(width: max(layout.width, 1), height: height), flipped: false) { _ in
+            // AppKit makes the status item's effective appearance current here,
+            // so one live image follows menu-bar light/dark changes immediately.
+            draw(layout, metrics: .menubar, appearance: NSAppearance.current)
             return true
         }
-
-        image.isTemplate = counts.total == 0
+        image.isTemplate = false
         return image
     }
 
-    private static func drawSegmentedBar(
-        in barRect: NSRect, counts: StatusCounts, appearance: NSAppearance
-    ) {
-        let path = NSBezierPath(
-            roundedRect: barRect,
-            xRadius: barRect.height / 2,
-            yRadius: barRect.height / 2
-        )
-        NSGraphicsContext.current?.saveGraphicsState()
-        path.addClip()
-
-        let segments = counts.barSegments(forWidth: Double(barRect.width))
-        var xPos = barRect.minX
-        for (index, seg) in segments.enumerated() {
-            // Last segment fills to the right edge to avoid float rounding gaps
-            let segWidth = index == segments.count - 1
-                ? max(0, barRect.maxX - xPos)
-                : barRect.width * seg.proportion
-            StatusColors.color(for: seg.kind, appearance: appearance).setFill()
-            NSRect(
-                x: xPos, y: barRect.minY,
-                width: segWidth, height: barRect.height
-            ).fill()
-            xPos += segWidth
+    private static func emptyImage() -> NSImage {
+        let image = NSImage(size: NSSize(width: emptyLine.width, height: height), flipped: false) { _ in
+            let rect = NSRect(
+                x: 0, y: (height - emptyLine.height) / 2,
+                width: emptyLine.width, height: emptyLine.height
+            )
+            NSColor.labelColor.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
+            return true
         }
+        image.isTemplate = true
+        return image
+    }
 
-        NSGraphicsContext.current?.restoreGraphicsState()
+    private static func draw(_ layout: StatusDotLayout, metrics: StatusDotMetrics, appearance: NSAppearance) {
+        let midY = height / 2
+        for item in layout.items {
+            switch item {
+            case .dot(let dot, let xPos):
+                let rect = NSRect(
+                    x: xPos, y: midY - metrics.dotDiameter / 2,
+                    width: metrics.dotDiameter, height: metrics.dotDiameter
+                )
+                drawDot(dot, in: rect, appearance: appearance)
+            case .separator(let xPos):
+                NSColor.labelColor.withAlphaComponent(0.35).setFill()
+                NSRect(
+                    x: xPos, y: midY - separatorHeight / 2,
+                    width: metrics.separatorWidth, height: separatorHeight
+                ).fill()
+            case .overflow(let text, let xPos, _):
+                let attributed = NSAttributedString(string: text, attributes: [
+                    .font: metrics.overflowFont,
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                ])
+                let size = attributed.size()
+                attributed.draw(at: NSPoint(x: xPos, y: midY - size.height / 2))
+            }
+        }
+    }
+
+    private static func drawDot(_ dot: StatusDotGroup.Dot, in rect: NSRect, appearance: NSAppearance) {
+        switch dot {
+        case .unreadDone:
+            NSColor.controlAccentColor.setStroke()
+            let ring = NSBezierPath(ovalIn: rect.insetBy(dx: ringWidth / 2, dy: ringWidth / 2))
+            ring.lineWidth = ringWidth
+            ring.stroke()
+        case .permission, .attention, .working:
+            StatusColors.color(for: dot.segmentKind, appearance: appearance).setFill()
+            NSBezierPath(ovalIn: rect).fill()
+        }
+    }
+}
+
+extension StatusDotGroup.Dot {
+    /// Filled dots reuse the status bar's theme colors.
+    var segmentKind: StatusCounts.SegmentKind {
+        switch self {
+        case .permission: return .permission
+        case .attention: return .attention
+        case .working: return .working
+        case .unreadDone: return .idle
+        }
     }
 }

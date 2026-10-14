@@ -10,7 +10,6 @@ enum SessionDisplayPolicy {
         static let empty = Signature(activeIDs: [], idleIDs: [])
     }
 
-    static let staleIdleInterval: TimeInterval = 172_800 // 48 hours
 
     static func activeSessions(from userSessions: [UserSession], now: Date = Date()) -> [UserSession] {
         userSessions.filter { isActive($0.displayRecord.data, now: now) }
@@ -91,17 +90,30 @@ enum SessionDisplayPolicy {
             < (rightData.lifecycle.rawValue, right.status.sortOrder, leftData.lastActivity)
     }
 
-    private static func isStaleActiveIdle(_ session: SessionData, now: Date) -> Bool {
-        guard session.lifecycle == .active, session.status == .idle else { return false }
-        return now.timeIntervalSince(session.lastActivity) > staleIdleInterval
+    /// Active means "worth a look now": running, waiting on the user, or a finished turn the
+    /// user has not seen. A connected session with nothing to do is Idle; a disconnected
+    /// (dormant) one belongs to Recent.
+    static func needsLook(_ session: SessionData) -> Bool {
+        switch session.status {
+        case .working, .compacting, .background, .waitingPermission, .waitingInput, .needsAttention:
+            return true
+        case .done:
+            return session.isUnseenDone
+        case .idle:
+            return false
+        }
     }
 
     private static func isIdle(_ session: SessionData, now: Date) -> Bool {
-        session.lifecycle == .dormant || isStaleActiveIdle(session, now: now)
+        session.lifecycle == .active && !needsLook(session)
     }
 
     private static func isActive(_ session: SessionData, now: Date) -> Bool {
-        session.lifecycle == .active && !isStaleActiveIdle(session, now: now)
+        session.lifecycle == .active && needsLook(session)
+    }
+
+    static func dormantSessions(from userSessions: [UserSession]) -> [UserSession] {
+        userSessions.filter { $0.displayRecord.data.lifecycle == .dormant }
     }
 
 }

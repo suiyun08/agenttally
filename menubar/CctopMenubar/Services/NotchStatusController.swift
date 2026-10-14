@@ -5,10 +5,18 @@ import SwiftUI
 /// next to the camera notch on built-in displays. No-op on non-notch Macs.
 @MainActor
 class NotchStatusController {
-    private static let pillWidth: CGFloat = 52
+    /// The pill grows left from the notch; past this width it would cover the frontmost app's menus.
+    static let maxPillWidth: CGFloat = 120
     private static let pillHeight: CGFloat = 20
     /// How far the pill overlaps the notch edge, anchoring it visually.
     private static let notchOverlap: CGFloat = 9
+    static let maxContentWidth = maxPillWidth - notchOverlap
+        - NotchStatusView.leadingPadding - NotchStatusView.trailingPadding
+
+    static func pillWidth(for counts: StatusCounts) -> CGFloat {
+        NotchStatusView.contentWidth(for: counts, maxWidth: maxContentWidth)
+            + NotchStatusView.leadingPadding + NotchStatusView.trailingPadding + notchOverlap
+    }
 
     private var panel: NotchStatusPanel?
     private var hostingView: NSHostingView<NotchStatusView>?
@@ -38,9 +46,10 @@ class NotchStatusController {
         guard screen.hasPhysicalNotch else { return }
 
         let notchSize = screen.notchSize
-        let xPos = screen.frame.midX - notchSize.width / 2 - Self.pillWidth + Self.notchOverlap
+        let pillWidth = Self.pillWidth(for: counts)
+        let xPos = screen.frame.midX - notchSize.width / 2 - pillWidth + Self.notchOverlap
         let yPos = screen.frame.maxY - Self.pillHeight
-        let frame = NSRect(x: xPos, y: yPos, width: Self.pillWidth, height: Self.pillHeight)
+        let frame = NSRect(x: xPos, y: yPos, width: pillWidth, height: Self.pillHeight)
 
         if let panel {
             if counts != lastCounts {
@@ -75,6 +84,15 @@ class NotchStatusController {
         lastCounts = counts
         guard let hostingView else { return }
         hostingView.rootView = NotchStatusView(counts: counts, themeId: themeId())
+        // Keep the right edge on the notch while the width follows the dots.
+        if let panel {
+            let width = Self.pillWidth(for: counts)
+            var frame = panel.frame
+            guard abs(frame.width - width) > 0.5 else { return }
+            frame.origin.x = frame.maxX - width
+            frame.size.width = width
+            panel.setFrame(frame, display: true)
+        }
     }
 
     /// Remove the notch panel. Hide first, then release views.

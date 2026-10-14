@@ -65,12 +65,12 @@ final class DisplayStateWriterTests: XCTestCase {
         let now = Date()
         var dormant = SessionData.mock(id: "dormant", status: .working)
         dormant.lifecycle = .dormant
-        var staleIdle = SessionData.mock(id: "stale", status: .idle)
-        staleIdle.lastActivity = now.addingTimeInterval(-SessionDisplayPolicy.staleIdleInterval - 60)
+        // Connected but nothing to do: Idle tab, not Active, so not on the keys.
+        let idle = SessionData.mock(id: "idle", status: .idle)
         let active = SessionData.mock(id: "active", status: .working)
 
         let snapshot = DisplayStateWriter.snapshot(
-            userSessions: userSessions(fromDataFixtures: [dormant, staleIdle, active]),
+            userSessions: userSessions(fromDataFixtures: [dormant, idle, active]),
             theme: .claude,
             appRunning: true,
             appIdentity: DisplayState.ProcessIdentity(pid: 123, startTime: 1_000),

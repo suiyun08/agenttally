@@ -14,14 +14,13 @@ enum PopupTab: CaseIterable, Hashable {
     }
 
     var helpText: String {
-        let staleIdleDuration = Self.staleIdleDurationText
         switch self {
         case .active:
-            return String(localized: "Current sessions; idle moves after \(staleIdleDuration).")
+            return String(localized: "Sessions that are working or waiting for you, including unread results.")
         case .idle:
-            return String(localized: "Dormant sessions and idle sessions over \(staleIdleDuration).")
+            return String(localized: "Open sessions with nothing to do: read results and sessions not started yet.")
         case .recent:
-            return String(localized: "Finished work and archived desktop sessions. Rows open the project or app when possible.")
+            return String(localized: "Disconnected sessions from the last 7 days. Rows reopen the session or project when possible.")
         case .cleanup:
             return String(localized: "Ended-session worktrees checked before removal.")
         }
@@ -30,11 +29,11 @@ enum PopupTab: CaseIterable, Hashable {
     var emptyStateDetail: String {
         switch self {
         case .active:
-            return String(localized: "Current and recently idle sessions appear here.")
+            return String(localized: "Working sessions and unread results appear here.")
         case .idle:
-            return String(localized: "Dormant and long-idle sessions appear here.")
+            return String(localized: "Read results and sessions not started yet appear here.")
         case .recent:
-            return String(localized: "Finished work and archived desktop sessions appear here.")
+            return String(localized: "Disconnected sessions from the last 7 days appear here.")
         case .cleanup:
             return String(localized: "Ended-session worktrees appear here after checks.")
         }
@@ -60,11 +59,6 @@ enum PopupTab: CaseIterable, Hashable {
         default:
             return current
         }
-    }
-
-    private static var staleIdleDurationText: String {
-        let hours = Int(SessionDisplayPolicy.staleIdleInterval / 3_600)
-        return String(localized: "\(hours) hours")
     }
 }
 
