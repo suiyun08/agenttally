@@ -200,11 +200,12 @@ enum HookHandler {
         case .userPromptSubmit:
             clearToolState(&data)
             if let prompt = input.prompt { data.lastPrompt = prompt }
-        case .preToolUse, .preToolUseAwaitingUser:
-            if let toolName = input.toolName {
-                data.lastTool = toolName
-                data.lastToolDetail = extractToolDetail(toolName: toolName, toolInput: input.toolInput)
-            }
+        case .preToolUse:
+            recordTool(&data, input: input)
+        case .awaitingUserAnswer:
+            recordTool(&data, input: input)
+            // A message left by an earlier permission prompt would hide the question.
+            data.notificationMessage = nil
 
         case .permissionRequest:
             let msg = input.title ?? input.toolName.map { tool in
@@ -235,6 +236,12 @@ enum HookHandler {
         case .notificationPermission, .postCompact, .preCompact, .postToolUse, .sessionEnd, .unknown:
             break
         }
+    }
+
+    private static func recordTool(_ data: inout SessionData, input: HookInput) {
+        guard let toolName = input.toolName else { return }
+        data.lastTool = toolName
+        data.lastToolDetail = extractToolDetail(toolName: toolName, toolInput: input.toolInput)
     }
 
     /// Records what the finished turn left behind: Claude's last reply and any background work

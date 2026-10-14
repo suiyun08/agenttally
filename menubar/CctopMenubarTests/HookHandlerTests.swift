@@ -768,6 +768,29 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(try loadSession().status, .working)
     }
 
+    func testQuestionWaitsForInputWhicheverHookArrivesFirst() throws {
+        let permission = """
+        {"session_id":"test-session-001","cwd":"/tmp/test-project","hook_event_name":"PermissionRequest",\
+        "tool_name":"AskUserQuestion","tool_input":{"questions":[]}}
+        """
+        for order in [["PermissionRequest", "PreToolUse"], ["PreToolUse", "PermissionRequest"]] {
+            try handleFixture("SessionStart")
+            try handleFixture("PermissionRequest")  // an earlier Bash prompt leaves its message behind
+            try handleFixture("PostToolUse")
+            for hook in order {
+                if hook == "PermissionRequest" {
+                    try handleHook(permission, hookName: hook)
+                } else {
+                    try handleFixture("PreToolUse-AskUserQuestion")
+                }
+            }
+            let session = try loadSession()
+            XCTAssertEqual(session.status, .waitingInput, "\(order)")
+            XCTAssertNil(session.notificationMessage, "\(order)")
+            XCTAssertEqual(session.contextLine, "Asking you a question", "\(order)")
+        }
+    }
+
     func testIdlePromptAfterStopKeepsDoneAndFinishTime() throws {
         try handleFixture("SessionStart")
         try handleFixture("UserPromptSubmit")

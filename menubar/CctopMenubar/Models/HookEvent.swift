@@ -4,8 +4,10 @@ enum HookEvent: Equatable {
     case sessionStart
     case userPromptSubmit
     case preToolUse
-    /// PreToolUse for a tool that blocks on the user's answer (AskUserQuestion, ExitPlanMode).
-    case preToolUseAwaitingUser
+    /// PreToolUse or PermissionRequest for a tool that blocks on the user's answer
+    /// (AskUserQuestion, ExitPlanMode). Claude Code sends both within a millisecond, in either
+    /// order, so both must land on the same status.
+    case awaitingUserAnswer
     case postToolUse
     case postToolUseFailure
     case stop
@@ -55,8 +57,9 @@ enum HookEvent: Equatable {
             }
         }
         let event = hookNameMap[hookName] ?? .unknown
-        if event == .preToolUse, let toolName, awaitingUserToolNames.contains(toolName) {
-            return .preToolUseAwaitingUser
+        if event == .preToolUse || event == .permissionRequest,
+           let toolName, awaitingUserToolNames.contains(toolName) {
+            return .awaitingUserAnswer
         }
         if event == .stop, hasBackgroundWork {
             return .stopWithBackgroundWork
@@ -80,7 +83,7 @@ enum Transition {
         case .stopWithBackgroundWork: return .background
         case .stopFailure, .sessionError: return .needsAttention
         case .userPromptSubmit, .preToolUse, .postToolUse, .postToolUseFailure: return .working
-        case .preToolUseAwaitingUser, .notificationElicitation: return .waitingInput
+        case .awaitingUserAnswer, .notificationElicitation: return .waitingInput
         // Claude Code sends idle_prompt about 60s after a turn ends. It never re-flags a finished
         // turn, but it still rescues a turn whose Stop never came (an Esc interrupt sends none).
         case .notificationIdle:
@@ -97,7 +100,7 @@ enum Transition {
     /// True when a hook is strong evidence that a previously ended/dormant session resumed.
     static func clearsInactiveMarkers(event: HookEvent) -> Bool {
         switch event {
-        case .sessionStart, .userPromptSubmit, .preToolUse, .preToolUseAwaitingUser, .postToolUse,
+        case .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
              .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopFailure, .notificationIdle,
              .notificationElicitation, .permissionRequest, .preCompact, .postCompact, .sessionError:
             return true

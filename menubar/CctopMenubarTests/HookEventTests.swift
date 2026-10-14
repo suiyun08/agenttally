@@ -48,10 +48,19 @@ final class HookEventTests: XCTestCase {
         for tool in ["AskUserQuestion", "ExitPlanMode"] {
             XCTAssertEqual(
                 HookEvent.parse(hookName: "PreToolUse", notificationType: nil, toolName: tool),
-                .preToolUseAwaitingUser, tool
+                .awaitingUserAnswer, tool
             )
         }
         XCTAssertEqual(HookEvent.parse(hookName: "PreToolUse", notificationType: nil, toolName: "Bash"), .preToolUse)
+        // Claude Code also sends PermissionRequest for these tools, a millisecond apart and in either order.
+        XCTAssertEqual(
+            HookEvent.parse(hookName: "PermissionRequest", notificationType: nil, toolName: "AskUserQuestion"),
+            .awaitingUserAnswer
+        )
+        XCTAssertEqual(
+            HookEvent.parse(hookName: "PermissionRequest", notificationType: nil, toolName: "Bash"),
+            .permissionRequest
+        )
         XCTAssertEqual(
             HookEvent.parse(hookName: "PostToolUse", notificationType: nil, toolName: "AskUserQuestion"),
             .postToolUse
@@ -140,7 +149,7 @@ final class HookEventTests: XCTestCase {
     }
 
     func testBlockingToolsAndElicitationWaitForInput() {
-        XCTAssertEqual(Transition.forEvent(.working, event: .preToolUseAwaitingUser), .waitingInput)
+        XCTAssertEqual(Transition.forEvent(.working, event: .awaitingUserAnswer), .waitingInput)
         XCTAssertEqual(Transition.forEvent(.working, event: .notificationElicitation), .waitingInput)
         XCTAssertEqual(Transition.forEvent(.done, event: .notificationElicitation), .waitingInput)
     }
@@ -238,7 +247,7 @@ final class HookEventTests: XCTestCase {
 
     func testAllTransitionsExhaustive() {
         let allEvents: [HookEvent] = [
-            .sessionStart, .userPromptSubmit, .preToolUse, .preToolUseAwaitingUser, .postToolUse,
+            .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
             .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopFailure, .notificationIdle,
             .notificationElicitation, .notificationPermission, .notificationOther,
             .permissionRequest, .subagentStart, .subagentStop, .preCompact, .postCompact,
@@ -267,7 +276,7 @@ final class HookEventTests: XCTestCase {
             XCTAssertNotNil(Transition.forEvent(status, event: .stop))
             XCTAssertNotNil(Transition.forEvent(status, event: .stopWithBackgroundWork))
             XCTAssertNotNil(Transition.forEvent(status, event: .stopFailure))
-            XCTAssertNotNil(Transition.forEvent(status, event: .preToolUseAwaitingUser))
+            XCTAssertNotNil(Transition.forEvent(status, event: .awaitingUserAnswer))
             XCTAssertNotNil(Transition.forEvent(status, event: .notificationElicitation))
             XCTAssertNotNil(Transition.forEvent(status, event: .permissionRequest))
             XCTAssertNotNil(Transition.forEvent(status, event: .preCompact))
