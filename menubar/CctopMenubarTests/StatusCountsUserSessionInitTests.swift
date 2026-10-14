@@ -134,7 +134,7 @@ final class StatusDotLayoutTests: XCTestCase {
         )
         // 6pt dots, 3pt gaps, 4pt margins around a 1pt separator.
         XCTAssertEqual(layout.items, [
-            .dot(.permission, x: 0), .dot(.working, x: 9), .separator(x: 19), .dot(.unreadDone, x: 24),
+            .dot(.permission, xPos: 0), .dot(.working, xPos: 9), .separator(xPos: 19), .dot(.unreadDone, xPos: 24),
         ])
         XCTAssertEqual(layout.width, 30)
     }

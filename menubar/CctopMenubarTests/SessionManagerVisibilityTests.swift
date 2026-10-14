@@ -396,7 +396,7 @@ final class SessionManagerVisibilityTests: XCTestCase {
         archived.cctopSessionId = sharedID
         archived.harnessSessionId = durableConversationID
         archived.sessionName = "Archived desktop record"
-        archived.lastActivity = Date(timeIntervalSince1970: 2_000)
+        archived.lastActivity = Date().addingTimeInterval(-600)  // inside Recent's 7-day window
         try archived.writeToFile(path: sessionsURL.appendingPathComponent("archived-desktop.json").path)
 
         var sources = isolatedSessionDataSources(sessionsDir: sessionsURL, visibilityPrefix: "cctop-recent-live-suppression")
@@ -1882,7 +1882,8 @@ final class SessionManagerVisibilityTests: XCTestCase {
         manager.loadSessions()
 
         let activeAfterUpdates = SessionDisplayPolicy.activeSessions(from: manager.userSessions, now: now)
-        XCTAssertEqual(activeAfterUpdates.map(\.displayRecord.data.id), ["303", "404", "101", "202"])
+        // beta is idle now: Idle tab, not Active.
+        XCTAssertEqual(activeAfterUpdates.map(\.displayRecord.data.id), ["303", "404", "101"])
         let snapshot = DisplayStateWriter.snapshot(
             userSessions: manager.userSessions,
             theme: .claude,
@@ -1902,7 +1903,7 @@ final class SessionManagerVisibilityTests: XCTestCase {
         manager.loadSessions()
         XCTAssertEqual(
             SessionDisplayPolicy.activeSessions(from: manager.userSessions, now: now).map(\.displayRecord.data.id),
-            ["303", "404", "202"]
+            ["303", "404"]
         )
 
         beta.endedAt = now

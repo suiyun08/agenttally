@@ -3,6 +3,9 @@ import XCTest
 @testable import CctopMenubar
 
 final class SessionLifecycleTests: XCTestCase {
+    /// Fixtures date their records near the epoch; Recent only lists the last 7 days.
+    private let recentFixtureNow = Date(timeIntervalSince1970: 10_000)
+
     // MARK: - Lifecycle derivation (Phase 1)
 
     private static let lifeNow = Date(timeIntervalSince1970: 1_000_000)
@@ -617,7 +620,7 @@ final class SessionLifecycleTests: XCTestCase {
         XCTAssertEqual(classification.archivedCodexThreadIDs, ["archived-cli", "archived-no-bundle"])
         XCTAssertEqual(classification.cleanupSources.map(\.sessionId).sorted(), ["archived-cli", "archived-no-bundle"])
         XCTAssertEqual(classification.protectedProjectPathsForCleanup, ["/tmp/p"])
-        XCTAssertTrue(RecentResumeTarget.build(projects: [], classification: classification).isEmpty)
+        XCTAssertTrue(RecentResumeTarget.build(projects: [], classification: classification, now: recentFixtureNow).isEmpty)
 
         let archivedOnly = SessionManager.sessionClassificationSnapshot(
             in: [archivedWithoutBundle, archivedCLI],
@@ -821,7 +824,7 @@ final class SessionLifecycleTests: XCTestCase {
             codexThreads: StubCodexThreadState(archived: [codexID])
         )
 
-        let targets = RecentResumeTarget.build(projects: [], classification: classification)
+        let targets = RecentResumeTarget.build(projects: [], classification: classification, now: recentFixtureNow)
 
         XCTAssertEqual(targets.map(\.title), ["Run plugin node:test suites in CI"])
         XCTAssertEqual(targets.map(\.openActionLabel), ["Open Claude Desktop"])
@@ -875,14 +878,16 @@ final class SessionLifecycleTests: XCTestCase {
             classification: SessionManager.sessionClassificationSnapshot(
                 in: [preferred, other],
                 claudeMetadata: metadata
-            )
+            ),
+            now: recentFixtureNow
         )
         let reversed = RecentResumeTarget.build(
             projects: [],
             classification: SessionManager.sessionClassificationSnapshot(
                 in: [other, preferred],
                 claudeMetadata: metadata
-            )
+            ),
+            now: recentFixtureNow
         )
 
         XCTAssertEqual(forward, reversed)
@@ -926,7 +931,7 @@ final class SessionLifecycleTests: XCTestCase {
                     isAuthoritative: true
                 )
             )
-            let targets = RecentResumeTarget.build(projects: [], classification: classification)
+            let targets = RecentResumeTarget.build(projects: [], classification: classification, now: recentFixtureNow)
             XCTAssertEqual(targets.count, 1)
             return try XCTUnwrap(targets.first)
         }
@@ -978,7 +983,7 @@ final class SessionLifecycleTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            Set(RecentResumeTarget.build(projects: [], classification: classification).map(\.id)),
+            Set(RecentResumeTarget.build(projects: [], classification: classification, now: recentFixtureNow).map(\.id)),
             [
                 "desktop:Claude Desktop:legacy-without-id",
                 "desktop:Claude Desktop:legacy-invalid-id",
@@ -1001,7 +1006,7 @@ final class SessionLifecycleTests: XCTestCase {
             codexThreads: StubCodexThreadState(existing: [], archived: [])
         )
 
-        XCTAssertTrue(RecentResumeTarget.build(projects: [], classification: classification).isEmpty)
+        XCTAssertTrue(RecentResumeTarget.build(projects: [], classification: classification, now: recentFixtureNow).isEmpty)
     }
 
     @MainActor
@@ -1016,13 +1021,13 @@ final class SessionLifecycleTests: XCTestCase {
         let codexID = "019e1eff-3374-74b0-8d3d-6fba94e7d75f"
         var codex = codexSession(sessionId: codexID, projectPath: "\(NSHomeDirectory())/projects/cctop")
         codex.sessionName = "Can you use product design skills for the cctop logo"
-        codex.lastActivity = Date(timeIntervalSince1970: 3000)
+        codex.lastActivity = Date().addingTimeInterval(-300)
         try codex.writeToFile(path: (sessionsDir as NSString).appendingPathComponent("codex-\(codexID).json"))
 
         let claudeID = "39253133-4a65-48fb-af2b-844463d3b5bb"
         var claude = claudeDesktopSession(sessionId: claudeID, projectPath: "\(NSHomeDirectory())/projects/cctop")
         claude.sessionName = "Run plugin node:test suites in CI"
-        claude.lastActivity = Date(timeIntervalSince1970: 2000)
+        claude.lastActivity = Date().addingTimeInterval(-600)  // inside Recent's 7-day window
         try claude.writeToFile(path: (sessionsDir as NSString).appendingPathComponent("\(claudeID).json"))
 
         var sources = isolatedSessionDataSources(sessionsDir: URL(fileURLWithPath: sessionsDir), visibilityPrefix: "cctop-recent-desktop-targets")

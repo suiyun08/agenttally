@@ -220,9 +220,9 @@ struct StatusDotMetrics {
 /// Horizontal positions of every dot, separator, and "+N" label, plus the total width.
 struct StatusDotLayout: Equatable {
     enum Item: Equatable {
-        case dot(StatusDotGroup.Dot, x: CGFloat)
-        case separator(x: CGFloat)
-        case overflow(String, x: CGFloat, width: CGFloat)
+        case dot(StatusDotGroup.Dot, xPos: CGFloat)
+        case separator(xPos: CGFloat)
+        case overflow(String, xPos: CGFloat, width: CGFloat)
     }
 
     let items: [Item]
@@ -250,13 +250,13 @@ struct StatusDotLayout: Equatable {
         for (index, group) in groups.enumerated() {
             if index > 0 {
                 xPos += metrics.separatorMargin
-                items.append(.separator(x: xPos))
+                items.append(.separator(xPos: xPos))
                 xPos += metrics.separatorWidth + metrics.separatorMargin
             }
             let visible = group.dots.prefix(maxVisibleDots)
             for (dotIndex, dot) in visible.enumerated() {
                 if dotIndex > 0 { xPos += metrics.dotGap }
-                items.append(.dot(dot, x: xPos))
+                items.append(.dot(dot, xPos: xPos))
                 xPos += metrics.dotDiameter
             }
             let hidden = group.dots.count - visible.count
@@ -266,11 +266,10 @@ struct StatusDotLayout: Equatable {
                     string: text, attributes: [.font: metrics.overflowFont]
                 ).size().width)
                 xPos += metrics.overflowGap
-                items.append(.overflow(text, x: xPos, width: textWidth))
+                items.append(.overflow(text, xPos: xPos, width: textWidth))
                 xPos += textWidth
             }
         }
         return (items, xPos)
     }
 }
-

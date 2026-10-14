@@ -3,70 +3,48 @@ import XCTest
 
 @MainActor
 final class MenubarIconRendererTests: XCTestCase {
-    // MARK: - Zero sessions (template icon)
-
-    func testZeroSessions_returnsTemplateImage() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 0, working: 0, idle: 0)
-        )
-        XCTAssertTrue(image.isTemplate, "Zero-session icon should be a template image")
+    private func counts(_ groups: [StatusDotGroup]) -> StatusCounts {
+        StatusCounts(permission: 0, attention: 0, working: 0, idle: 0, dotGroups: groups)
     }
 
-    // MARK: - Dimensions
+    // MARK: - Nothing worth a look (template line)
 
-    func testIconSize() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 0, working: 1, idle: 0)
-        )
-        XCTAssertEqual(image.size.width, 36, "Icon should be 36px wide")
-        XCTAssertEqual(image.size.height, 18, "Icon should be 18px tall")
-        XCTAssertFalse(image.isTemplate, "Active-session icon should not be template")
+    func testNoDots_returnsShortTemplateLine() {
+        let image = MenubarIconRenderer.render(counts: .zero)
+        XCTAssertTrue(image.isTemplate, "With no dots the icon is a template line")
+        XCTAssertEqual(image.size.width, 14)
+        XCTAssertEqual(image.size.height, 18)
     }
 
-    // MARK: - Non-template when sessions active
+    func testCountsWithoutDots_stillRenderTheTemplateLine() {
+        // Read results and idle sessions get no dot, whatever the counts say.
+        let image = MenubarIconRenderer.render(counts: StatusCounts(permission: 0, attention: 0, working: 0, idle: 5))
+        XCTAssertTrue(image.isTemplate)
+    }
 
-    func testPermissionSession_notTemplate() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 1, attention: 0, working: 0, idle: 0)
-        )
+    // MARK: - Dots
+
+    func testDotsImage_isColoredAndSizedToItsLayout() {
+        let groups = [StatusDotGroup(family: .claude, dots: [.working, .permission])]
+        let image = MenubarIconRenderer.render(counts: counts(groups))
         XCTAssertFalse(image.isTemplate)
+        XCTAssertEqual(image.size.width, StatusDotLayout(groups: groups, metrics: .menubar).width)
+        XCTAssertEqual(image.size.height, 18)
     }
 
-    func testAttentionSession_notTemplate() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 2, working: 0, idle: 0)
-        )
-        XCTAssertFalse(image.isTemplate)
-    }
-
-    func testMixedSessions_notTemplate() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 1, attention: 1, working: 2, idle: 3)
-        )
-        XCTAssertFalse(image.isTemplate)
-    }
-
-    func testIdleOnly_notTemplate() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 0, working: 0, idle: 5)
-        )
-        XCTAssertFalse(image.isTemplate)
-    }
-
-    // MARK: - Valid image output
-
-    func testRenderProducesNonEmptyImage() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 1, attention: 0, working: 2, idle: 1)
-        )
-        XCTAssertGreaterThan(image.size.width, 0)
-        XCTAssertGreaterThan(image.size.height, 0)
+    func testWidthGrowsWithSessionsAndAgents() {
+        let one = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .claude, dots: [.working])]))
+        let two = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .claude, dots: [.working, .working])]))
+        let split = MenubarIconRenderer.render(counts: counts([
+            StatusDotGroup(family: .claude, dots: [.working, .working]),
+            StatusDotGroup(family: .codex, dots: [.working]),
+        ]))
+        XCTAssertLessThan(one.size.width, two.size.width)
+        XCTAssertLessThan(two.size.width, split.size.width)
     }
 
     func testLiveImageResolvesStatusColorForCurrentDrawingAppearance() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 0, working: 1, idle: 0)
-        )
+        let image = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .claude, dots: [.working])]))
         let darkAppearance = NSAppearance(named: .darkAqua)!
         let lightAppearance = NSAppearance(named: .aqua)!
 
@@ -78,25 +56,13 @@ final class MenubarIconRendererTests: XCTestCase {
         XCTAssertNotEqual(sRGBComponents(darkPixel), sRGBComponents(lightPixel))
     }
 
-    // MARK: - Single session
-
-    func testSingleWorkingSession_correctSize() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 0, attention: 0, working: 1, idle: 0)
-        )
-        XCTAssertEqual(image.size.width, 36)
-        XCTAssertEqual(image.size.height, 18)
-        XCTAssertFalse(image.isTemplate)
+    func testUnreadDoneIsAHollowRing() {
+        let image = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .codex, dots: [.unreadDone])]))
+        let center = centerPixel(in: image, appearance: NSAppearance(named: .aqua)!)
+        XCTAssertEqual(sRGBComponents(center)[3], 0, accuracy: 0.05, "The ring's center stays transparent")
     }
 
-    func testSinglePermissionSession_correctSize() {
-        let image = MenubarIconRenderer.render(
-            counts: StatusCounts(permission: 1, attention: 0, working: 0, idle: 0)
-        )
-        XCTAssertEqual(image.size.width, 36)
-        XCTAssertEqual(image.size.height, 18)
-        XCTAssertFalse(image.isTemplate)
-    }
+    // MARK: - Helpers
 
     private func centerPixel(in image: NSImage, appearance: NSAppearance) -> NSColor {
         let width = Int(image.size.width)

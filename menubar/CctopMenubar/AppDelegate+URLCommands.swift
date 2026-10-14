@@ -44,7 +44,7 @@ extension AppDelegate {
                 return
             }
             let initialUserSessions = sessionManager.userSessions
-            let initialActiveUserSessions = SessionDisplayPolicy.activeSessions(from: initialUserSessions)
+            let initialActiveUserSessions = SessionDisplayPolicy.connectedSessions(from: initialUserSessions)
             if let userSession = FocusTargetResolver.currentUserSession(
                 forCctopSessionID: cctopSessionID,
                 in: initialActiveUserSessions
@@ -64,7 +64,7 @@ extension AppDelegate {
             sessionManager.loadSessions()
             let refreshElapsedMilliseconds = (ProcessInfo.processInfo.systemUptime - refreshStart) * 1_000
             let refreshedUserSessions = sessionManager.userSessions
-            let refreshedActiveUserSessions = SessionDisplayPolicy.activeSessions(from: refreshedUserSessions)
+            let refreshedActiveUserSessions = SessionDisplayPolicy.connectedSessions(from: refreshedUserSessions)
             let resolvedUserSession = FocusTargetResolver.currentUserSession(
                 forCctopSessionID: cctopSessionID,
                 in: refreshedActiveUserSessions

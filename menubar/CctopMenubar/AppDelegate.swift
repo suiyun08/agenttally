@@ -421,7 +421,7 @@ extension AppDelegate {
         ) else { return nil }
         return FocusTargetResolver.currentUserSession(
             forCctopSessionID: cctopSessionID,
-            in: SessionDisplayPolicy.activeSessions(from: userSessions)
+            in: SessionDisplayPolicy.connectedSessions(from: userSessions)
         )?.focusTarget
     }
 }

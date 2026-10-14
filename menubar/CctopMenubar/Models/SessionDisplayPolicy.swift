@@ -10,7 +10,6 @@ enum SessionDisplayPolicy {
         static let empty = Signature(activeIDs: [], idleIDs: [])
     }
 
-
     static func activeSessions(from userSessions: [UserSession], now: Date = Date()) -> [UserSession] {
         userSessions.filter { isActive($0.displayRecord.data, now: now) }
     }
@@ -114,6 +113,12 @@ enum SessionDisplayPolicy {
 
     static func dormantSessions(from userSessions: [UserSession]) -> [UserSession] {
         userSessions.filter { $0.displayRecord.data.lifecycle == .dormant }
+    }
+
+    /// Every connected session (Active and Idle). Jumps by ID resolve here, so a notification
+    /// or `cctop://focus` still reaches a session after the user has read it.
+    static func connectedSessions(from userSessions: [UserSession]) -> [UserSession] {
+        userSessions.filter { $0.displayRecord.data.lifecycle == .active }
     }
 
 }

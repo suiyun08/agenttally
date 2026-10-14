@@ -58,7 +58,8 @@ final class DisplayStateWriterTests: XCTestCase {
             snapshot.sessions.map(\.cctopSessionId),
             expected.map { $0.identity.cctopSessionID ?? "" }
         )
-        XCTAssertEqual(snapshot.sessions.map(\.name), ["alpha", "bravo", "charlie", "delta"])
+        // The idle session sits in the Idle tab, so the keys mirror Active without it.
+        XCTAssertEqual(snapshot.sessions.map(\.name), ["alpha", "bravo", "charlie"])
     }
 
     func testSnapshotExcludesSessionsTheAppDoesNotDisplay() {

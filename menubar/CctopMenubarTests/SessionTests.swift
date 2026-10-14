@@ -2419,8 +2419,9 @@ final class SessionTests: XCTestCase {
             pid: 111, pidStartTime: 1_000
         )
         working.lastActivity = now.addingTimeInterval(-10)
+        // Both records are worth a look, so the grouped session reaches the display state.
         var idle = SessionData.mock(
-            id: "conv-1", cctopSessionId: cctopSessionID, harnessSessionId: "conv-1", status: .idle,
+            id: "conv-1", cctopSessionId: cctopSessionID, harnessSessionId: "conv-1", status: .waitingInput,
             pid: 999, pidStartTime: 2_000
         )
         idle.lastActivity = now.addingTimeInterval(-5)

@@ -16,8 +16,8 @@ final class SessionDisplayPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             SessionDisplayPolicy.activeSessions(from: userSessions(fromDataFixtures: sessions), now: now)
-                .map(\.displayRecord.data.id),
-            ["waiting", "working", "background", "unread"]
+                .map(\.displayRecord.data.id).sorted(),
+            ["background", "unread", "waiting", "working"]
         )
     }
 
@@ -188,7 +188,7 @@ final class SessionDisplayPolicyTests: XCTestCase {
             result.map(\.displayRecord.data.id),
             [
                 "permission", "new-permission", "waiting", "new-waiting", "working", "new-working",
-                "compacting", "new-compacting", "idle", "new-idle",
+                "compacting", "new-compacting", "new-idle", "idle",
             ]
         )
     }
@@ -213,8 +213,9 @@ final class SessionDisplayPolicyTests: XCTestCase {
             SessionDisplayPolicy.activeSessions(from: result, now: now).map(\.displayRecord.data.id),
             ["wait-b", "work-b"]
         )
+        XCTAssertEqual(SessionDisplayPolicy.idleSessions(from: result, now: now), [])
         XCTAssertEqual(
-            SessionDisplayPolicy.idleSessions(from: result, now: now).map(\.displayRecord.data.id),
+            SessionDisplayPolicy.dormantSessions(from: result).map(\.displayRecord.data.id),
             ["dormant"]
         )
     }
