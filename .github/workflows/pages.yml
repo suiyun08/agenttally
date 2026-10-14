@@ -1,14 +1,6 @@
 name: Deploy site to GitHub Pages
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'site/**'
-      - 'assets/icons/**'
-      - 'assets/cctop-app-icon.svg'
-      - 'docs/menubar-tokyonight-dark.png'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
