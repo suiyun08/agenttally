@@ -124,30 +124,27 @@ struct WorktreeCleanupCandidate: Identifiable, Equatable {
     /// Reasons stay English inside cleanup logic (they are compared and matched); translate them
     /// only where they are shown.
     static func displayReason(_ reason: String) -> String {
-        switch reason {
-        case untrackedFilesReason: return String(localized: "Worktree has untracked files")
-        case ignoredFilesReason: return String(localized: "Worktree has ignored files")
-        case trackedChangesReason: return String(localized: "Worktree has uncommitted tracked changes")
-        case lockedReason: return String(localized: "Worktree is locked")
-        case initializedSubmodulesReason: return String(localized: "Worktree contains initialized submodules")
-        case indexHiddenTrackedFilesReason:
-            return String(localized: "Worktree has tracked files hidden by Git index flags")
-        case statusUnreadableReason: return String(localized: "Git status could not be read")
-        case branchUnknownReason:
-            return String(localized: "Branch safety cannot be verified because the branch is unknown or detached")
-        case mainWorktreePathUnverifiedReason: return String(localized: "Main checkout path could not be verified")
-        case commitSafetyUnknownReason: return String(localized: "Branch upstream or commit safety could not be verified")
-        case protectedFolderAccessReason:
-            return String(localized: "File access is needed to inspect this protected worktree")
-        case "Path is not a registered Git worktree": return String(localized: "Path is not a registered Git worktree")
-        case "Path is not listed by Git worktree metadata":
-            return String(localized: "Path is not listed by Git worktree metadata")
-        case "No upstream branch": return String(localized: "No upstream branch")
-        case "Branch unique commits could not be verified":
-            return String(localized: "Branch unique commits could not be verified")
-        default:
-            return uniqueCommitDisplayReason(reason) ?? reason
-        }
+        knownReasonTranslations[reason] ?? uniqueCommitDisplayReason(reason) ?? reason
+    }
+
+    private static var knownReasonTranslations: [String: String] {
+        [
+            untrackedFilesReason: String(localized: "Worktree has untracked files"),
+            ignoredFilesReason: String(localized: "Worktree has ignored files"),
+            trackedChangesReason: String(localized: "Worktree has uncommitted tracked changes"),
+            lockedReason: String(localized: "Worktree is locked"),
+            initializedSubmodulesReason: String(localized: "Worktree contains initialized submodules"),
+            indexHiddenTrackedFilesReason: String(localized: "Worktree has tracked files hidden by Git index flags"),
+            statusUnreadableReason: String(localized: "Git status could not be read"),
+            branchUnknownReason: String(localized: "Branch safety cannot be verified because the branch is unknown or detached"),
+            mainWorktreePathUnverifiedReason: String(localized: "Main checkout path could not be verified"),
+            commitSafetyUnknownReason: String(localized: "Branch upstream or commit safety could not be verified"),
+            protectedFolderAccessReason: String(localized: "File access is needed to inspect this protected worktree"),
+            "Path is not a registered Git worktree": String(localized: "Path is not a registered Git worktree"),
+            "Path is not listed by Git worktree metadata": String(localized: "Path is not listed by Git worktree metadata"),
+            "No upstream branch": String(localized: "No upstream branch"),
+            "Branch unique commits could not be verified": String(localized: "Branch unique commits could not be verified"),
+        ]
     }
 
     private static func uniqueCommitDisplayReason(_ reason: String) -> String? {

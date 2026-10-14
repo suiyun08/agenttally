@@ -78,7 +78,7 @@ struct AboutView: View {
 }
 
 private struct HoverLinkButton: View {
-    let label: String
+    let label: LocalizedStringKey
     let url: String
     var font: Font = .system(size: 11)
     var color: Color = .amber

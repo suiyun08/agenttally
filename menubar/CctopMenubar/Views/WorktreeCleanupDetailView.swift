@@ -143,7 +143,11 @@ struct WorktreeCleanupDetailView: View {
             if nonOKChecks.isEmpty {
                 evidenceRow(String(localized: "\(passedCheckCount) checks passed"), systemImage: "checkmark.circle", color: Color.statusGreen)
             } else {
-                evidenceRow(String(localized: "\(nonOKChecks.count) checks need review"), systemImage: "exclamationmark.circle", color: candidate.state.accentColor)
+                evidenceRow(
+                    String(localized: "\(nonOKChecks.count) checks need review"),
+                    systemImage: "exclamationmark.circle",
+                    color: candidate.state.accentColor
+                )
             }
         }
     }
