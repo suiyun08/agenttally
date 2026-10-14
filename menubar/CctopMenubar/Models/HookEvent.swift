@@ -93,7 +93,6 @@ enum Transition {
             return nil
         }
     }
-    }
 
     /// True when a hook is strong evidence that a previously ended/dormant session resumed.
     static func clearsInactiveMarkers(event: HookEvent) -> Bool {
