@@ -135,6 +135,11 @@ enum Config {
         return nil
     }
 
+    /// Codex Desktop's persisted UI state, including its per-thread unread list. Read-only.
+    static func codexGlobalStatePath() -> String {
+        (codexHome() as NSString).appendingPathComponent(".codex-global-state.json")
+    }
+
     private static func codexHome() -> String {
         let environment = ProcessInfo.processInfo.environment
         return environment["CODEX_HOME"].flatMap(nonEmpty).map { standardizedAbsolutePath($0) }

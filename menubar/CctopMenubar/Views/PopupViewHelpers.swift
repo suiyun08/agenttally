@@ -327,6 +327,7 @@ struct PanelContentView: View {
     /// Called (async on main) whenever content layout changes so the host can resize the panel.
     var onLayoutChanged: () -> Void = {}
     @ObservedObject private var themeManager = ThemeManager.shared
+    @AppStorage(PanelWidth.defaultsKey) private var panelWidth = PanelWidth.standard.rawValue
     @StateObject private var overlayController = OverlayController()
 
     var body: some View {
@@ -350,7 +351,7 @@ struct PanelContentView: View {
             onLayoutChanged: onLayoutChanged,
             maxListHeight: heightLimit.maxHeight
         )
-        .frame(width: 320)
+        .frame(width: CGFloat(panelWidth))
         .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()
@@ -360,6 +361,7 @@ struct PanelContentView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
         .id(themeManager.themeId)
+        .onChange(of: panelWidth) { _ in onLayoutChanged() }
     }
 }
 

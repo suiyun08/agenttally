@@ -69,3 +69,24 @@ enum AppLanguage: String, CaseIterable {
         NSApp.terminate(nil)
     }
 }
+
+/// Panel width presets. The panel resizes as soon as the choice changes.
+enum PanelWidth: Int, CaseIterable {
+    case standard = 320
+    case wide = 400
+    case wider = 480
+
+    static let defaultsKey = "panelWidth"
+
+    var label: String {
+        switch self {
+        case .standard: String(localized: "Standard")
+        case .wide: String(localized: "Wide")
+        case .wider: String(localized: "Wider")
+        }
+    }
+
+    static var current: PanelWidth {
+        PanelWidth(rawValue: UserDefaults.standard.integer(forKey: defaultsKey)) ?? .standard
+    }
+}

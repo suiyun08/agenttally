@@ -181,3 +181,46 @@ struct LanguageSettingsRow: View {
         .onChange(of: selection) { $0.apply() }
     }
 }
+
+/// Panel width picker for the Appearance group.
+struct PanelWidthSettingsRow: View {
+    @AppStorage(PanelWidth.defaultsKey) private var width = PanelWidth.standard.rawValue
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Panel Width")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            Spacer(minLength: 8)
+            AmberSegmentedPicker(
+                options: PanelWidth.allCases.map { ($0.rawValue, $0.label) },
+                selection: $width
+            )
+        }
+        .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
+        .padding(.vertical, 4)
+        .frame(minHeight: 25)
+    }
+}
+
+/// The Appearance group's language and panel width rows, each under a divider.
+struct LanguageAndWidthSettingsRows: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            divider
+            LanguageSettingsRow()
+            divider
+            PanelWidthSettingsRow()
+        }
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.groupedRowBorder)
+            .frame(height: 0.5)
+            .padding(.leading, AppChrome.settingsDividerLeadingPadding)
+    }
+}
+

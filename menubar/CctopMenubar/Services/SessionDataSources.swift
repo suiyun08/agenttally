@@ -16,6 +16,8 @@ struct SessionDataSources {
     var notificationClient: SessionNotificationClient = .live
     var manualSessionVisibility: ManualSessionVisibilityStore = .live
     var seenSessions: SessionSeenStore = .live
+    /// Read state the clients keep themselves. Only `.live()` reads real client files.
+    var clientReadState: any ClientReadStateProviding = NoClientReadState()
     var now: () -> Date
 
     /// A function rather than a stored constant so `Config.sessionsDir()` is resolved
@@ -29,6 +31,7 @@ struct SessionDataSources {
             desktopAppConnection: .live,
             processAlive: { $0.isAlive },
             notificationsEnabled: { UserDefaults.standard.bool(forKey: "notificationsEnabled") },
+            clientReadState: ClientReadStateLookup(),
             now: Date.init
         )
     }

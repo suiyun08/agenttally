@@ -2101,6 +2101,16 @@
         }
       }
     },
+    "Panel Width": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "面板宽度"
+          }
+        }
+      }
+    },
     "Path": {
       "localizations": {
         "zh-Hans": {
@@ -2561,6 +2571,16 @@
         }
       }
     },
+    "Standard": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准"
+          }
+        }
+      }
+    },
     "Start a Codex CLI session and trust the hooks when prompted": {
       "localizations": {
         "zh-Hans": {
@@ -2894,6 +2914,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "为什么无法跳转"
+          }
+        }
+      }
+    },
+    "Wide": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宽"
+          }
+        }
+      }
+    },
+    "Wider": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更宽"
           }
         }
       }

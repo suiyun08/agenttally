@@ -63,8 +63,7 @@ struct SettingsSection: View {
                     AmberSegmentedPicker(options: AppearanceMode.allCases.map { ($0.rawValue, $0.label) }, selection: $appearanceMode)
                 }
                 .onChange(of: appearanceMode) { _ in UserDefaults.standard.synchronize() }
-                groupedDivider
-                LanguageSettingsRow()
+                LanguageAndWidthSettingsRows()
             }
 
             sectionHeader("Shortcuts")

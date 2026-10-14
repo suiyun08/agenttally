@@ -147,7 +147,7 @@ extension AppDelegate {
     private func panelFittingSize() -> NSSize? {
         panel.contentView?.layout()
         guard let size = panel.contentView?.fittingSize else { return nil }
-        return NSSize(width: max(size.width, 320), height: size.height)
+        return NSSize(width: max(size.width, CGFloat(PanelWidth.current.rawValue)), height: size.height)
     }
 
     private func setPanelFrame(_ frame: NSRect, animate: Bool) {

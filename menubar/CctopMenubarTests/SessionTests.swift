@@ -2784,3 +2784,138 @@ final class SessionTurnEndStatusTests: XCTestCase {
         XCTAssertEqual(counts.needsAction, 0)
     }
 }
+
+/// Unread results the user already read in Claude Desktop or Codex Desktop.
+final class ClientReadStateTests: XCTestCase {
+    private let finishedAt = Date(timeIntervalSince1970: 1_000_000)
+
+    private func done(_ session: SessionData) -> SessionData {
+        var session = session
+        session.status = .done
+        session.statusChangedAt = finishedAt
+        return session
+    }
+
+    private func codexDesktopThread(_ threadID: String = "01a13992-d000-7000-8000-000000000001") -> SessionData {
+        var session = SessionData.mock(id: threadID, status: .done, terminal: nil, source: SessionData.codexSource)
+        session.harnessSessionId = threadID
+        return done(session)
+    }
+
+    private func claudeDesktop(_ cliID: String = "002fb6fa-eae0-4631-94bd-84071dbd21d8") -> SessionData {
+        var session = SessionData.mock(
+            id: cliID, status: .done,
+            terminal: TerminalInfo(program: "", bundleId: HostAppBundleID.claudeDesktop),
+            source: SessionData.ccSource
+        )
+        session.harnessSessionId = cliID
+        return done(session)
+    }
+
+    private func codex(_ ids: Set<String>, writtenAfterFinish: Bool = true) -> ClientReadSnapshot {
+        ClientReadSnapshot(codexUnread: .init(
+            threadIDs: ids,
+            writtenAt: finishedAt.addingTimeInterval(writtenAfterFinish ? 5 : -5)
+        ))
+    }
+
+    func testCodexDesktopThreadIsReadOnceCodexDropsItFromItsUnreadList() {
+        let thread = codexDesktopThread()
+        XCTAssertTrue(ClientReadPolicy.seenInClient(thread, snapshot: codex([])))
+        XCTAssertFalse(ClientReadPolicy.seenInClient(thread, snapshot: codex([thread.harnessSessionId!])))
+    }
+
+    func testCodexSilenceCountsOnlyAfterItWroteStateForThisTurn() {
+        XCTAssertFalse(ClientReadPolicy.seenInClient(codexDesktopThread(), snapshot: codex([], writtenAfterFinish: false)))
+        XCTAssertFalse(ClientReadPolicy.seenInClient(codexDesktopThread(), snapshot: .empty))
+    }
+
+    func testCodexCLISessionKeepsCctopsOwnRule() {
+        var cli = codexDesktopThread()
+        cli.terminal = TerminalInfo(program: "iTerm.app", sessionId: nil, tty: "/dev/ttys004")
+        XCTAssertFalse(cli.isCodexDesktopThread)
+        XCTAssertFalse(ClientReadPolicy.seenInClient(cli, snapshot: codex([])))
+    }
+
+    func testClaudeDesktopConversationFocusedAfterTheTurnFinishedIsRead() {
+        let session = claudeDesktop()
+        let cliID = session.harnessSessionId!
+        let afterFinish = ClientReadSnapshot(claudeFocusByCliSessionID: [cliID: finishedAt.addingTimeInterval(30)])
+        let beforeFinish = ClientReadSnapshot(claudeFocusByCliSessionID: [cliID: finishedAt.addingTimeInterval(-30)])
+        XCTAssertTrue(ClientReadPolicy.seenInClient(session, snapshot: afterFinish))
+        XCTAssertFalse(ClientReadPolicy.seenInClient(session, snapshot: beforeFinish))
+    }
+
+    func testClaudeDesktopShowingTheConversationInFrontIsRead() {
+        let session = claudeDesktop()
+        let cliID = session.harnessSessionId!
+        let showing = ClientReadSnapshot(claudeCurrentCliSessionIDs: [cliID], claudeIsFrontmost: true)
+        let inBackground = ClientReadSnapshot(claudeCurrentCliSessionIDs: [cliID], claudeIsFrontmost: false)
+        let otherConversation = ClientReadSnapshot(claudeCurrentCliSessionIDs: ["other"], claudeIsFrontmost: true)
+        XCTAssertTrue(ClientReadPolicy.seenInClient(session, snapshot: showing))
+        XCTAssertFalse(ClientReadPolicy.seenInClient(session, snapshot: inBackground))
+        XCTAssertFalse(ClientReadPolicy.seenInClient(session, snapshot: otherConversation))
+    }
+
+    func testOnlyFinishedTurnsCanBeReadInTheClient() {
+        var working = claudeDesktop()
+        working.status = .working
+        let showing = ClientReadSnapshot(claudeCurrentCliSessionIDs: [working.harnessSessionId!], claudeIsFrontmost: true)
+        XCTAssertFalse(ClientReadPolicy.seenInClient(working, snapshot: showing))
+    }
+
+    func testParsesCodexUnreadAcrossAccountsAndHosts() throws {
+        let json = #"{"electron-thread-read-state-v1":{"version":1,"unreadByIdentity":{"acct-a":{"local:1":["t1","t2"]},"acct-b":{"local:1":[],"remote:2":["t3"]}}}}"#
+        XCTAssertEqual(ClientReadStateLookup.parseCodexUnreadThreadIDs(Data(json.utf8)), ["t1", "t2", "t3"])
+        XCTAssertNil(ClientReadStateLookup.parseCodexUnreadThreadIDs(Data(#"{"other":1}"#.utf8)))
+    }
+
+    func testClaudeFocusMapsPriorIDsAndPicksTheLatestConversation() {
+        let focus = ClientReadStateLookup.focus(from: [
+            ClaudeDesktopSessionLinkMetadata(
+                sessionId: "local_a", cliSessionId: "cli-a2", priorCliSessionIds: ["cli-a1"], lastFocusedAt: 2_000_000
+            ),
+            ClaudeDesktopSessionLinkMetadata(sessionId: "local_b", cliSessionId: "cli-b", lastFocusedAt: 1_000_000),
+            ClaudeDesktopSessionLinkMetadata(
+                sessionId: "local_c", cliSessionId: "cli-c", isArchived: true, lastFocusedAt: 9_000_000
+            ),
+        ])
+        XCTAssertEqual(focus.byCliSessionID["cli-a1"], Date(timeIntervalSince1970: 2_000))
+        XCTAssertEqual(focus.byCliSessionID["cli-b"], Date(timeIntervalSince1970: 1_000))
+        XCTAssertNil(focus.byCliSessionID["cli-c"])
+        XCTAssertEqual(focus.current, ["cli-a1", "cli-a2"])
+    }
+
+    @MainActor
+    func testManagerClearsTheDotWhenTheClientAlreadyShowedTheTurn() throws {
+        struct StubClientReadState: ClientReadStateProviding {
+            let value: ClientReadSnapshot
+            func snapshot() -> ClientReadSnapshot { value }
+        }
+        let suiteName = "cctop-client-read-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        var sources = try isolatedSessionDataSources(prefix: "cctop-client-read")
+        var thread = codexDesktopThread()
+        thread.statusChangedAt = Date().addingTimeInterval(-60)
+        thread.lastActivity = Date().addingTimeInterval(-60)
+        try thread.writeToFile(path: sources.sessionsDir.appendingPathComponent("codex-\(thread.sessionId).json").path)
+        sources.processAlive = { _ in true }
+        sources.seenSessions = SessionSeenStore(defaults: defaults)
+        sources.clientReadState = StubClientReadState(value: ClientReadSnapshot(
+            codexUnread: .init(threadIDs: [], writtenAt: Date())
+        ))
+
+        let manager = SessionManager(
+            historyManager: HistoryManager(historyDir: sources.sessionsDir.appendingPathComponent("history")),
+            dataSources: sources,
+            startMonitoring: false
+        )
+
+        let shown = try XCTUnwrap(manager.userSessions.first?.displayRecord.data)
+        XCTAssertEqual(shown.status, .done)
+        XCTAssertFalse(shown.isUnseenDone)
+        XCTAssertNotNil(SessionSeenStore(defaults: defaults).seenAt(cctopSessionID: try XCTUnwrap(thread.cctopSessionId)))
+    }
+}

@@ -29,6 +29,8 @@ class SessionManager: ObservableObject {
     private var debounceTask: DispatchWorkItem?
     private var livenessTimer: Timer?
     private var focusObserver: NSObjectProtocol?
+    /// Client read state sampled at the start of each load pass.
+    private var clientReadSnapshot = ClientReadSnapshot.empty
     private var gcTimer: Timer?
     private var lastDisplaySignature = SessionDisplayPolicy.Signature.empty
     var lastLoadLogSignature: SessionLoadLogSignature?
@@ -70,6 +72,7 @@ class SessionManager: ObservableObject {
 
     // swiftlint:disable:next function_body_length
     func loadSessions() {
+        clientReadSnapshot = dataSources.clientReadState.snapshot()
         let hasStoredHideEvidence = dataSources.manualSessionVisibility.hasStoredHideEvidence
         guard let files = try? FileManager.default.contentsOfDirectory(
             at: sessionsDir,
@@ -349,6 +352,12 @@ class SessionManager: ObservableObject {
         }
         var result = adjustPermissionStatus(session)
         result = Self.adjustIdleTimeout(result, now: dataSources.now())
+        // A turn the user already read in Claude Desktop or Codex Desktop counts as seen here too.
+        if dataSources.seenSessions.isUnseen(result),
+           let cctopSessionID = result.cctopSessionId,
+           ClientReadPolicy.seenInClient(result, snapshot: clientReadSnapshot) {
+            dataSources.seenSessions.markSeen(cctopSessionID: cctopSessionID, at: dataSources.now())
+        }
         result.isUnseenDone = dataSources.seenSessions.isUnseen(result)
         return result
     }

@@ -399,23 +399,27 @@ struct ClaudeDesktopSessionLinkMetadata: Decodable, Equatable {
     let priorCliSessionIds: [String]?
     let isArchived: Bool?
     let lastActivityAt: Double?
+    /// Milliseconds since 1970 when the user last opened this conversation in Claude Desktop.
+    let lastFocusedAt: Double?
 
     init(
         sessionId: String?,
         cliSessionId: String?,
         priorCliSessionIds: [String]? = nil,
         isArchived: Bool? = nil,
-        lastActivityAt: Double? = nil
+        lastActivityAt: Double? = nil,
+        lastFocusedAt: Double? = nil
     ) {
         self.sessionId = sessionId
         self.cliSessionId = cliSessionId
         self.priorCliSessionIds = priorCliSessionIds
         self.isArchived = isArchived
         self.lastActivityAt = lastActivityAt
+        self.lastFocusedAt = lastFocusedAt
     }
 
     private enum CodingKeys: String, CodingKey {
-        case sessionId, cliSessionId, priorCliSessionIds, isArchived, lastActivityAt
+        case sessionId, cliSessionId, priorCliSessionIds, isArchived, lastActivityAt, lastFocusedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -425,6 +429,7 @@ struct ClaudeDesktopSessionLinkMetadata: Decodable, Equatable {
         priorCliSessionIds = try? container.decodeIfPresent([String].self, forKey: .priorCliSessionIds)
         isArchived = try? container.decodeIfPresent(Bool.self, forKey: .isArchived)
         lastActivityAt = try? container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
+        lastFocusedAt = try? container.decodeIfPresent(Double.self, forKey: .lastFocusedAt)
     }
 }
 
