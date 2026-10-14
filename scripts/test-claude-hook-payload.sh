@@ -30,5 +30,6 @@ check_payload() {
 check_payload UserPromptSubmit '{"session_id":"prompt-test","cwd":"/tmp/project","prompt":"first line\nsecond line"}'
 check_payload PostToolUse '{"session_id":"tool-test","cwd":"/tmp/project","tool_response":"first line\nsecond line\tC:\\temp"}'
 check_payload Stop '{"session_id":"ordinary-test","cwd":"/tmp/project"}'
+check_payload StopFailure '{"session_id":"failure-test","cwd":"/tmp/project","error":"rate_limit","last_assistant_message":"API Error: Rate limit reached"}'
 
 echo "Claude hook payload tests passed."

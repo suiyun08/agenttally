@@ -45,6 +45,13 @@
         "command": "${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh Stop"
       }]
     }],
+    "StopFailure": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh StopFailure"
+      }]
+    }],
     "Notification": [{
       "matcher": ".*",
       "hooks": [{

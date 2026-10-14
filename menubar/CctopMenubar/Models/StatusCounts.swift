@@ -32,8 +32,8 @@ struct StatusCounts: Equatable {
         // cards are retained for reachability, not live work, so they never inflate counts.
         for userSession in SessionDisplayPolicy.activeSessions(from: userSessions, now: now) {
             switch userSession.status {
-            case .idle: idleCount += 1
-            case .working, .compacting: work += 1
+            case .idle, .done: idleCount += 1
+            case .working, .compacting, .background: work += 1
             case .waitingPermission: perm += 1
             case .waitingInput, .needsAttention: attn += 1
             }

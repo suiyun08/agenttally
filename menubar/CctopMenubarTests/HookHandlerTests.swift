@@ -669,16 +669,114 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(session.notificationMessage, "Command exited with code 1")
     }
 
-    // MARK: - Stop transitions to waiting_input
+    // MARK: - Turn end: Stop, background work, StopFailure
 
-    func testStopSetsWaitingInput() throws {
+    func testStopSetsDone() throws {
         try handleFixture("SessionStart")
         try handleFixture("UserPromptSubmit")
         try handleFixture("Stop")
         let session = try loadSession()
-        XCTAssertEqual(session.status, .waitingInput)
+        XCTAssertEqual(session.status, .done)
+        XCTAssertNotNil(session.statusChangedAt)
         XCTAssertNil(session.lastTool)
         XCTAssertNil(session.lastToolDetail)
+    }
+
+    func testStopWithBackgroundTasksSetsBackgroundAndSummary() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("Stop-background")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .background)
+        XCTAssertEqual(session.backgroundTaskCount, 1)
+        XCTAssertNil(session.scheduledWakeupCount)
+        XCTAssertEqual(session.backgroundTaskDetail, "Run the integration tests")
+        XCTAssertEqual(session.contextLine, "1 background task: Run the integration tests")
+        XCTAssertEqual(
+            session.lastAssistantMessage,
+            "Started the test run in the background. I'll report back when it finishes."
+        )
+    }
+
+    func testStopWithOnlyScheduledWakeupsSetsBackground() throws {
+        try handleFixture("SessionStart")
+        try handleHook("""
+        {
+          "session_id": "test-session-001",
+          "cwd": "/tmp/test-project",
+          "hook_event_name": "Stop",
+          "background_tasks": [],
+          "session_crons": [{ "id": "cron-1", "schedule": "*/20 * * * *", "recurring": true, "prompt": "check CI" }]
+        }
+        """, hookName: "Stop")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .background)
+        XCTAssertEqual(session.scheduledWakeupCount, 1)
+        XCTAssertEqual(session.contextLine, "1 scheduled wakeup")
+    }
+
+    func testPlainStopAfterBackgroundClearsSummaryAndFinishes() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("Stop-background")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("Stop")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .done)
+        XCTAssertNil(session.backgroundTaskCount)
+        XCTAssertNil(session.backgroundTaskDetail)
+        XCTAssertNil(session.lastAssistantMessage)
+    }
+
+    func testMalformedBackgroundTasksStillFinishTheTurn() throws {
+        try handleFixture("SessionStart")
+        try handleHook("""
+        {
+          "session_id": "test-session-001",
+          "cwd": "/tmp/test-project",
+          "hook_event_name": "Stop",
+          "background_tasks": "not-an-array",
+          "last_assistant_message": 42
+        }
+        """, hookName: "Stop")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .done)
+        XCTAssertNil(session.lastAssistantMessage)
+    }
+
+    func testStopFailureSetsNeedsAttentionWithErrorText() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("StopFailure")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .needsAttention)
+        XCTAssertEqual(session.notificationMessage, "API Error: Rate limit reached")
+        XCTAssertNil(session.lastAssistantMessage)
+        XCTAssertEqual(session.notificationContent.body, "API Error: Rate limit reached")
+    }
+
+    func testAskUserQuestionWaitsForInputUntilAnswered() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("PreToolUse-AskUserQuestion")
+        let asking = try loadSession()
+        XCTAssertEqual(asking.status, .waitingInput)
+        XCTAssertEqual(asking.lastTool, "AskUserQuestion")
+        XCTAssertEqual(asking.contextLine, "Asking you a question")
+        XCTAssertEqual(asking.notificationContent.body, "Asking you a question")
+
+        try handleFixture("PostToolUse")
+        XCTAssertEqual(try loadSession().status, .working)
+    }
+
+    func testIdlePromptAfterStopKeepsDoneAndFinishTime() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("Stop")
+        let finished = try loadSession()
+        try handleFixture("Notification-idle", hookName: "Notification")
+        let reminded = try loadSession()
+        XCTAssertEqual(reminded.status, .done)
+        XCTAssertEqual(reminded.statusChangedAt, finished.statusChangedAt)
     }
 
     // MARK: - PermissionRequest transitions to waiting_permission
@@ -691,14 +789,14 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(session.notificationMessage, "Allow Bash: rm -rf /tmp/old")
     }
 
-    // MARK: - Notification (idle) transitions to waiting_input
+    // MARK: - Notification (idle) rescues a turn whose Stop never came
 
-    func testNotificationIdleSetsWaitingInput() throws {
+    func testNotificationIdleFinishesAStuckWorkingTurn() throws {
         try handleFixture("SessionStart")
         try handleFixture("UserPromptSubmit")
         try handleFixture("Notification-idle", hookName: "Notification")
         let session = try loadSession()
-        XCTAssertEqual(session.status, .waitingInput)
+        XCTAssertEqual(session.status, .done)
         XCTAssertNil(session.notificationMessage)
         XCTAssertEqual(session.contextLine, "\"Fix the login bug\"")
     }
@@ -1224,7 +1322,7 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(try loadSession().status, .working)
 
         try handleFixture("Stop")
-        XCTAssertEqual(try loadSession().status, .waitingInput)
+        XCTAssertEqual(try loadSession().status, .done)
 
         try handleFixture("SessionEnd")
         XCTAssertTrue(sessionFileExists())
@@ -1536,7 +1634,7 @@ final class HookHandlerTests: XCTestCase {
         """, hookName: "Stop")
         let stopped = try loadSession("codex-\(sessionId).json")
         XCTAssertTrue(stopped.hidden)
-        XCTAssertEqual(stopped.status, .waitingInput)
+        XCTAssertEqual(stopped.status, .done)
     }
 
     func testCodexSuggestionEvidenceRequiresPromptEventAndExplicitlyNullTranscript() throws {

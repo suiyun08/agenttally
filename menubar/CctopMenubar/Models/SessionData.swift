@@ -129,6 +129,19 @@ struct SessionData: Codable, Identifiable, Equatable {
     var hidden: Bool
     var createdByHookVersion: String?
     var lastWrittenByHookVersion: String?
+    /// When `status` last changed or a turn last ended. Unlike `lastActivity`, trailing events
+    /// such as SubagentStop or idle_prompt leave it alone, so "seen" checks stay stable.
+    var statusChangedAt: Date?
+    /// Claude's final text for the last turn, trimmed by the hook.
+    var lastAssistantMessage: String?
+    /// Background tasks and scheduled wakeups reported when the last turn ended.
+    var backgroundTaskCount: Int?
+    var scheduledWakeupCount: Int?
+    var backgroundTaskDetail: String?
+
+    /// Display-only: a `done` session the user has not looked at since it finished. Derived on
+    /// each load from the app's seen store and never persisted, like `lifecycle`.
+    var isUnseenDone = false
 
     /// Display-only lifecycle, derived on each load. Deliberately NOT in `CodingKeys`, so the
     /// synthesized `Codable` skips it and decode defaults it to `.active` (never persisted —
@@ -200,6 +213,11 @@ struct SessionData: Codable, Identifiable, Equatable {
         case hidden
         case createdByHookVersion = "created_by_hook_version"
         case lastWrittenByHookVersion = "last_written_by_hook_version"
+        case statusChangedAt = "status_changed_at"
+        case lastAssistantMessage = "last_assistant_message"
+        case backgroundTaskCount = "background_task_count"
+        case scheduledWakeupCount = "scheduled_wakeup_count"
+        case backgroundTaskDetail = "background_task_detail"
     }
 
     // MARK: - Constructors
@@ -233,6 +251,11 @@ struct SessionData: Codable, Identifiable, Equatable {
         hidden = try container.decodeIfPresent(Bool.self, forKey: .hidden) ?? false
         createdByHookVersion = try container.decodeIfPresent(String.self, forKey: .createdByHookVersion)
         lastWrittenByHookVersion = try container.decodeIfPresent(String.self, forKey: .lastWrittenByHookVersion)
+        statusChangedAt = try? container.decodeIfPresent(Date.self, forKey: .statusChangedAt)
+        lastAssistantMessage = try? container.decodeIfPresent(String.self, forKey: .lastAssistantMessage)
+        backgroundTaskCount = try? container.decodeIfPresent(Int.self, forKey: .backgroundTaskCount)
+        scheduledWakeupCount = try? container.decodeIfPresent(Int.self, forKey: .scheduledWakeupCount)
+        backgroundTaskDetail = try? container.decodeIfPresent(String.self, forKey: .backgroundTaskDetail)
     }
 
     /// Full memberwise init (used by mocks and tests).
@@ -263,7 +286,12 @@ struct SessionData: Codable, Identifiable, Equatable {
         isSubagentSession: Bool = false,
         hidden: Bool = false,
         createdByHookVersion: String? = nil,
-        lastWrittenByHookVersion: String? = nil
+        lastWrittenByHookVersion: String? = nil,
+        statusChangedAt: Date? = nil,
+        lastAssistantMessage: String? = nil,
+        backgroundTaskCount: Int? = nil,
+        scheduledWakeupCount: Int? = nil,
+        backgroundTaskDetail: String? = nil
     ) {
         self.sessionId = sessionId
         self.cctopSessionId = cctopSessionId
@@ -292,6 +320,11 @@ struct SessionData: Codable, Identifiable, Equatable {
         self.hidden = hidden
         self.createdByHookVersion = createdByHookVersion
         self.lastWrittenByHookVersion = lastWrittenByHookVersion
+        self.statusChangedAt = statusChangedAt
+        self.lastAssistantMessage = lastAssistantMessage
+        self.backgroundTaskCount = backgroundTaskCount
+        self.scheduledWakeupCount = scheduledWakeupCount
+        self.backgroundTaskDetail = backgroundTaskDetail
     }
 
     /// Convenience init for creating new sessions (used by cctop-hook).
@@ -408,7 +441,11 @@ extension SessionData {
         case .waitingPermission:
             return notificationMessage ?? "Permission needed"
         case .waitingInput:
-            return notificationMessage ?? promptSnippet
+            return notificationMessage ?? awaitingUserToolLine ?? promptSnippet
+        case .done:
+            return assistantSnippet ?? promptSnippet
+        case .background:
+            return backgroundWorkLine
         case .needsAttention:
             return notificationMessage ?? promptSnippet ?? "Needs attention"
         case .working:

@@ -28,6 +28,7 @@ class SessionManager: ObservableObject {
     private var source: DispatchSourceFileSystemObject?
     private var debounceTask: DispatchWorkItem?
     private var livenessTimer: Timer?
+    private var focusObserver: NSObjectProtocol?
     private var gcTimer: Timer?
     private var lastDisplaySignature = SessionDisplayPolicy.Signature.empty
     var lastLoadLogSignature: SessionLoadLogSignature?
@@ -50,6 +51,12 @@ class SessionManager: ObservableObject {
         self.sessionsDir = dataSources.sessionsDir
         loadSessions()
         guard startMonitoring else { return }
+        focusObserver = NotificationCenter.default.addObserver(
+            forName: .cctopSessionFocused, object: nil, queue: .main
+        ) { [weak self] note in
+            guard let cctopSessionID = note.object as? String else { return }
+            Task { @MainActor in self?.markSessionSeen(cctopSessionID: cctopSessionID) }
+        }
         startWatching()
         // Pass 1 (fast): read, derive lifecycle, dedup, publish.
         livenessTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -340,15 +347,22 @@ class SessionManager: ObservableObject {
         }
         var result = adjustPermissionStatus(session)
         result = Self.adjustIdleTimeout(result, now: dataSources.now())
+        result.isUnseenDone = dataSources.seenSessions.isUnseen(result)
         return result
+    }
+
+    /// Marks a session seen after the user jumps to it, clearing its unread dot and notification.
+    func markSessionSeen(cctopSessionID: String) {
+        dataSources.seenSessions.markSeen(cctopSessionID: cctopSessionID, at: dataSources.now())
+        loadSessions()
     }
 
     private static let idleTimeoutSeconds: TimeInterval = 3600 // 60 minutes
 
-    /// If a session has been in `waitingInput` for over 60 minutes, treat it as
+    /// If a session has been in `waitingInput` or `done` for over 60 minutes, treat it as
     /// `idle` for display. The user likely walked away.
     nonisolated static func adjustIdleTimeout(_ session: SessionData, now: Date) -> SessionData {
-        guard session.status == .waitingInput,
+        guard session.status == .waitingInput || session.status == .done,
               now.timeIntervalSince(session.lastActivity) > Self.idleTimeoutSeconds else {
             return session
         }

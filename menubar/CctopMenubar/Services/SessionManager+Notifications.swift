@@ -149,8 +149,9 @@ extension SessionManager {
             guard let cctopSessionID = newUserSession.identity.cctopSessionID else { continue }
             let newData = newUserSession.displayRecord.data
             guard newData.lifecycle == .active, newData.shouldPostAttentionNotification else { continue }
+            // Re-post when the reason changes (question -> finished), so the banner never keeps a stale reason.
             guard let oldData = oldByCctopSessionID[cctopSessionID]?.displayRecord.data,
-                  !oldData.shouldPostAttentionNotification else { continue }
+                  !oldData.shouldPostAttentionNotification || oldData.status != newData.status else { continue }
             actions.append(.post(cctopSessionID: cctopSessionID))
         }
         return actions

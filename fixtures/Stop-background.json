@@ -1,0 +1,16 @@
+{
+  "session_id": "test-session-001",
+  "cwd": "/tmp/test-project",
+  "hook_event_name": "Stop",
+  "last_assistant_message": "Started the test run in the background. I'll report back when it finishes.",
+  "background_tasks": [
+    {
+      "id": "task-001",
+      "type": "shell",
+      "status": "running",
+      "description": "Run the integration tests",
+      "command": "make test"
+    }
+  ],
+  "session_crons": []
+}

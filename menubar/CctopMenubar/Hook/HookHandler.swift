@@ -1,13 +1,19 @@
 import Foundation
 
 private let maxToolDetailLen = 120
+private let maxAssistantMessageLen = 200
 
 enum HookHandler {
     // Identity resolution and the lock-held transition stay together so callers cannot
     // accidentally reorder the mapping and session-file locks.
     // swiftlint:disable:next function_body_length
     static func handleHook(hookName: String, input: HookInput, deps: HookDependencies = .live) throws {
-        let event = HookEvent.parse(hookName: hookName, notificationType: input.notificationType)
+        let event = HookEvent.parse(
+            hookName: hookName,
+            notificationType: input.notificationType,
+            toolName: input.toolName,
+            hasBackgroundWork: input.hasBackgroundWork
+        )
 
         if event == .sessionEnd {
             handleSessionEnd(hookName: hookName, input: input, deps: deps)
@@ -124,9 +130,13 @@ enum HookHandler {
         _ data: inout SessionData, event: HookEvent, input: HookInput,
         branch: String, terminal: TerminalInfo
     ) -> (String, SessionStatus?) {
-        let oldStatus = data.status.rawValue
-        let newStatus = Transition.forEvent(data.status, event: event)
+        let previousStatus = data.status
+        let oldStatus = previousStatus.rawValue
+        let newStatus = Transition.forEvent(previousStatus, event: event)
         if let newStatus { data.status = newStatus }
+        if let newStatus, newStatus != previousStatus || event.endsTurn {
+            data.statusChangedAt = Date()
+        }
         // Skip lastActivity for notificationPermission — PermissionRequest already set it,
         // and the menubar app needs the original timestamp for child-process-start-time comparison.
         if event != .notificationPermission { data.lastActivity = Date() }
@@ -190,7 +200,7 @@ enum HookHandler {
         case .userPromptSubmit:
             clearToolState(&data)
             if let prompt = input.prompt { data.lastPrompt = prompt }
-        case .preToolUse:
+        case .preToolUse, .preToolUseAwaitingUser:
             if let toolName = input.toolName {
                 data.lastTool = toolName
                 data.lastToolDetail = extractToolDetail(toolName: toolName, toolInput: input.toolInput)
@@ -206,10 +216,13 @@ enum HookHandler {
             // Keep lastTool/lastToolDetail from the preceding PreToolUse — when the
             // delayed Notification transitions to .working, the card can show what tool is running.
 
-        case .notificationIdle, .notificationOther:
+        case .notificationIdle, .notificationElicitation, .notificationOther:
             applyNotificationEvent(event: event, data: &data, input: input)
-        case .stop:
+        case .stop, .stopWithBackgroundWork:
             clearToolState(&data)
+            applyTurnEnd(&data, input: input)
+        case .stopFailure:
+            applyStopFailure(&data, input: input)
         case .postToolUseFailure:
             if let error = input.error { data.notificationMessage = error }
         case .subagentStart, .subagentStop:
@@ -222,6 +235,31 @@ enum HookHandler {
         case .notificationPermission, .postCompact, .preCompact, .postToolUse, .sessionEnd, .unknown:
             break
         }
+    }
+
+    /// Records what the finished turn left behind: Claude's last reply and any background work
+    /// that will wake the session. A Stop without background work clears the old summary.
+    private static func applyTurnEnd(_ data: inout SessionData, input: HookInput) {
+        data.lastAssistantMessage = truncatedForStorage(input.lastAssistantMessage, limit: maxAssistantMessageLen)
+        let tasks = input.backgroundTasks ?? []
+        let wakeups = input.sessionCronCount ?? 0
+        data.backgroundTaskCount = tasks.isEmpty ? nil : tasks.count
+        data.scheduledWakeupCount = wakeups > 0 ? wakeups : nil
+        data.backgroundTaskDetail = truncatedForStorage(
+            tasks.lazy.compactMap(\.displayDetail).first,
+            limit: maxToolDetailLen
+        )
+    }
+
+    private static func applyStopFailure(_ data: inout SessionData, input: HookInput) {
+        clearToolState(&data)
+        applyTurnEnd(&data, input: input)
+        // Claude Code puts the API error string ("API Error: Rate limit reached") in
+        // last_assistant_message; the error type alone is the fallback.
+        data.notificationMessage = truncatedForStorage(input.lastAssistantMessage, limit: maxToolDetailLen)
+            ?? truncatedForStorage(input.errorDetails, limit: maxToolDetailLen)
+            ?? input.error
+        data.lastAssistantMessage = nil
     }
 
     private static func applyNotificationEvent(event: HookEvent, data: inout SessionData, input: HookInput) {
@@ -388,6 +426,15 @@ func sessionFileName(input: HookInput, pid: UInt32, safeSessionId: String) -> St
         return "codex-\(safeSessionId).json"
     }
     return "\(pid).json"
+}
+
+/// Trims and caps free text before it is written into a session file.
+func truncatedForStorage(_ value: String?, limit: Int) -> String? {
+    guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+        return nil
+    }
+    guard trimmed.count > limit else { return trimmed }
+    return String(trimmed.prefix(limit - 3)) + "..."
 }
 
 // MARK: - Tool Detail Extraction

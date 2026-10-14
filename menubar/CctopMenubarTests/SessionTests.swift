@@ -2608,3 +2608,145 @@ final class CctopSessionIdentityStoreTests: XCTestCase {
         )
     }
 }
+
+/// Turn-end statuses: `done` with an unread dot and one notification, `background` while
+/// background work will wake the session, and the seen store that clears both.
+final class SessionTurnEndStatusTests: XCTestCase {
+    private let cctopSessionID = "22222222-2222-4222-8222-222222222222"
+    private var defaultsSuiteName = ""
+
+    override func setUp() {
+        super.setUp()
+        defaultsSuiteName = "cctop-seen-tests-\(UUID().uuidString)"
+    }
+
+    override func tearDown() {
+        UserDefaults().removePersistentDomain(forName: defaultsSuiteName)
+        super.tearDown()
+    }
+
+    private func makeSeenStore() throws -> SessionSeenStore {
+        SessionSeenStore(defaults: try XCTUnwrap(UserDefaults(suiteName: defaultsSuiteName)))
+    }
+
+    private func doneSession(finishedAt: Date, unseen: Bool = true) -> SessionData {
+        var session = SessionData.mock(
+            id: "done-record", cctopSessionId: cctopSessionID, status: .done,
+            lastPrompt: "Fix the login bug", pid: 33_333
+        )
+        session.statusChangedAt = finishedAt
+        session.lastAssistantMessage = "All tests pass.\nI also updated the changelog."
+        session.isUnseenDone = unseen
+        return session
+    }
+
+    func testSeenStoreKeepsDoneUnseenUntilLookedAtAfterFinish() throws {
+        let store = try makeSeenStore()
+        let finishedAt = Date(timeIntervalSince1970: 1_000_000)
+        let session = doneSession(finishedAt: finishedAt)
+        XCTAssertTrue(store.isUnseen(session))
+
+        store.markSeen(cctopSessionID: cctopSessionID, at: finishedAt.addingTimeInterval(5))
+        XCTAssertFalse(store.isUnseen(session))
+
+        // The next finished turn is unseen again.
+        XCTAssertTrue(store.isUnseen(doneSession(finishedAt: finishedAt.addingTimeInterval(60))))
+    }
+
+    func testSeenStoreIgnoresNonDoneAndUnidentifiedSessions() throws {
+        let store = try makeSeenStore()
+        var working = doneSession(finishedAt: Date())
+        working.status = .working
+        XCTAssertFalse(store.isUnseen(working))
+
+        var legacy = doneSession(finishedAt: Date())
+        legacy.cctopSessionId = nil
+        XCTAssertFalse(store.isUnseen(legacy))
+    }
+
+    func testSeenStoreDropsEntriesPastRetention() throws {
+        let store = try makeSeenStore()
+        let old = Date(timeIntervalSince1970: 1_000_000)
+        store.markSeen(cctopSessionID: cctopSessionID, at: old)
+        let otherID = "33333333-3333-4333-8333-333333333333"
+        store.markSeen(cctopSessionID: otherID, at: old.addingTimeInterval(SessionSeenStore.retention + 1))
+        XCTAssertNil(store.seenAt(cctopSessionID: cctopSessionID))
+        XCTAssertNotNil(store.seenAt(cctopSessionID: otherID))
+    }
+
+    func testUnseenDoneNotifiesWithLastReplyAndClearsOnceSeen() {
+        let working = SessionData.mock(
+            id: "done-record", cctopSessionId: cctopSessionID, status: .working, pid: 33_333
+        )
+        let unseen = doneSession(finishedAt: Date())
+        XCTAssertTrue(unseen.shouldPostAttentionNotification)
+        XCTAssertEqual(unseen.notificationContent.subtitle, "Claude finished")
+        XCTAssertEqual(unseen.notificationContent.body, "All tests pass.")
+
+        XCTAssertEqual(
+            SessionManager.notificationActions(
+                newUserSessions: userSessions(fromDataFixtures: [unseen]),
+                oldUserSessions: userSessions(fromDataFixtures: [working]),
+                notificationsEnabled: true
+            ),
+            [.post(cctopSessionID: cctopSessionID)]
+        )
+
+        let seen = doneSession(finishedAt: Date(), unseen: false)
+        XCTAssertFalse(seen.shouldPostAttentionNotification)
+        XCTAssertEqual(
+            SessionManager.notificationActions(
+                newUserSessions: userSessions(fromDataFixtures: [seen]),
+                oldUserSessions: userSessions(fromDataFixtures: [unseen]),
+                notificationsEnabled: true
+            ),
+            [.remove(cctopSessionID: cctopSessionID)]
+        )
+    }
+
+    func testNotificationRepostsWhenTheReasonChanges() {
+        let asking = SessionData.mock(
+            id: "done-record", cctopSessionId: cctopSessionID, status: .waitingInput,
+            pid: 33_333, lastTool: "AskUserQuestion"
+        )
+        XCTAssertEqual(
+            SessionManager.notificationActions(
+                newUserSessions: userSessions(fromDataFixtures: [doneSession(finishedAt: Date())]),
+                oldUserSessions: userSessions(fromDataFixtures: [asking]),
+                notificationsEnabled: true
+            ),
+            [.post(cctopSessionID: cctopSessionID)]
+        )
+    }
+
+    func testBackgroundWorkNeverNotifies() {
+        var background = SessionData.mock(
+            id: "bg-record", cctopSessionId: cctopSessionID, status: .background, pid: 33_333
+        )
+        background.backgroundTaskCount = 2
+        XCTAssertFalse(background.shouldPostAttentionNotification)
+        XCTAssertEqual(background.contextLine, "2 background tasks")
+    }
+
+    func testIdleTimeoutIdlesDoneButNotBackground() {
+        let now = Date()
+        var done = doneSession(finishedAt: now.addingTimeInterval(-7_200))
+        done.lastActivity = now.addingTimeInterval(-7_200)
+        XCTAssertEqual(SessionManager.adjustIdleTimeout(done, now: now).status, .idle)
+
+        var background = done
+        background.status = .background
+        XCTAssertEqual(SessionManager.adjustIdleTimeout(background, now: now).status, .background)
+    }
+
+    func testCountsTreatDoneAsIdleAndBackgroundAsWorking() {
+        var background = SessionData.mock(id: "bg", status: .background, pid: 44_444)
+        background.lastActivity = Date()
+        let counts = StatusCounts(userSessions: userSessions(fromDataFixtures: [
+            doneSession(finishedAt: Date()), background,
+        ]))
+        XCTAssertEqual(counts.idle, 1)
+        XCTAssertEqual(counts.working, 1)
+        XCTAssertEqual(counts.needsAction, 0)
+    }
+}

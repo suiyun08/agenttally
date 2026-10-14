@@ -84,3 +84,36 @@ extension SessionData {
         return owner != (source ?? ccSource)
     }
 }
+
+// MARK: - Turn-end display text
+
+extension SessionData {
+    /// What a blocking tool is asking for, when the last tool was one.
+    var awaitingUserToolLine: String? {
+        switch lastTool {
+        case "AskUserQuestion": return "Asking you a question"
+        case "ExitPlanMode": return "Plan ready for your approval"
+        default: return nil
+        }
+    }
+
+    /// The first non-empty line of Claude's final reply, whitespace-collapsed.
+    var assistantSnippet: String? {
+        guard let message = lastAssistantMessage else { return nil }
+        let line = message.split(whereSeparator: \.isNewline)
+            .map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+            .first { !$0.isEmpty }
+        return line.map { String($0.prefix(80)) }
+    }
+
+    var backgroundWorkLine: String {
+        var parts: [String] = []
+        let tasks = backgroundTaskCount ?? 0
+        let wakeups = scheduledWakeupCount ?? 0
+        if tasks > 0 { parts.append(tasks == 1 ? "1 background task" : "\(tasks) background tasks") }
+        if wakeups > 0 { parts.append(wakeups == 1 ? "1 scheduled wakeup" : "\(wakeups) scheduled wakeups") }
+        let summary = parts.isEmpty ? "Background work" : parts.joined(separator: ", ")
+        guard let detail = backgroundTaskDetail else { return summary }
+        return "\(summary): \(detail.prefix(40))"
+    }
+}

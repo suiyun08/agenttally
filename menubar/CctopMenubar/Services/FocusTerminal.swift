@@ -117,6 +117,10 @@ private let focusQueue = DispatchQueue(label: "cctop.focus-terminal", qos: .user
 /// Cmux `ps` probing, focus scripts, and kitty/multiplexer CLIs all block — so the whole jump runs on `focusQueue`, serial so a
 /// slow jump can't finish after (and steal focus from) a later one. AppKit calls hop back to the main thread.
 func focusTerminal(session: SessionData) {
+    // Every jump (row click, notification, Navigate, URL command) counts as looking at the session.
+    if let cctopSessionID = session.cctopSessionId {
+        NotificationCenter.default.post(name: .cctopSessionFocused, object: cctopSessionID)
+    }
     focusQueue.async {
         let multiplexerOverride = resolveCmuxLiveMultiplexer(session: session)
         let verifiedHostApp: HostApp? = CodexDesktopRuntimeProbe().isCurrentDesktopAppServer(for: session)

@@ -182,6 +182,24 @@ hiding and notification grouping use `cctop_session_id`. Archived desktop Recent
 rows also prefer it for logical row identity; path-based Recent Projects, Cleanup,
 and other persisted preferences keep their separate contracts.
 
+## Status
+
+`status` is written by `cctop-hook` from the client's events. The app adjusts it only for display.
+
+| Value | Meaning | Written on |
+| --- | --- | --- |
+| `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact` |
+| `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest` |
+| `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications |
+| `needs_attention` | The turn ended on an error | `StopFailure`; `SessionError` |
+| `background` | The turn ended, but background tasks or scheduled wakeups will resume the session | `Stop` with a non-empty `background_tasks` or `session_crons` |
+| `done` | The turn ended with nothing in flight | `Stop`; `idle_prompt` only when a turn never sent `Stop` |
+| `idle` | No turn has run since start or compaction | `SessionStart`, `PostCompact` |
+
+`status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Like `waiting_input`, a `done` session displays as `idle` after 60 minutes without activity.
+
+`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them.
+
 ## Terminal Focus Metadata
 
 ### `terminal.multiplexer`

@@ -10,8 +10,9 @@ extension SessionData {
     private static let notificationBodyLimit = 72
 
     var shouldPostAttentionNotification: Bool {
-        guard status.needsAttention else { return false }
-        guard usesCodexPromptFallbackPolicy, status == .waitingInput else { return true }
+        // A finished turn notifies once, until the user looks at the session.
+        guard status.needsAttention || (status == .done && isUnseenDone) else { return false }
+        guard usesCodexPromptFallbackPolicy, status == .waitingInput || status == .done else { return true }
         guard Self.cleanOptionalNotificationBodyText(notificationMessage) == nil else { return true }
         guard let lastPrompt else { return true }
         return Self.userFacingCodexPromptFallbackText(from: lastPrompt) != nil
@@ -67,6 +68,8 @@ extension SessionData {
             return "\(sender) needs permission"
         case .waitingInput:
             return "\(sender) is waiting for input"
+        case .done:
+            return "\(sender) finished"
         default:
             return "\(sender) needs attention"
         }
@@ -77,8 +80,16 @@ extension SessionData {
         switch status {
         case .waitingPermission:
             detail = Self.cleanOptionalNotificationBodyText(notificationMessage) ?? "Permission needed"
+        case .done:
+            detail = Self.cleanOptionalNotificationBodyText(assistantSnippet)
+                ?? Self.cleanOptionalPromptFallbackText(
+                    lastPrompt,
+                    usesCodexPromptFallbackPolicy: usesCodexPromptFallbackPolicy
+                )
+                ?? "Finished"
         case .waitingInput:
             detail = Self.cleanOptionalNotificationBodyText(notificationMessage)
+                ?? awaitingUserToolLine
                 ?? Self.cleanOptionalPromptFallbackText(
                     lastPrompt,
                     usesCodexPromptFallbackPolicy: usesCodexPromptFallbackPolicy

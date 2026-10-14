@@ -152,12 +152,22 @@ struct SessionCardView: View {
                 statusText("Idle", color: Color.textMuted)
             case .working:
                 statusDotLabel("Working", dotColor: Color.statusGreen, textColor: Color.statusWorkingText)
+            case .background:
+                statusDotLabel("Background", dotColor: Color.statusGreen.opacity(0.55), textColor: Color.statusWorkingText)
             case .compacting:
                 statusDotLabel("Compacting", dotColor: Color.agentBadge)
             case .waitingPermission:
                 permissionStatusLabel
-            case .waitingInput, .needsAttention:
-                statusDotLabel("Waiting", dotColor: Color.statusAttention, textColor: Color.statusAttentionText)
+            case .waitingInput:
+                statusDotLabel("Needs Input", dotColor: Color.statusAttention, textColor: Color.statusAttentionText)
+            case .needsAttention:
+                statusDotLabel("Error", dotColor: Color.statusAttention, textColor: Color.statusAttentionText)
+            case .done:
+                if session.isUnseenDone {
+                    statusDotLabel("Done", dotColor: Color.accentColor, textColor: Color.textPrimary)
+                } else {
+                    statusText("Done", color: Color.textMuted)
+                }
             }
         }
     }
@@ -220,8 +230,10 @@ struct SessionCardView: View {
     /// Text for the third row when the session is working/compacting — the command stripe.
     /// Reuses `SessionData.contextLine` formatting (Reading X.swift, Running: foo, etc.).
     private var workingCommandText: String? {
-        guard session.status == .working || session.status == .compacting else { return nil }
-        return session.contextLine
+        switch session.status {
+        case .working, .compacting, .background: return session.contextLine
+        default: return nil
+        }
     }
 
     /// Context note for waiting/permission/needs-attention states.
@@ -231,6 +243,8 @@ struct SessionCardView: View {
             return session.notificationMessage ?? "Permission needed"
         case .waitingInput, .needsAttention:
             return session.contextLine ?? "Waiting for input"
+        case .done:
+            return session.contextLine
         default:
             return nil
         }

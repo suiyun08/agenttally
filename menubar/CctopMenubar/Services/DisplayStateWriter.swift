@@ -159,9 +159,9 @@ final class DisplayStateWriter {
         switch status {
         case .waitingPermission: color = theme.statusPermission.dark
         case .waitingInput, .needsAttention: color = theme.statusAttention.dark
-        case .working: color = theme.statusWorking.dark
+        case .working, .background: color = theme.statusWorking.dark
         case .compacting: color = theme.agentBadge.dark
-        case .idle: color = theme.statusIdle.dark
+        case .idle, .done: color = theme.statusIdle.dark
         }
         let srgb = color.usingColorSpace(.sRGB) ?? color
         func component(_ value: CGFloat) -> Int { Int((value * 255).rounded()) }

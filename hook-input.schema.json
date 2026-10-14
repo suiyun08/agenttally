@@ -18,6 +18,7 @@
         "PostToolUse",
         "PostToolUseFailure",
         "Stop",
+        "StopFailure",
         "PreCompact",
         "Notification",
         "PermissionRequest",
@@ -57,7 +58,22 @@
       "enum": ["cc", "codex", "opencode", "pi"],
       "description": "Tool harness that produced this payload. Legacy plugins may still send this value in source."
     },
-    "session_name":     { "type": "string", "description": "Display name for the session" }
+    "session_name":     { "type": "string", "description": "Display name for the session" },
+    "last_assistant_message": {
+      "type": "string",
+      "description": "Claude's final text for the turn (Stop), or the API error string (StopFailure)"
+    },
+    "error_details":    { "type": "string", "description": "Optional detail for a StopFailure API error" },
+    "background_tasks": {
+      "type": "array",
+      "items": { "type": "object" },
+      "description": "In-flight background tasks reported on Stop; any entry means the session will resume without the user"
+    },
+    "session_crons":    {
+      "type": "array",
+      "items": { "type": "object" },
+      "description": "Scheduled wakeups (CronCreate, ScheduleWakeup, /loop) reported on Stop"
+    }
   },
   "additionalProperties": true,
   "x-cctop": {
@@ -76,6 +92,7 @@
         "PostToolUse",
         "PostToolUseFailure",
         "Stop",
+        "StopFailure",
         "PreCompact",
         "Notification",
         "PermissionRequest",

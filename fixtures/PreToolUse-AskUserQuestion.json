@@ -1,0 +1,14 @@
+{
+  "session_id": "test-session-001",
+  "cwd": "/tmp/test-project",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "AskUserQuestion",
+  "tool_input": {
+    "questions": [
+      {
+        "question": "Which database should the migration target?",
+        "options": [{ "label": "Postgres" }, { "label": "SQLite" }]
+      }
+    ]
+  }
+}
