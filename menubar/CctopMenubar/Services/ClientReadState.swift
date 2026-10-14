@@ -59,7 +59,7 @@ extension SessionData {
     /// Codex Desktop threads carry no terminal metadata; CLI sessions record their terminal.
     var isCodexDesktopThread: Bool {
         guard isCodex else { return false }
-        let program = terminal?.program?.trimmingCharacters(in: .whitespaces) ?? ""
+        let program = terminal?.program.trimmingCharacters(in: .whitespaces) ?? ""
         let tty = terminal?.tty?.trimmingCharacters(in: .whitespaces) ?? ""
         return program.isEmpty && tty.isEmpty
     }

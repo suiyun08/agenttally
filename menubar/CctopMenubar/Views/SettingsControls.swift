@@ -223,4 +223,3 @@ struct LanguageAndWidthSettingsRows: View {
             .padding(.leading, AppChrome.settingsDividerLeadingPadding)
     }
 }
-
