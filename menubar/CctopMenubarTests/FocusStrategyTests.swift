@@ -68,7 +68,7 @@ final class FocusStrategyTests: XCTestCase {
         )
         XCTAssertEqual(
             FocusStrategy.activateByBundleID(HostAppBundleID.claudeDesktop).actionTitle,
-            "Bring Claude Desktop Forward"
+            "Open Claude Session"
         )
         XCTAssertEqual(
             FocusStrategy.activateByBundleID("dev.commandline.waveterm").actionTitle,
@@ -470,7 +470,7 @@ final class FocusStrategyTests: XCTestCase {
     }
 
     func testClaudeDesktopLinkLookupPrefersCurrentLiveMostRecentMatch() {
-        typealias Metadata = ClaudeDesktopSessionLinkLookup.Metadata
+        typealias Metadata = ClaudeDesktopSessionLinkMetadata
         let cli = "002fb6fa-eae0-4631-94bd-84071dbd21d8"
         let records = [
             Metadata(sessionId: "local_prior", cliSessionId: "other", priorCliSessionIds: [cli], lastActivityAt: 900),
@@ -483,7 +483,7 @@ final class FocusStrategyTests: XCTestCase {
     }
 
     func testClaudeDesktopLinkLookupFallsBackToPriorCLISessionIDs() {
-        typealias Metadata = ClaudeDesktopSessionLinkLookup.Metadata
+        typealias Metadata = ClaudeDesktopSessionLinkMetadata
         let cli = "002fb6fa-eae0-4631-94bd-84071dbd21d8"
         let records = [
             Metadata(sessionId: "local_resumed", cliSessionId: "newer-cli", priorCliSessionIds: ["x", cli]),

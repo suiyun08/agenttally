@@ -53,6 +53,14 @@ extension AppDelegate {
         return resolve(NSSize(width: size.width, height: maxHeight)) ?? frame
     }
 
+    /// Starts the limit at the main screen's full visible height, before the first show measures.
+    @MainActor func seedPanelHeightLimit() {
+        guard let screen = NSScreen.main else { return }
+        panelHeightLimit.maxHeight = PanelPositioning.maxPanelHeight(
+            belowTopY: screen.visibleFrame.maxY, on: ScreenLayout(screen)
+        )
+    }
+
     /// The content re-measures against a changed limit on its next pass, so resize again then.
     @MainActor private func updatePanelHeightLimit(_ maxHeight: CGFloat) {
         guard abs(panelHeightLimit.maxHeight - maxHeight) > 0.5 else { return }

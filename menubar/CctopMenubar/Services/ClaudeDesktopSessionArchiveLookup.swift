@@ -391,44 +391,48 @@ private struct ClaudeCLISessionIDScan {
 
 // MARK: - Focus Link Lookup
 
+/// The fields of a Claude Desktop metadata file that focus needs. Decoding is per field, so one
+/// unexpected value does not hide the whole conversation.
+struct ClaudeDesktopSessionLinkMetadata: Decodable, Equatable {
+    let sessionId: String?
+    let cliSessionId: String?
+    let priorCliSessionIds: [String]?
+    let isArchived: Bool?
+    let lastActivityAt: Double?
+
+    init(
+        sessionId: String?,
+        cliSessionId: String?,
+        priorCliSessionIds: [String]? = nil,
+        isArchived: Bool? = nil,
+        lastActivityAt: Double? = nil
+    ) {
+        self.sessionId = sessionId
+        self.cliSessionId = cliSessionId
+        self.priorCliSessionIds = priorCliSessionIds
+        self.isArchived = isArchived
+        self.lastActivityAt = lastActivityAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId, cliSessionId, priorCliSessionIds, isArchived, lastActivityAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try? container.decodeIfPresent(String.self, forKey: .sessionId)
+        cliSessionId = try? container.decodeIfPresent(String.self, forKey: .cliSessionId)
+        priorCliSessionIds = try? container.decodeIfPresent([String].self, forKey: .priorCliSessionIds)
+        isArchived = try? container.decodeIfPresent(Bool.self, forKey: .isArchived)
+        lastActivityAt = try? container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
+    }
+}
+
 /// Resolves the Claude Desktop conversation ID (`local_<uuid>`) for a Claude Code `session_id`,
 /// so focus can open that exact conversation instead of only activating Claude.
 /// Focus-only: archive and orphan classification above never read this.
 enum ClaudeDesktopSessionLinkLookup {
-    struct Metadata: Decodable, Equatable {
-        let sessionId: String?
-        let cliSessionId: String?
-        let priorCliSessionIds: [String]?
-        let isArchived: Bool?
-        let lastActivityAt: Double?
-
-        init(
-            sessionId: String?,
-            cliSessionId: String?,
-            priorCliSessionIds: [String]? = nil,
-            isArchived: Bool? = nil,
-            lastActivityAt: Double? = nil
-        ) {
-            self.sessionId = sessionId
-            self.cliSessionId = cliSessionId
-            self.priorCliSessionIds = priorCliSessionIds
-            self.isArchived = isArchived
-            self.lastActivityAt = lastActivityAt
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case sessionId, cliSessionId, priorCliSessionIds, isArchived, lastActivityAt
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            sessionId = try? container.decodeIfPresent(String.self, forKey: .sessionId)
-            cliSessionId = try? container.decodeIfPresent(String.self, forKey: .cliSessionId)
-            priorCliSessionIds = try? container.decodeIfPresent([String].self, forKey: .priorCliSessionIds)
-            isArchived = try? container.decodeIfPresent(Bool.self, forKey: .isArchived)
-            lastActivityAt = try? container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
-        }
-    }
+    typealias Metadata = ClaudeDesktopSessionLinkMetadata
 
     /// Scans Claude Desktop metadata on disk. Blocking; call it off the main thread.
     static func localSessionID(

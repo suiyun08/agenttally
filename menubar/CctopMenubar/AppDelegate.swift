@@ -74,11 +74,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         setupStatusItem()
         hasNotch = NSScreen.builtin?.hasPhysicalNotch == true
 
-        if let screen = NSScreen.main {
-            panelHeightLimit.maxHeight = PanelPositioning.maxPanelHeight(
-                belowTopY: screen.visibleFrame.maxY, on: ScreenLayout(screen)
-            )
-        }
+        seedPanelHeightLimit()
         let contentView = makePanelContentView()
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
