@@ -6,7 +6,8 @@ enum PopupTab: CaseIterable, Hashable {
     var label: String {
         switch self {
         case .active: return String(localized: "Active")
-        case .idle: return String(localized: "Idle")
+        // Own key: the tab ("idle sessions") and the card status ("idle") translate differently.
+        case .idle: return String(localized: "tab.idle", defaultValue: "Idle")
         case .recent: return String(localized: "Recent")
         case .cleanup: return String(localized: "Cleanup")
         }

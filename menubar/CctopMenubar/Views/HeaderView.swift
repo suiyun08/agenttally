@@ -19,19 +19,19 @@ struct HeaderView: View {
                     count: counts.permission,
                     color: Color.statusPermission,
                     textColor: Color.statusPermissionText,
-                    categoryLabel: "need permission"
+                    categoryLabel: String(localized: "need permission")
                 )
                 StatusChip(
                     count: counts.attention,
                     color: Color.statusAttention,
                     textColor: Color.statusAttentionText,
-                    categoryLabel: "need attention"
+                    categoryLabel: String(localized: "need attention")
                 )
                 StatusChip(
                     count: counts.working,
                     color: Color.statusGreen,
                     textColor: Color.statusWorkingText,
-                    categoryLabel: "working"
+                    categoryLabel: String(localized: "working")
                 )
             }
         }

@@ -4,6 +4,11 @@ name: Package
 # No Developer ID or notarization, so the app runs with Sparkle updates disabled.
 on:
   workflow_dispatch:
+    inputs:
+      zh_snapshots:
+        description: Also render the snapshot screenshots in Simplified Chinese
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,3 +47,39 @@ jobs:
           name: cctop-macOS-arm64
           path: dist/cctop-macOS.zip
           retention-days: 7
+
+  zh-snapshots:
+    name: Snapshots (zh-Hans)
+    if: ${{ inputs.zh_snapshots }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app
+
+      - name: Build app
+        run: xcodebuild build -project menubar/CctopMenubar.xcodeproj -scheme CctopMenubar -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
+
+      # Snapshot tests assert English copy, so failures are expected here; the images are the output.
+      - name: Render snapshots in Simplified Chinese
+        env:
+          CCTOP_SNAPSHOT_OUTPUT_DIR: ${{ runner.temp }}/zh-snapshots
+          TEST_RUNNER_CCTOP_SNAPSHOT_OUTPUT_DIR: ${{ runner.temp }}/zh-snapshots
+        run: |
+          mkdir -p "$CCTOP_SNAPSHOT_OUTPUT_DIR"
+          scripts/run-swift-tests-isolated.sh \
+            test -project menubar/CctopMenubar.xcodeproj -scheme CctopMenubar -configuration Debug \
+            -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-" \
+            -testLanguage zh-Hans -testRegion CN \
+            -only-testing:CctopMenubarTests/SnapshotTests || true
+          ls -la "$CCTOP_SNAPSHOT_OUTPUT_DIR"
+
+      - name: Upload snapshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zh-snapshots
+          path: ${{ runner.temp }}/zh-snapshots
+          retention-days: 7
+
