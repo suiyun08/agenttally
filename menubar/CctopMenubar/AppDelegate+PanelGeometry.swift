@@ -141,7 +141,18 @@ extension AppDelegate {
         if let screenMaxHeight {
             updatePanelHeightLimit(screenMaxHeight)
         }
-        setPanelFrame(newFrame, animate: animate)
+        setPanelFrame(panel.isVisible ? keptOnScreen(newFrame) : newFrame, animate: animate)
+    }
+
+    /// A panel widened while open stays inside its screen instead of spilling past the edge.
+    @MainActor private func keptOnScreen(_ frame: NSRect) -> NSRect {
+        let screens = screenLayouts
+        guard let idx = PanelPositioning.screenIndex(forPanelFrame: frame, in: screens) else { return frame }
+        let visible = screens[idx].visibleFrame
+        let margin = PanelPositioning.margin
+        var kept = frame
+        kept.origin.x = max(visible.minX + margin, min(frame.origin.x, visible.maxX - frame.width - margin))
+        return kept
     }
 
     private func panelFittingSize() -> NSSize? {
