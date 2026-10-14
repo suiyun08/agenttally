@@ -26,6 +26,8 @@ struct PopupView: View {
     var onCleanupTabHidden: () -> Void = {}
     /// Called (async on main) whenever content layout changes so the host can resize the panel.
     var onLayoutChanged: () -> Void = {}
+    /// Upper bound for scrolling lists. The panel host passes its screen-based limit.
+    var maxListHeight: CGFloat = AppChrome.overlayMinimumContentHeight
     @State var selectedTab: PopupTab = .active
     @State var selectedIndex: Int?
     @State var selectedSessionIdentity: SessionIdentityPolicy.LogicalIdentity?
@@ -225,7 +227,7 @@ struct PopupView: View {
                 }
                 .padding(.bottom, AppChrome.listVerticalPadding)
             }
-            .frame(maxHeight: AppChrome.overlayMinimumContentHeight)
+            .frame(maxHeight: maxListHeight)
             .onChange(of: selectedIndex) { newIndex in
                 guard selectedTab == tab,
                       let idx = newIndex, idx < list.count else { return }

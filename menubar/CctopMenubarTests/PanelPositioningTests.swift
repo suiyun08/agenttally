@@ -26,6 +26,67 @@ final class PanelPositioningTests: XCTestCase {
     // Anchor (menubar icon) near the right side of the primary screen
     let anchorOnPrimary = NSRect(x: 1870, y: 1058, width: 40, height: 22)
 
+    // MARK: - maxPanelHeight
+
+    func testMaxPanelHeightFillsSpaceBelowAnchoredTop() throws {
+        let frame = try XCTUnwrap(PanelPositioning.resolveAnchorPosition(
+            anchorRect: anchorOnPrimary, clickLocation: nil, panelSize: panelSize, screens: screens
+        ))
+        let maxHeight = PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: screens)
+        // Top sits under the anchor; bottom stops one margin above the visible bottom (Dock).
+        XCTAssertEqual(maxHeight, anchorOnPrimary.minY - margin - primary.visibleFrame.minY - margin)
+    }
+
+    func testMaxPanelHeightCapsTopAtVisibleTop() {
+        let frame = NSRect(x: 100, y: 900, width: 320, height: 400)
+        XCTAssertEqual(
+            PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: screens),
+            primary.visibleFrame.maxY - primary.visibleFrame.minY - margin
+        )
+    }
+
+    func testMaxPanelHeightUsesDockRaisedVisibleBottom() {
+        let withDock = ScreenLayout(
+            frame: NSRect(x: 0, y: 0, width: 1512, height: 982),
+            visibleFrame: NSRect(x: 0, y: 70, width: 1512, height: 879),
+            key: "builtin"
+        )
+        XCTAssertEqual(
+            PanelPositioning.maxPanelHeight(belowTopY: 949 - margin, on: withDock),
+            949 - margin - 70 - margin
+        )
+    }
+
+    func testMaxPanelHeightKeepsFloorOnCrampedScreen() {
+        let cramped = ScreenLayout(
+            frame: NSRect(x: 0, y: 0, width: 800, height: 300),
+            visibleFrame: NSRect(x: 0, y: 0, width: 800, height: 275),
+            key: "cramped"
+        )
+        XCTAssertEqual(
+            PanelPositioning.maxPanelHeight(belowTopY: 270, on: cramped),
+            PanelPositioning.minimumMaxPanelHeight
+        )
+    }
+
+    func testMaxPanelHeightUsesTheScreenThatOwnsTheFrame() {
+        let shortSecondary = ScreenLayout(
+            frame: NSRect(x: 1920, y: 0, width: 1440, height: 900),
+            visibleFrame: NSRect(x: 1920, y: 0, width: 1440, height: 875),
+            key: "secondary"
+        )
+        let frame = NSRect(x: 2000, y: 500, width: 320, height: 371)
+        XCTAssertEqual(
+            PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: [primary, shortSecondary]),
+            871 - margin
+        )
+    }
+
+    func testMaxPanelHeightIsNilOffEveryScreen() {
+        let frame = NSRect(x: 9000, y: 9000, width: 320, height: 400)
+        XCTAssertNil(PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: screens))
+    }
+
     // MARK: - screenIndex
 
     func testScreenIndexOnPrimary() {

@@ -316,6 +316,7 @@ struct PanelContentView: View {
     @ObservedObject var updater: UpdaterBase
     @ObservedObject var pluginManager: PluginManager
     @ObservedObject var navigate: NavigateController
+    @ObservedObject var heightLimit = PanelHeightLimit()
     var onOpenUpdater: (() -> Void)?
     var onSelectCleanupRemovalAction: ((WorktreeCleanupCandidate) async -> WorktreeRemovalService.RemovalAction)?
     var onExecuteCleanupRemovalAction: ((WorktreeRemovalService.RemovalAction) async -> WorktreeRemovalService.RemovalResult)?
@@ -344,9 +345,11 @@ struct PanelContentView: View {
             onExecuteCleanupRemovalAction: onExecuteCleanupRemovalAction,
             onCleanupTabVisible: onCleanupTabVisible,
             onCleanupTabHidden: onCleanupTabHidden,
-            onLayoutChanged: onLayoutChanged
+            onLayoutChanged: onLayoutChanged,
+            maxListHeight: heightLimit.maxHeight
         )
         .frame(width: 320)
+        .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()
         }

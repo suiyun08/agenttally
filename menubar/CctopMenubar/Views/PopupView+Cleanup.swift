@@ -30,7 +30,8 @@ extension PopupView {
             onSelect: openCleanupDetail,
             onRemove: requestCleanupRemoval,
             removalNotice: cleanupRemovalNotice,
-            removingCandidateID: removingCleanupCandidateID
+            removingCandidateID: removingCleanupCandidateID,
+            maxListHeight: maxListHeight
         )
     }
 

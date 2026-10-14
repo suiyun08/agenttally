@@ -10,6 +10,7 @@ struct WorktreeCleanupTabView: View {
     var onRemove: (WorktreeCleanupCandidate) -> Void = { _ in }
     var removalNotice: WorktreeRemovalNotice?
     var removingCandidateID: String?
+    var maxListHeight: CGFloat = AppChrome.overlayMinimumContentHeight
 
     var body: some View {
         if isScanning && !candidates.isEmpty {
@@ -129,7 +130,7 @@ struct WorktreeCleanupTabView: View {
                 }
                 .padding(.bottom, 4)
             }
-            .frame(maxHeight: AppChrome.overlayMinimumContentHeight)
+            .frame(maxHeight: maxListHeight)
             .onChange(of: selectedIndex) { newIndex in
                 guard let idx = newIndex, idx < candidates.count else { return }
                 withAnimation(.easeOut(duration: 0.15)) {

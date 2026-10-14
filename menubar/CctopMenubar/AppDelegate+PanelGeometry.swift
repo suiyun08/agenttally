@@ -20,14 +20,45 @@ extension AppDelegate {
         guard let size = panelFittingSize() else { return }
         let clickKey = focusLocation.flatMap { screenKey(at: $0) }
             ?? panelScreenKey()
-        if let frame = panelGeometry.showFrame(
-            clickScreenKey: clickKey,
-            clickLocation: focusLocation,
-            anchorRect: anchorRect(),
-            panelSize: size,
-            screens: screenLayouts
-        ) {
+        let clickLocation = focusLocation
+        let anchor = anchorRect()
+        let screens = screenLayouts
+        let frame = screenFittedFrame(fitting: size, screens: screens) { panelSize in
+            panelGeometry.showFrame(
+                clickScreenKey: clickKey,
+                clickLocation: clickLocation,
+                anchorRect: anchor,
+                panelSize: panelSize,
+                screens: screens
+            )
+        }
+        if let frame {
             setPanelFrame(frame, animate: animate)
+        }
+    }
+
+    /// Resolves a frame for the content's fitting size, shrinks it to the tallest panel its
+    /// screen allows, and publishes that limit so the content's lists scroll inside it.
+    @MainActor private func screenFittedFrame(
+        fitting size: NSSize,
+        screens: [ScreenLayout],
+        resolve: (NSSize) -> NSRect?
+    ) -> NSRect? {
+        guard let frame = resolve(size) else { return nil }
+        guard let maxHeight = PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: screens) else {
+            return frame
+        }
+        updatePanelHeightLimit(maxHeight)
+        guard frame.height > maxHeight else { return frame }
+        return resolve(NSSize(width: size.width, height: maxHeight)) ?? frame
+    }
+
+    /// The content re-measures against a changed limit on its next pass, so resize again then.
+    @MainActor private func updatePanelHeightLimit(_ maxHeight: CGFloat) {
+        guard abs(panelHeightLimit.maxHeight - maxHeight) > 0.5 else { return }
+        panelHeightLimit.maxHeight = maxHeight
+        DispatchQueue.main.async { [weak self] in
+            self?.resizePanel()
         }
     }
 
@@ -51,13 +82,18 @@ extension AppDelegate {
         guard let size = panelFittingSize() else { return }
         let layouts = screenLayouts
         let panelIdx = PanelPositioning.screenIndex(forPanelFrame: panel.frame, in: layouts)
-        if let frame = PanelPositioning.resolveResetPosition(
-            anchorRect: anchorRect(),
-            menubarIconRect: menubarIconRect(),
-            panelScreenIndex: panelIdx,
-            panelSize: size,
-            screens: layouts
-        ) {
+        let anchor = anchorRect()
+        let iconRect = menubarIconRect()
+        let frame = screenFittedFrame(fitting: size, screens: layouts) { panelSize in
+            PanelPositioning.resolveResetPosition(
+                anchorRect: anchor,
+                menubarIconRect: iconRect,
+                panelScreenIndex: panelIdx,
+                panelSize: panelSize,
+                screens: layouts
+            )
+        }
+        if let frame {
             setPanelFrame(frame, animate: animate)
         }
     }
@@ -84,16 +120,26 @@ extension AppDelegate {
     @MainActor func resizePanel(animate: Bool = false) {
         guard !suppressResize else { return }
         guard let size = panelFittingSize() else { return }
+        // A hidden panel's frame is stale, so only a visible panel re-derives the screen limit.
+        let screenMaxHeight = panel.isVisible
+            ? PanelPositioning.maxPanelHeight(forPanelFrame: panel.frame, in: screenLayouts)
+            : nil
+        let maxHeight = screenMaxHeight ?? panelHeightLimit.maxHeight
         let newFrame = panelGeometry.resizedFrame(
-            from: panel.frame, to: size, panelScreenKey: panelScreenKey()
+            from: panel.frame,
+            to: NSSize(width: size.width, height: min(size.height, maxHeight)),
+            panelScreenKey: panelScreenKey()
         )
+        if let screenMaxHeight {
+            updatePanelHeightLimit(screenMaxHeight)
+        }
         setPanelFrame(newFrame, animate: animate)
     }
 
     private func panelFittingSize() -> NSSize? {
         panel.contentView?.layout()
         guard let size = panel.contentView?.fittingSize else { return nil }
-        return NSSize(width: max(size.width, 320), height: min(size.height, 600))
+        return NSSize(width: max(size.width, 320), height: size.height)
     }
 
     private func setPanelFrame(_ frame: NSRect, animate: Bool) {

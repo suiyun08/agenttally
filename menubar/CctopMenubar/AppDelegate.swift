@@ -36,6 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     @AppStorage("appearanceMode") var appearanceMode: String = "system"
 
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
+    let panelHeightLimit = PanelHeightLimit()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -73,6 +74,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         setupStatusItem()
         hasNotch = NSScreen.builtin?.hasPhysicalNotch == true
 
+        if let screen = NSScreen.main {
+            panelHeightLimit.maxHeight = PanelPositioning.maxPanelHeight(
+                belowTopY: screen.visibleFrame.maxY, on: ScreenLayout(screen)
+            )
+        }
         let contentView = makePanelContentView()
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
@@ -111,6 +117,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             updater: updater,
             pluginManager: pluginManager,
             navigate: navigateController,
+            heightLimit: panelHeightLimit,
             onOpenUpdater: { [weak self] in
                 Task { @MainActor in self?.openUpdaterFromPanel() }
             },

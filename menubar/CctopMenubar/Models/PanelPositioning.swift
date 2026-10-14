@@ -135,9 +135,24 @@ struct PanelGeometryModel {
 
 }
 
+/// The tallest panel the current screen allows. The panel content reads it so its lists grow
+/// with the screen instead of stopping at a fixed height.
+final class PanelHeightLimit: ObservableObject {
+    /// The fixed panel cap used before screen-based sizing.
+    static let legacyMaxHeight: CGFloat = 600
+
+    @Published var maxHeight: CGFloat
+
+    init(maxHeight: CGFloat = PanelHeightLimit.legacyMaxHeight) {
+        self.maxHeight = maxHeight
+    }
+}
+
 /// Pure positioning math for the floating panel.
 enum PanelPositioning {
     static let margin: CGFloat = 4
+    /// Floor for the screen-based height limit, so a cramped screen keeps a usable panel.
+    static let minimumMaxPanelHeight: CGFloat = 300
     private static let menubarButtonWidth: CGFloat = 20
     private static let menubarButtonHeight: CGFloat = 22
 
@@ -180,6 +195,20 @@ enum PanelPositioning {
         let height = min(lhs.maxY, rhs.maxY) - max(lhs.minY, rhs.minY)
         guard width > 0, height > 0 else { return 0 }
         return width * height
+    }
+
+    /// Tallest panel whose top edge sits at `topY` (capped at the visible top) and whose bottom
+    /// stays `margin` above the visible bottom, which excludes the Dock.
+    static func maxPanelHeight(belowTopY topY: CGFloat, on screen: ScreenLayout) -> CGFloat {
+        let visible = screen.visibleFrame
+        let top = min(topY, visible.maxY)
+        return max(minimumMaxPanelHeight, top - visible.minY - margin)
+    }
+
+    /// Tallest panel that fits below `frame`'s top edge on the screen that owns the frame.
+    static func maxPanelHeight(forPanelFrame frame: NSRect, in screens: [ScreenLayout]) -> CGFloat? {
+        guard let idx = screenIndex(forPanelFrame: frame, in: screens) else { return nil }
+        return maxPanelHeight(belowTopY: frame.maxY, on: screens[idx])
     }
 
     /// Clamp a saved panel position to stay within screen bounds.
