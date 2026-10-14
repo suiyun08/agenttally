@@ -69,8 +69,8 @@ jobs:
           TEST_RUNNER_CCTOP_SNAPSHOT_OUTPUT_DIR: ${{ runner.temp }}/zh-snapshots
         run: |
           mkdir -p "$CCTOP_SNAPSHOT_OUTPUT_DIR"
-          scripts/run-swift-tests-isolated.sh \
-            test -project menubar/CctopMenubar.xcodeproj -scheme CctopMenubar -configuration Debug \
+          # The isolation wrapper rejects -testLanguage; a throwaway CI runner needs no isolation.
+          xcodebuild test -project menubar/CctopMenubar.xcodeproj -scheme CctopMenubar -configuration Debug \
             -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-" \
             -testLanguage zh-Hans -testRegion CN \
             -only-testing:CctopMenubarTests/SnapshotTests || true
