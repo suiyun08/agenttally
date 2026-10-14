@@ -417,9 +417,9 @@ final class FocusStrategyTests: XCTestCase {
     // MARK: - Desktop AI apps
 
     func testClaudeDesktopUsesActivateByBundleID() {
-        // Claude Desktop has a claude://resume?session=... URL but it FORKS the
-        // conversation instead of focusing it — destructive, so we deliberately
-        // fall through to plain bundle-ID activation. See HostApp.sessionDeepLink.
+        // Without a resolved desktop conversation ID, Claude Desktop falls back to
+        // plain bundle-ID activation. claude://resume?session=... FORKS the
+        // conversation instead of focusing it, so it is never used. See HostApp.sessionDeepLink.
         let bundleID = HostApp.claudeDesktop.bundleID!
         let session = makeSession(
             program: "", bundleId: bundleID,
@@ -427,6 +427,94 @@ final class FocusStrategyTests: XCTestCase {
         )
         let strategy = resolveFocusStrategy(session: session)
         XCTAssertEqual(strategy, .activateByBundleID(bundleID))
+    }
+
+    func testClaudeDesktopWithDesktopSessionIDOpensContinueLink() throws {
+        let session = makeSession(
+            program: "", bundleId: HostApp.claudeDesktop.bundleID!,
+            sessionUuid: "002fb6fa-eae0-4631-94bd-84071dbd21d8"
+        )
+        let strategy = resolveFocusStrategy(
+            session: session,
+            multiplexerOverride: nil,
+            claudeDesktopSessionID: "local_36d1bd98-0b4c-4d5e-9f10-1a2b3c4d5e6f"
+        )
+        let expected = try XCTUnwrap(URL(
+            string: "claude://code/continue?session=local_36d1bd98-0b4c-4d5e-9f10-1a2b3c4d5e6f"
+        ))
+        XCTAssertEqual(strategy, .openURL(expected))
+        XCTAssertEqual(strategy.actionTitle, "Open Claude Session")
+    }
+
+    func testClaudeDesktopWithMalformedDesktopSessionIDFallsBackToActivate() {
+        let bundleID = HostApp.claudeDesktop.bundleID!
+        let session = makeSession(program: "", bundleId: bundleID)
+        for invalidID in ["", "local_", "36d1bd98-0b4c", "local_abc&source=x", "cse_123"] {
+            let strategy = resolveFocusStrategy(
+                session: session,
+                multiplexerOverride: nil,
+                claudeDesktopSessionID: invalidID
+            )
+            XCTAssertEqual(strategy, .activateByBundleID(bundleID), invalidID)
+        }
+    }
+
+    func testClaudeDesktopSessionIDIgnoredForTerminalHost() {
+        let session = makeSession(program: "iTerm.app", sessionId: "w0t0p0:ABC-123")
+        let strategy = resolveFocusStrategy(
+            session: session,
+            multiplexerOverride: nil,
+            claudeDesktopSessionID: "local_36d1bd98-0b4c-4d5e-9f10-1a2b3c4d5e6f"
+        )
+        XCTAssertEqual(strategy, resolveFocusStrategy(session: session))
+    }
+
+    func testClaudeDesktopLinkLookupPrefersCurrentLiveMostRecentMatch() {
+        typealias Metadata = ClaudeDesktopSessionLinkLookup.Metadata
+        let cli = "002fb6fa-eae0-4631-94bd-84071dbd21d8"
+        let records = [
+            Metadata(sessionId: "local_prior", cliSessionId: "other", priorCliSessionIds: [cli], lastActivityAt: 900),
+            Metadata(sessionId: "local_old", cliSessionId: cli, lastActivityAt: 100),
+            Metadata(sessionId: "local_new", cliSessionId: cli, lastActivityAt: 200),
+            Metadata(sessionId: "local_archived", cliSessionId: cli, isArchived: true, lastActivityAt: 999),
+            Metadata(sessionId: "not-a-desktop-id", cliSessionId: cli, lastActivityAt: 999),
+        ]
+        XCTAssertEqual(ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: cli, in: records), "local_new")
+    }
+
+    func testClaudeDesktopLinkLookupFallsBackToPriorCLISessionIDs() {
+        typealias Metadata = ClaudeDesktopSessionLinkLookup.Metadata
+        let cli = "002fb6fa-eae0-4631-94bd-84071dbd21d8"
+        let records = [
+            Metadata(sessionId: "local_resumed", cliSessionId: "newer-cli", priorCliSessionIds: ["x", cli]),
+            Metadata(sessionId: "local_unrelated", cliSessionId: "another-cli"),
+        ]
+        XCTAssertEqual(ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: cli, in: records), "local_resumed")
+        XCTAssertNil(ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: "missing", in: records))
+    }
+
+    func testClaudeDesktopLinkLookupScansNestedMetadataFiles() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("cctop-claude-link-\(UUID().uuidString)")
+        let nested = root.appendingPathComponent("account/org")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let cli = "002fb6fa-eae0-4631-94bd-84071dbd21d8"
+        try Data(#"{"sessionId":"local_abc-123","cliSessionId":"\#(cli)","isArchived":false,"lastActivityAt":1}"#.utf8)
+            .write(to: nested.appendingPathComponent("local_abc-123.json"))
+        try Data(#"{"sessionId":"local_bad","cliSessionId":"\#(cli)","lastActivityAt":"#.utf8)
+            .write(to: nested.appendingPathComponent("local_bad.json"))
+        try Data(#"{"sessionId":"local_skip","cliSessionId":"\#(cli)","lastActivityAt":5}"#.utf8)
+            .write(to: nested.appendingPathComponent("notes.json"))
+
+        XCTAssertEqual(
+            ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: cli, sessionsDirectory: root.path),
+            "local_abc-123"
+        )
+        XCTAssertNil(ClaudeDesktopSessionLinkLookup.localSessionID(
+            forCliSessionID: cli,
+            sessionsDirectory: root.appendingPathComponent("missing").path
+        ))
     }
 
     func testCodexWithoutDirectHostUsesThreadDeepLinkWithOrWithoutPersistedBundle() throws {

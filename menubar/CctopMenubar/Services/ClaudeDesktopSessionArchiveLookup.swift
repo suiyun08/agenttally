@@ -388,3 +388,78 @@ private struct ClaudeCLISessionIDScan {
     let values: [String]
     let sawUnparseableValue: Bool
 }
+
+// MARK: - Focus Link Lookup
+
+/// Resolves the Claude Desktop conversation ID (`local_<uuid>`) for a Claude Code `session_id`,
+/// so focus can open that exact conversation instead of only activating Claude.
+/// Focus-only: archive and orphan classification above never read this.
+enum ClaudeDesktopSessionLinkLookup {
+    struct Metadata: Decodable, Equatable {
+        let sessionId: String?
+        let cliSessionId: String?
+        let priorCliSessionIds: [String]?
+        let isArchived: Bool?
+        let lastActivityAt: Double?
+
+        init(
+            sessionId: String?,
+            cliSessionId: String?,
+            priorCliSessionIds: [String]? = nil,
+            isArchived: Bool? = nil,
+            lastActivityAt: Double? = nil
+        ) {
+            self.sessionId = sessionId
+            self.cliSessionId = cliSessionId
+            self.priorCliSessionIds = priorCliSessionIds
+            self.isArchived = isArchived
+            self.lastActivityAt = lastActivityAt
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case sessionId, cliSessionId, priorCliSessionIds, isArchived, lastActivityAt
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sessionId = try? container.decodeIfPresent(String.self, forKey: .sessionId)
+            cliSessionId = try? container.decodeIfPresent(String.self, forKey: .cliSessionId)
+            priorCliSessionIds = try? container.decodeIfPresent([String].self, forKey: .priorCliSessionIds)
+            isArchived = try? container.decodeIfPresent(Bool.self, forKey: .isArchived)
+            lastActivityAt = try? container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
+        }
+    }
+
+    /// Scans Claude Desktop metadata on disk. Blocking; call it off the main thread.
+    static func localSessionID(
+        forCliSessionID cliSessionID: String,
+        sessionsDirectory: String = Config.claudeCodeSessionsDir()
+    ) -> String? {
+        guard let enumerator = FileManager.default.enumerator(
+            at: URL(fileURLWithPath: sessionsDirectory),
+            includingPropertiesForKeys: nil
+        ) else { return nil }
+        let records: [Metadata] = enumerator.compactMap { entry in
+            guard let url = entry as? URL,
+                  url.pathExtension == "json",
+                  url.lastPathComponent.hasPrefix("local_"),
+                  let data = try? Data(contentsOf: url) else { return nil }
+            return try? JSONDecoder().decode(Metadata.self, from: data)
+        }
+        return localSessionID(forCliSessionID: cliSessionID, in: records)
+    }
+
+    /// A current `cliSessionId` match wins over a `priorCliSessionIds` match. Archived
+    /// conversations are skipped, and the most recently active candidate wins.
+    static func localSessionID(forCliSessionID cliSessionID: String, in records: [Metadata]) -> String? {
+        let linkable = records.filter { record in
+            record.isArchived != true
+                && record.sessionId.map(HostApp.isClaudeDesktopLocalSessionID) == true
+        }
+        let current = linkable.filter { $0.cliSessionId == cliSessionID }
+        let candidates = current.isEmpty
+            ? linkable.filter { $0.priorCliSessionIds?.contains(cliSessionID) == true }
+            : current
+        return candidates.max { ($0.lastActivityAt ?? 0) < ($1.lastActivityAt ?? 0) }?.sessionId
+    }
+}

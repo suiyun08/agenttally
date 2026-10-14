@@ -83,7 +83,8 @@ the most specific place it can.
 
 - **Targets the exact session:** [iTerm2](https://iterm2.com/), [Warp](https://www.warp.dev/terminal), [cmux](https://cmux.com/), [Kitty](https://sw.kovidgoyal.net/kitty/), [Ghostty](https://ghostty.org/), [Terminal](https://support.apple.com/guide/terminal/welcome/mac), [Codex Desktop](https://developers.openai.com/codex/app), [Herdr](https://github.com/ogulcancelik/herdr), [Zellij](https://zellij.dev/), [tmux](https://tmux.us/). cctop jumps to the right window, tab, pane, surface, or desktop thread.
 - **Opens the project:** [VS Code](https://code.visualstudio.com/), [Cursor](https://cursor.com/), [Windsurf](https://windsurf.com/download), [Zed](https://zed.dev/). cctop focuses the editor window, using the workspace file if present.
-- **Activates the app:** [Claude Desktop](https://claude.com/download) and other detected macOS apps. cctop brings the app to the front so you can find the tab manually.
+- **Opens the exact conversation:** [Claude Desktop](https://claude.com/download). cctop matches the session to Claude's local conversation and opens it with Claude's own continue link; if no match is found, it brings Claude to the front.
+- **Activates the app:** other detected macOS apps. cctop brings the app to the front so you can find the tab manually.
 
 <details>
 <summary>Focus details and requirements</summary>

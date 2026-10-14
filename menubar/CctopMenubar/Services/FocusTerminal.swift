@@ -44,7 +44,8 @@ func resolveFocusStrategy(session: SessionData) -> FocusStrategy {
 func resolveFocusStrategy(
     session: SessionData,
     multiplexerOverride: MultiplexerInfo?,
-    verifiedHostApp: HostApp? = nil
+    verifiedHostApp: HostApp? = nil,
+    claudeDesktopSessionID: String? = nil
 ) -> FocusStrategy {
     let terminal = session.terminal
     let multiplexer = multiplexerOverride ?? terminal?.multiplexer
@@ -60,6 +61,12 @@ func resolveFocusStrategy(
     let target = session.workspaceFile ?? session.projectPath
 
     if hostApp == .cmux, let url = cmuxNavigationURL(multiplexer: multiplexer) {
+        return .openURL(url)
+    }
+
+    // An unknown or ignored continue link still brings Claude forward, the same as activation.
+    if hostApp == .claudeDesktop, let claudeDesktopSessionID,
+       let url = HostApp.claudeDesktopContinueURL(localSessionID: claudeDesktopSessionID) {
         return .openURL(url)
     }
 
@@ -115,10 +122,14 @@ func focusTerminal(session: SessionData) {
         let verifiedHostApp: HostApp? = CodexDesktopRuntimeProbe().isCurrentDesktopAppServer(for: session)
             ? .codexDesktop
             : nil
+        let claudeDesktopSessionID = session.isClaudeDesktopHost
+            ? ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: session.sessionId)
+            : nil
         let strategy = resolveFocusStrategy(
             session: session,
             multiplexerOverride: multiplexerOverride,
-            verifiedHostApp: verifiedHostApp
+            verifiedHostApp: verifiedHostApp,
+            claudeDesktopSessionID: claudeDesktopSessionID
         )
         let muxStrategy = resolveMultiplexerFocus(session: session, multiplexerOverride: multiplexerOverride,
                                                   primaryStrategy: strategy)

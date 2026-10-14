@@ -22,11 +22,15 @@ extension FocusStrategy {
         case .activateByBundleID(let bundleID):
             let host = HostApp.from(bundleIdentifier: bundleID)
             if host == .cmux { return "Focus cmux" }
+            if host == .claudeDesktop { return "Open Claude Session" }
             let name = host?.displayName ?? "App"
             return "Bring \(name) Forward"
         case .openURL(let url, _):
             if url.scheme?.lowercased() == "codex" {
                 return "Focus Codex Task"
+            }
+            if url.scheme?.lowercased() == "claude" {
+                return "Open Claude Session"
             }
             if WarpFocusLink.isChannelScheme(url.scheme) {
                 return "Focus Warp Pane"

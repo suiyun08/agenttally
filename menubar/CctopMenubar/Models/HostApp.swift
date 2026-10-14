@@ -240,8 +240,22 @@ extension SessionData {
 }
 
 extension HostApp {
+    /// Opens an existing Claude Desktop conversation by its desktop ID (`local_<uuid>`), the link
+    /// Claude's own Dock and Spotlight menus use. Unlike `claude://resume`, it focuses the
+    /// conversation instead of forking it. Claude falls back to its Code home for an unknown ID.
+    static func claudeDesktopContinueURL(localSessionID: String) -> URL? {
+        guard isClaudeDesktopLocalSessionID(localSessionID) else { return nil }
+        return URL(string: "claude://code/continue?session=\(localSessionID)")
+    }
+
+    /// Claude Desktop's continue-link handler validates `?session=` with this exact pattern.
+    static func isClaudeDesktopLocalSessionID(_ value: String) -> Bool {
+        value.range(of: #"^local_[A-Za-z0-9-]{1,64}$"#, options: .regularExpression) != nil
+    }
+
     /// Returns an exact-session deep link for supported apps and valid UUIDs.
-    /// Claude resume links are unsupported because they fork instead of focusing the conversation.
+    /// Claude resume links are unsupported because they fork instead of focusing the conversation;
+    /// Claude Desktop uses `claudeDesktopContinueURL` with its own conversation ID instead.
     func sessionDeepLink(sessionId: String) -> URL? {
         guard Self.isUUID(sessionId) else { return nil }
         switch self {
