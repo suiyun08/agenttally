@@ -318,6 +318,7 @@ extension AppDelegate {
     }
 
     @MainActor @objc func togglePanel() {
+        panelHover.cancelPendingRest()
         focusLocation = NSEvent.mouseLocation
 
         let onDifferentScreen: Bool = {

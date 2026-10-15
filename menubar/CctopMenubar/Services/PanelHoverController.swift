@@ -66,6 +66,11 @@ final class PanelHoverController: NSResponder {
     }
 
     override func mouseExited(with event: NSEvent) {
+        cancelPendingRest()
+    }
+
+    /// A click decides on its own; a rest still pending from before it must not reopen the panel.
+    func cancelPendingRest() {
         restTimer?.invalidate()
         restTimer = nil
     }
@@ -101,8 +106,10 @@ final class PanelHoverController: NSResponder {
         leaveTimer = nil
     }
 
-    private static func contains(_ zones: [NSRect], _ point: NSPoint) -> Bool {
-        zones.contains { $0.contains(point) }
+    /// Edges count as inside: a pointer pushed against the top of the screen reports the screen's
+    /// max Y, which a plain `contains` leaves out of the menu bar.
+    nonisolated static func contains(_ zones: [NSRect], _ point: NSPoint) -> Bool {
+        zones.contains { $0.insetBy(dx: -1, dy: -1).contains(point) }
     }
 
     /// Fires on the main run loop in every mode, so drags and open menus don't hold it back.

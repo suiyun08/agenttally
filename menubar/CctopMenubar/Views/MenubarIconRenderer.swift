@@ -20,6 +20,8 @@ enum MenubarIconRenderer {
             // so one live image follows menu-bar light/dark changes immediately.
             let appearance: NSAppearance = NSAppearance.current
             drawPill(in: rect, appearance: appearance)
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
             NSGraphicsContext.current?.cgContext.translateBy(x: pillPadding, y: 0)
             draw(layout, metrics: .menubar, appearance: appearance)
             return true

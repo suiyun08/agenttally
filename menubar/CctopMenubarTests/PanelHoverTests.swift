@@ -71,6 +71,16 @@ final class PanelHoverTests: XCTestCase {
         XCTAssertEqual(handle(.menubarIconClicked(appIsActive: true), mode: mode).state.mode, .hidden)
     }
 
+    // MARK: - Where the pointer is
+
+    func testThePointerAgainstTheTopOfTheScreenIsOnTheMenuBar() {
+        let statusItem = NSRect(x: 1200, y: 958, width: 60, height: 24)
+        XCTAssertTrue(PanelHoverController.contains([statusItem], NSPoint(x: 1230, y: 982)))
+        XCTAssertTrue(PanelHoverController.contains([statusItem], NSPoint(x: 1230, y: 970)))
+        XCTAssertFalse(PanelHoverController.contains([statusItem], NSPoint(x: 1230, y: 950)))
+        XCTAssertFalse(PanelHoverController.contains([statusItem], NSPoint(x: 1100, y: 982)))
+    }
+
     // MARK: - When a peek closes
 
     func testPeekClosesOnlyAfterThePointerStaysAwayForTheGrace() {
