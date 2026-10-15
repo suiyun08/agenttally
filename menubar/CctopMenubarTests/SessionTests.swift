@@ -2933,21 +2933,37 @@ final class PanelWidthDragTests: XCTestCase {
         XCTAssertEqual(PanelWidthDrag.edge(atX: 320, panelWidth: 320), .trailing)
     }
 
-    func testLeadingEdgeDragJumpsToTheNearestPresetAndHoldsTrailingEdge() {
-        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -30).width, 320)
-        let frame = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -50)
-        XCTAssertEqual(frame.width, 400)
-        XCTAssertEqual(frame.maxX, start.maxX)
-        XCTAssertEqual(frame.minY, start.minY)
-        XCTAssertEqual(frame.height, start.height)
+    func testLeadingEdgeDragFollowsThePointerAndHoldsTrailingEdge() {
+        let following = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -50)
+        XCTAssertEqual(following.width, 370)
+        XCTAssertEqual(following.maxX, start.maxX)
+        XCTAssertEqual(following.minY, start.minY)
+        XCTAssertEqual(following.height, start.height)
+        let nearWide = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -65)
+        XCTAssertEqual(nearWide.width, 400)
+        XCTAssertEqual(nearWide.maxX, start.maxX)
     }
 
-    func testTrailingEdgeDragJumpsToTheNearestPresetAndHoldsLeadingEdge() {
-        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 30).width, 320)
-        let frame = PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 70)
-        XCTAssertEqual(frame.width, 400)
-        XCTAssertEqual(frame.minX, start.minX)
-        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 130).width, 480)
+    func testTrailingEdgeDragTakesAPresetWithinTheSnapDistance() {
+        let widths: [(CGFloat, CGFloat)] = [
+            (10, 320), (30, 350), (59, 379), (61, 400), (70, 400), (99, 400), (101, 421),
+            (130, 450), (145, 480),
+        ]
+        for (deltaX, expected) in widths {
+            let frame = PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: deltaX)
+            XCTAssertEqual(frame.width, expected, "deltaX \(deltaX)")
+            XCTAssertEqual(frame.minX, start.minX)
+        }
+    }
+
+    func testGlideKeepsTheHeldEdgeStill() {
+        let narrow = NSRect(x: 1000, y: 100, width: 320, height: 300)
+        let widerLeftward = NSRect(x: 920, y: 100, width: 400, height: 300)
+        for progress: CGFloat in [0, 0.25, 0.5, 1] {
+            let step = PanelWidthDrag.interpolated(from: narrow, to: widerLeftward, progress: progress)
+            XCTAssertEqual(step.maxX, narrow.maxX, accuracy: 0.001)
+            XCTAssertEqual(step.width, 320 + 80 * progress, accuracy: 0.001)
+        }
     }
 
     func testDragStaysWithinThePresetRange() {
@@ -3140,10 +3156,15 @@ final class PanelSnapTests: XCTestCase {
         XCTAssertEqual(widened.minX, 1100)
         XCTAssertLessThanOrEqual(widened.maxX, 1512 - PanelPositioning.margin)
 
-        // 366pt of room: only the standard width fits.
+        // 366pt of room: the drag stops at the screen edge, and a release settles on the
+        // standard width, the only preset that fits.
         let nearLeft = NSRect(x: 50, y: 100, width: 320, height: 300)
         let leftWidened = PanelWidthDrag.frame(from: nearLeft, edge: .leading, deltaX: -200, visible: visible)
-        XCTAssertEqual(leftWidened, nearLeft)
+        XCTAssertEqual(leftWidened.minX, PanelPositioning.margin)
+        XCTAssertEqual(leftWidened.maxX, nearLeft.maxX)
+        let released = PanelWidthDrag.settled(from: leftWidened, edge: .leading, visible: visible)
+        XCTAssertEqual(released.width, .standard)
+        XCTAssertEqual(released.frame.maxX, nearLeft.maxX)
 
         let roomy = PanelWidthDrag.frame(from: panel(x: 600, y: 100), edge: .trailing, deltaX: 500, visible: visible)
         XCTAssertEqual(roomy.width, 480)

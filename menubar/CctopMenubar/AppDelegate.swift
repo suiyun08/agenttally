@@ -38,6 +38,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
     let panelResizeState = PanelResizeState()
+    lazy var panelWidthAnimator = PanelWidthAnimator { [weak self] frame in
+        self?.applyDraggedWidth(frame)
+    }
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment

@@ -205,18 +205,32 @@ extension AppDelegate: FloatingPanelDelegate {
     }
 
     @MainActor func panelWidthDragDidBegin(edge: PanelResizeEdge) {
+        panelWidthAnimator.cancel()
         suppressResize = true
         panelResizeState.draggingEdge = edge
     }
 
+    /// The width follows the pointer; jumping onto or off a preset glides instead of snapping.
     @MainActor func panelWidthDragDidMove(to frame: NSRect) {
-        applyDraggedWidth(frame)
+        if panelWidthAnimator.isRunning {
+            panelWidthAnimator.redirect(to: frame)
+        } else if abs(frame.width - panel.frame.width) > PanelWidthDrag.glideThreshold {
+            panelWidthAnimator.glide(from: panel.frame, to: frame)
+        } else {
+            applyDraggedWidth(frame)
+        }
     }
 
+    /// A release glides to the nearest preset that fits, then hands the width back to layout.
     @MainActor func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge) {
-        let settled = PanelWidthDrag.settled(from: frame, edge: edge)
+        let settled = PanelWidthDrag.settled(from: frame, edge: edge, visible: panel.screen?.visibleFrame)
         UserDefaults.standard.set(settled.width.rawValue, forKey: PanelWidth.defaultsKey)
-        applyDraggedWidth(keptOnScreen(settled.frame))
+        panelWidthAnimator.glide(from: panel.frame, to: keptOnScreen(settled.frame)) { [weak self] in
+            self?.finishWidthDrag()
+        }
+    }
+
+    @MainActor private func finishWidthDrag() {
         panelResizeState.width = nil
         panelResizeState.draggingEdge = nil
         // A panel the user placed by hand reopens where its new edges are.
@@ -228,7 +242,7 @@ extension AppDelegate: FloatingPanelDelegate {
     }
 
     /// The content takes the new width first, so the window never shows it at the old one.
-    @MainActor private func applyDraggedWidth(_ frame: NSRect) {
+    @MainActor func applyDraggedWidth(_ frame: NSRect) {
         panelResizeState.width = frame.width
         panel.contentView?.layout()
         panel.setFrame(frame, display: true)
