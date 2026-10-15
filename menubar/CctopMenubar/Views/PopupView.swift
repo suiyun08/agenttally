@@ -1,8 +1,7 @@
 import Combine
-import KeyboardShortcuts
 import SwiftUI
 
-private let overlayAnimationDuration: TimeInterval = 0.2
+private let pageAnimationDuration: TimeInterval = 0.18
 private let relativeTimeRefresh = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
 
 struct PopupView: View {
@@ -31,9 +30,6 @@ struct PopupView: View {
     @State var selectedTab: PopupTab = .active
     @State var selectedIndex: Int?
     @State var selectedSessionIdentity: SessionIdentityPolicy.LogicalIdentity?
-    @State private var gearHovered = false
-    @State private var versionHovered = false
-    @State private var shortcutHovered = false
     @State var selectedCleanupCandidate: WorktreeCleanupCandidate?
     @State var cleanupRemovalNotice: WorktreeRemovalNotice?
     @State var removingCleanupCandidateID: String?
@@ -54,14 +50,29 @@ struct PopupView: View {
     }
 
     private var showTabs: Bool { availableTabs.count > 1 && overlayController.active == nil }
+    private var currentPage: PanelPage { overlayController.active == .settings ? .settings : .sessions }
 
-    var body: some View {
+    /// The top bar and, on the session page, the tabs: they float over the page.
+    private var topChrome: some View {
         VStack(spacing: 0) {
-            HeaderView(counts: StatusCounts(userSessions: userSessions))
+            PanelTopBar(counts: StatusCounts(userSessions: userSessions), page: currentPage, onSelect: selectPage)
             if showTabs {
                 tabPicker
             }
-            ZStack(alignment: .top) {
+        }
+    }
+
+    private var pageContent: some View {
+        ZStack(alignment: .top) {
+            if currentPage == .settings {
+                SettingsSection(
+                    updater: updater,
+                    pluginManager: pluginManager,
+                    onOpenUpdater: onOpenUpdater,
+                    maxHeight: maxListHeight
+                )
+                .transition(.opacity)
+            } else {
                 Group {
                     switch selectedTab {
                     case .active: activeContent
@@ -71,35 +82,20 @@ struct PopupView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .opacity(overlayController.hideContent ? 0 : 1)
-                .animation(.none, value: overlayController.hideContent)
-                if let overlay = overlayController.active {
-                    switch overlay {
-                    case .settings:
-                        overlayPanel(verticalPadding: AppChrome.settingsOverlayVerticalPadding) {
-                            SettingsSection(
-                                updater: updater,
-                                pluginManager: pluginManager,
-                                onOpenUpdater: onOpenUpdater
-                            )
-                        }
-                    case .about:
-                        overlayPanel {
-                            AboutView()
-                        }
-                    }
-                }
+                .transition(.opacity)
             }
-            .frame(minHeight: overlayController.active != nil ? AppChrome.overlayMinimumContentHeight : 0)
-            .clipped()
-            .animation(.easeInOut(duration: overlayAnimationDuration), value: overlayController.active)
-            footerBar
         }
+        .animation(.easeInOut(duration: pageAnimationDuration), value: overlayController.active)
+    }
+
+    var body: some View {
+        pageContent
+            .modifier(FloatingTopChrome(chrome: topChrome))
         .onReceive(navigate?.didActivateSubject.eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { _ in
             selectedIndex = nil
             selectedSessionIdentity = nil
             if selectedTab != .active { selectedTab = .active }
-            if overlayController.active != nil { closeOverlay(animated: false) }
+            if overlayController.active != nil { closeOverlay() }
         }
         .onReceive(navigate?.navActionSubject.eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { action in
             guard overlayController.active == nil else { return }
@@ -169,7 +165,7 @@ struct PopupView: View {
             hasAttention: hasAttention && selectedTab != tab,
             isSelected: selectedTab == tab
         ) {
-            if overlayController.active != nil { closeOverlay(animated: false) }
+            if overlayController.active != nil { closeOverlay() }
             withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
             notifyLayoutChanged()
         }
@@ -237,106 +233,9 @@ struct PopupView: View {
     }
 }
 
-// MARK: - Overlay & Footer
+// MARK: - Pages
 
 extension PopupView {
-    var footerBar: some View {
-        HStack(spacing: 8) {
-            QuitButton()
-            footerSeparator
-            versionButton
-            footerShortcutHints
-            Spacer()
-            footerUpdateStatus
-            settingsGearButton
-        }
-        .padding(.leading, 16)
-        .padding(.trailing, 12)
-        .padding(.top, 6)
-        .padding(.bottom, 10)
-    }
-
-    private var versionButton: some View {
-        let isActive = overlayController.active == .about
-        let color: Color = isActive ? .amber : (versionHovered ? .textPrimary : .textMuted)
-        return Button { toggleOverlay(.about) } label: {
-            Text("v\(Bundle.main.appVersion)")
-                .font(.system(size: 10.5))
-                .foregroundStyle(color)
-                .underline(versionHovered && !isActive)
-        }
-        .buttonStyle(.plain)
-        .onHover { versionHovered = $0 }
-    }
-
-    private var settingsGearButton: some View {
-        Button { toggleOverlay(.settings) } label: {
-            Image(systemName: "gearshape")
-                .font(.system(size: 14))
-                .foregroundStyle(overlayController.active == .settings ? Color.textSecondary : Color.textMuted)
-                .frame(width: 20, height: 20)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(
-                            overlayController.active == .settings || gearHovered
-                                ? Color.panelSelectionBackground
-                                : Color.clear
-                        )
-                )
-                .contentShape(Rectangle().inset(by: -4))
-        }
-        .buttonStyle(.plain)
-        .onHover { gearHovered = $0 }
-        .accessibilityLabel("Settings")
-        .accessibilityValue(overlayController.active == .settings ? "Open" : "Closed")
-    }
-
-    @ViewBuilder
-    private var footerUpdateStatus: some View {
-        if overlayController.active == .settings {
-            EmptyView()
-        } else if let version = updater.downloadingUpdateVersion {
-            FooterUpdateStatusView(state: .downloading(version: version)) {}
-        } else if let version = updater.pendingUpdateVersion {
-            FooterUpdateStatusView(state: .available(version: version)) {
-                openUpdater()
-            }
-        }
-    }
-
-    private func openUpdater() {
-        if let onOpenUpdater {
-            onOpenUpdater()
-        } else {
-            updater.checkForUpdates()
-        }
-    }
-
-    // MARK: - Helpers
-
-    private var footerSeparator: some View {
-        Text("\u{00B7}")
-            .font(.system(size: 10.5))
-            .foregroundStyle(Color.textMuted.opacity(0.52))
-            .accessibilityHidden(true)
-    }
-
-    @ViewBuilder private var footerShortcutHints: some View {
-        if let sc = KeyboardShortcuts.getShortcut(for: .navigate) {
-            footerSeparator
-            Button { toggleOverlay(.settings) } label: {
-                Text("\(sc.description) navigate")
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(shortcutHovered ? Color.textPrimary : Color.textSecondary)
-                    .underline(shortcutHovered)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-            .buttonStyle(.plain)
-            .onHover { shortcutHovered = $0 }
-            .layoutPriority(-1)
-        } else { EmptyView() }
-    }
     var actionableCleanupCandidates: [WorktreeCleanupCandidate] {
         cleanupCandidates.filter(\.state.isActionable)
     }
@@ -356,22 +255,22 @@ extension PopupView {
         focusTerminal(session: session)
     }
 
-    private func toggleOverlay(_ overlay: PopupOverlay) {
-        if overlayController.active == overlay {
-            closeOverlay(animated: true)
-        } else {
-            if overlay == .settings { pluginManager.refresh() }
-            overlayController.active = nil
-            overlayController.hideContent = true
-            overlayController.active = overlay
+    /// The top bar's buttons: each shows its page; picking the page already shown does nothing.
+    func selectPage(_ page: PanelPage) {
+        switch page {
+        case .settings:
+            guard overlayController.active != .settings else { return }
+            pluginManager.refresh()
+            overlayController.active = .settings
             notifyLayoutChanged()
+        case .sessions:
+            closeOverlay()
         }
     }
-    private func closeOverlay(animated: Bool) {
+    private func closeOverlay() {
+        guard overlayController.active != nil else { return }
         overlayController.active = nil
         notifyLayoutChanged()
-        guard animated else { overlayController.hideContent = false; return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + overlayAnimationDuration) { overlayController.hideContent = false }
     }
 
     func notifyLayoutChanged() {
@@ -443,7 +342,7 @@ extension PopupView {
         let tabs = availableTabs
         let newTab = PopupTab.switched(from: selectedTab, action: action, availableTabs: tabs)
         guard newTab != selectedTab else { return }
-        if overlayController.active != nil { closeOverlay(animated: true) }
+        if overlayController.active != nil { closeOverlay() }
         withAnimation(.easeInOut(duration: 0.15)) { selectedTab = newTab }
         notifyLayoutChanged()
     }

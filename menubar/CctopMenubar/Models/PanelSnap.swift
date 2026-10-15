@@ -1,12 +1,12 @@
 import AppKit
 
-/// Keeps a dragged panel on screen and settles it against nearby screen edges on release.
+/// Keeps a dragged panel on screen and holds it against a screen edge it comes near, while the
+/// drag is still going, so the user sees where it will land.
 enum PanelSnap {
-    /// How close a panel edge has to come to a screen edge before it settles against it.
+    /// How close a panel edge has to come to a screen edge before it sticks to it.
     static let threshold: CGFloat = 20
-    /// The gap left between the panel and a side or bottom screen edge it settles against.
+    /// The gap left between the panel and a side or bottom screen edge it sticks to.
     static let gap: CGFloat = 8
-    static let settleDuration: TimeInterval = 0.25
 
     /// The screen a drag is on: the one under the pointer, else the one the panel overlaps most.
     static func screen(pointer: NSPoint?, frame: NSRect, in screens: [ScreenLayout]) -> ScreenLayout? {
@@ -24,8 +24,8 @@ enum PanelSnap {
         return kept
     }
 
-    /// The frame a released drag settles on: on screen, and against any screen edge within the
-    /// threshold. The top settles where the panel opens under the menu bar.
+    /// Where the panel shows for a drag position: on screen, and against any screen edge within
+    /// the threshold. The top sticks where the panel opens under the menu bar.
     static func settled(_ frame: NSRect, visible: NSRect) -> NSRect {
         var settled = keptOnScreen(frame, visible: visible)
         if settled.minX - visible.minX < threshold {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		PTB000010000000000000001 /* PanelTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = PTB000020000000000000001 /* PanelTopBar.swift */; };
 		PSN000010000000000000001 /* PanelSnap.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSN000020000000000000001 /* PanelSnap.swift */; };
 		PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSB000020000000000000001 /* PanelSurfaceBackground.swift */; };
 		BGC000010000000000000001 /* BackgroundCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BGC000020000000000000001 /* BackgroundCursor.swift */; };
@@ -45,15 +46,13 @@
 		SNC000010000000000000001 /* SessionData+NotificationContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SNC000020000000000000001 /* SessionData+NotificationContent.swift */; };
 		B10000030000000000000001 /* SessionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000040000000000000001 /* SessionStatus.swift */; };
 		C10000010000000000000001 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000001 /* SessionManager.swift */; };
-		D10000010000000000000001 /* StatusChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000001 /* StatusChip.swift */; };
-		D10000030000000000000001 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000040000000000000001 /* HeaderView.swift */; };
 		D10000050000000000000001 /* SessionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000060000000000000001 /* SessionCardView.swift */; };
 		SBV000010000000000000001 /* SourceBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBV000020000000000000001 /* SourceBadgeView.swift */; };
 		D10000070000000000000001 /* PopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000080000000000000001 /* PopupView.swift */; };
 		PVS000010000000000000001 /* PopupView+Sessions.swift in Sources */ = {isa = PBXBuildFile; fileRef = PVS000020000000000000001 /* PopupView+Sessions.swift */; };
 		PVH000010000000000000001 /* PopupViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = PVH000020000000000000001 /* PopupViewHelpers.swift */; };
 		PVR000010000000000000001 /* PopupView+Recent.swift in Sources */ = {isa = PBXBuildFile; fileRef = PVR000020000000000000001 /* PopupView+Recent.swift */; };
-		D10000090000000000000001 /* QuitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000000A000000000000001 /* QuitButton.swift */; };
+		D10000090000000000000001 /* SettingsFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000000A000000000000001 /* SettingsFooter.swift */; };
 		FTR000010000000000000001 /* FocusTargetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FTR000020000000000000001 /* FocusTargetResolver.swift */; };
 		E10000010000000000000001 /* FocusTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000001 /* FocusTerminal.swift */; };
 		EAPPRESTORE0010000000001 /* FocusTerminal+AppRestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAPPRESTORE0020000000001 /* FocusTerminal+AppRestore.swift */; };
@@ -92,7 +91,6 @@
 		K10000010000000000000001 /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = K10000020000000000000001 /* Color+Theme.swift */; };
 		L10000010000000000000001 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = L10000020000000000000001 /* EmptyStateView.swift */; };
 		N10000010000000000000001 /* SessionStatus+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = N10000020000000000000001 /* SessionStatus+UI.swift */; };
-		AB0000010000000000000001 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000020000000000000001 /* AboutView.swift */; };
 		MIR000010000000000000001 /* MenubarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIR000020000000000000001 /* MenubarIconRenderer.swift */; };
 		OB0000010000000000000001 /* OpenCodeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000020000000000000001 /* OpenCodeBanner.swift */; };
 		RP0000010000000000000001 /* RecentProject.swift in Sources */ = {isa = PBXBuildFile; fileRef = RP0000020000000000000001 /* RecentProject.swift */; };
@@ -215,6 +213,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		PTB000020000000000000001 /* PanelTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTopBar.swift; sourceTree = "<group>"; };
 		PSN000020000000000000001 /* PanelSnap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSnap.swift; sourceTree = "<group>"; };
 		PSB000020000000000000001 /* PanelSurfaceBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSurfaceBackground.swift; sourceTree = "<group>"; };
 		BGC000020000000000000001 /* BackgroundCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundCursor.swift; sourceTree = "<group>"; };
@@ -261,9 +260,7 @@
 		SML000020000000000000001 /* SessionManager+Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+Loading.swift"; sourceTree = "<group>"; };
 		SMN000020000000000000001 /* SessionManager+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+Notifications.swift"; sourceTree = "<group>"; };
 		NPC000020000000000000001 /* NotificationPermissionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPermissionController.swift; sourceTree = "<group>"; };
-		D1000000A000000000000001 /* QuitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitButton.swift; sourceTree = "<group>"; };
-		D10000020000000000000001 /* StatusChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusChip.swift; sourceTree = "<group>"; };
-		D10000040000000000000001 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		D1000000A000000000000001 /* SettingsFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFooter.swift; sourceTree = "<group>"; };
 		D10000060000000000000001 /* SessionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCardView.swift; sourceTree = "<group>"; };
 		SBV000020000000000000001 /* SourceBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceBadgeView.swift; sourceTree = "<group>"; };
 		D10000080000000000000001 /* PopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupView.swift; sourceTree = "<group>"; };
@@ -306,7 +303,6 @@
 		L10000020000000000000001 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		M10000010000000000000001 /* CctopMenubar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CctopMenubar.entitlements; sourceTree = "<group>"; };
 		N10000020000000000000001 /* SessionStatus+UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionStatus+UI.swift"; sourceTree = "<group>"; };
-		AB0000020000000000000001 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		MIR000020000000000000001 /* MenubarIconRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarIconRenderer.swift; sourceTree = "<group>"; };
 		OB0000020000000000000001 /* OpenCodeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeBanner.swift; sourceTree = "<group>"; };
 		RP0000020000000000000001 /* RecentProject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentProject.swift; sourceTree = "<group>"; };
@@ -560,8 +556,6 @@
 		A10000090000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				D10000020000000000000001 /* StatusChip.swift */,
-				D10000040000000000000001 /* HeaderView.swift */,
 				D10000060000000000000001 /* SessionCardView.swift */,
 				SBV000020000000000000001 /* SourceBadgeView.swift */,
 				D10000080000000000000001 /* PopupView.swift */,
@@ -571,20 +565,20 @@
 				PCU000020000000000000001 /* PopupView+Cleanup.swift */,
 				PVR000020000000000000001 /* PopupView+Recent.swift */,
 				PVH000020000000000000001 /* PopupViewHelpers.swift */,
-				D1000000A000000000000001 /* QuitButton.swift */,
+				D1000000A000000000000001 /* SettingsFooter.swift */,
 				J10000020000000000000001 /* SettingsSection.swift */,
 				SDR000020000000000000001 /* StreamDeckPluginRowView.swift */,
 				SCTRL0020000000000000001 /* SettingsControls.swift */,
 				NROW00020000000000000001 /* NotificationSettingsRow.swift */,
 				NSG000020000000000000001 /* NotificationSettingsGroup.swift */,
 				PSB000020000000000000001 /* PanelSurfaceBackground.swift */,
+				PTB000020000000000000001 /* PanelTopBar.swift */,
 				JSPREV020000000000000001 /* SettingsSection+Preview.swift */,
 				CDXROW020000000000000001 /* CodexPluginRowView.swift */,
 				L10000020000000000000001 /* EmptyStateView.swift */,
 				N10000020000000000000001 /* SessionStatus+UI.swift */,
 				RV0000020000000000000001 /* RecentProjectCardView.swift */,
 				OB0000020000000000000001 /* OpenCodeBanner.swift */,
-				AB0000020000000000000001 /* AboutView.swift */,
 				MIR000020000000000000001 /* MenubarIconRenderer.swift */,
 				NSP000020000000000000001 /* NotchStatusPanel.swift */,
 				NSV000020000000000000001 /* NotchStatusView.swift */,
@@ -811,14 +805,12 @@
 				SML000010000000000000001 /* SessionManager+Loading.swift in Sources */,
 				SMN000010000000000000001 /* SessionManager+Notifications.swift in Sources */,
 				NPC000010000000000000001 /* NotificationPermissionController.swift in Sources */,
-				D10000010000000000000001 /* StatusChip.swift in Sources */,
-				D10000030000000000000001 /* HeaderView.swift in Sources */,
 				D10000050000000000000001 /* SessionCardView.swift in Sources */,
 				SBV000010000000000000001 /* SourceBadgeView.swift in Sources */,
 				D10000070000000000000001 /* PopupView.swift in Sources */,
 				PVS000010000000000000001 /* PopupView+Sessions.swift in Sources */,
 				PVH000010000000000000001 /* PopupViewHelpers.swift in Sources */,
-				D10000090000000000000001 /* QuitButton.swift in Sources */,
+				D10000090000000000000001 /* SettingsFooter.swift in Sources */,
 				FTR000010000000000000001 /* FocusTargetResolver.swift in Sources */,
 				E10000010000000000000001 /* FocusTerminal.swift in Sources */,
 				EAPPRESTORE0010000000001 /* FocusTerminal+AppRestore.swift in Sources */,
@@ -864,7 +856,6 @@
 				RRT000010000000000000001 /* RecentResumeTarget.swift in Sources */,
 				RV0000010000000000000001 /* RecentProjectCardView.swift in Sources */,
 				OB0000010000000000000001 /* OpenCodeBanner.swift in Sources */,
-				AB0000010000000000000001 /* AboutView.swift in Sources */,
 				MIR000010000000000000001 /* MenubarIconRenderer.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,
 				RPM000010000000000000001 /* RecentProject+Mock.swift in Sources */,
@@ -880,6 +871,7 @@
 				NROW00010000000000000001 /* NotificationSettingsRow.swift in Sources */,
 				NSG000010000000000000001 /* NotificationSettingsGroup.swift in Sources */,
 				PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */,
+				PTB000010000000000000001 /* PanelTopBar.swift in Sources */,
 				PPO000010000000000000001 /* PanelPositioning.swift in Sources */,
 				WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */,
 				WCM000010000000000000001 /* WorktreeCleanupCandidate+Mock.swift in Sources */,

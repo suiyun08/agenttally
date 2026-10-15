@@ -135,6 +135,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             },
             onLayoutChanged: { [weak self] in
                 Task { @MainActor in self?.resizePanel(animate: true) }
+            },
+            onHeaderControlsChanged: { [weak self] rects in
+                Task { @MainActor in self?.panel?.headerControlRects = rects }
             }
         )
     }

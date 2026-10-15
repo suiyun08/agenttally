@@ -3,7 +3,7 @@ import SwiftUI
 
 enum AppChrome {
     static let cornerRadius: CGFloat = 8
-    static let headerHeight: CGFloat = 40
+    static let headerHeight: CGFloat = 44
     static let rowSelectionHorizontalInset: CGFloat = 8
     static let panelCornerRadius: CGFloat = 16
     static let controlCornerRadius = cornerRadius
@@ -23,8 +23,6 @@ enum AppChrome {
     static let settingsSegmentedControlCornerRadius: CGFloat = 7
     static let settingsSegmentSelectionCornerRadius: CGFloat = 5
     static let overlayMinimumContentHeight: CGFloat = 290
-    static let overlayContentVerticalPadding: CGFloat = 8
-    static let settingsOverlayVerticalPadding: CGFloat = 0
     static let settingsScrollViewportHeight: CGFloat = 454
     static let settingsContentPadding = EdgeInsets(
         top: settingsContentPaddingTop,

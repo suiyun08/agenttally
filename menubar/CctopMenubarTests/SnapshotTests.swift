@@ -209,7 +209,15 @@ final class SnapshotTests: XCTestCase {
             updater: DisabledUpdater(),
             pluginManager: inertPluginManager()
         )
-        let settings = SettingsSection(updater: DisabledUpdater(), pluginManager: inertPluginManager())
+        let settingsPage = OverlayController()
+        settingsPage.active = .settings
+        let settings = PopupView(
+            userSessions: userSessions(fromDataFixtures: SessionData.qaShowcase),
+            updater: DisabledUpdater(),
+            pluginManager: inertPluginManager(),
+            overlayController: settingsPage,
+            maxListHeight: 900
+        )
         for scheme in [ColorScheme.light, .dark] {
             let name = scheme == .dark ? "dark" : "light"
             try renderPanelScreenshot(
@@ -219,6 +227,10 @@ final class SnapshotTests: XCTestCase {
             try renderPanelScreenshot(
                 view: settings, colorScheme: scheme, directoryName: "cctop-screenshots",
                 filename: "glass-preview-settings-\(name).png", overWallpaper: true
+            )
+            try renderPanelScreenshot(
+                view: settings, colorScheme: scheme, directoryName: "cctop-screenshots",
+                filename: "panel-settings-\(name).png"
             )
         }
     }

@@ -2933,18 +2933,21 @@ final class PanelWidthDragTests: XCTestCase {
         XCTAssertEqual(PanelWidthDrag.edge(atX: 320, panelWidth: 320), .trailing)
     }
 
-    func testLeadingEdgeDragFollowsPointerAndHoldsTrailingEdge() {
+    func testLeadingEdgeDragJumpsToTheNearestPresetAndHoldsTrailingEdge() {
+        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -30).width, 320)
         let frame = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -50)
-        XCTAssertEqual(frame.width, 370)
+        XCTAssertEqual(frame.width, 400)
         XCTAssertEqual(frame.maxX, start.maxX)
         XCTAssertEqual(frame.minY, start.minY)
         XCTAssertEqual(frame.height, start.height)
     }
 
-    func testTrailingEdgeDragFollowsPointerAndHoldsLeadingEdge() {
+    func testTrailingEdgeDragJumpsToTheNearestPresetAndHoldsLeadingEdge() {
+        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 30).width, 320)
         let frame = PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 70)
-        XCTAssertEqual(frame.width, 390)
+        XCTAssertEqual(frame.width, 400)
         XCTAssertEqual(frame.minX, start.minX)
+        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 130).width, 480)
     }
 
     func testDragStaysWithinThePresetRange() {
@@ -3129,16 +3132,18 @@ final class PanelSnapTests: XCTestCase {
         XCTAssertEqual(PanelSnap.screen(pointer: nil, frame: frame, in: [main, side])?.key, "main")
     }
 
-    func testWidthDragStopsShortOfTheScreenEdge() {
+    func testWidthDragSkipsPresetsThatWouldLeaveTheScreen() {
+        // 408pt of room: 480 does not fit, so the drag stops at 400.
         let nearRight = NSRect(x: 1100, y: 100, width: 320, height: 300)
         let widened = PanelWidthDrag.frame(from: nearRight, edge: .trailing, deltaX: 200, visible: visible)
-        XCTAssertEqual(widened.maxX, 1512 - PanelPositioning.margin)
+        XCTAssertEqual(widened.width, 400)
         XCTAssertEqual(widened.minX, 1100)
+        XCTAssertLessThanOrEqual(widened.maxX, 1512 - PanelPositioning.margin)
 
+        // 366pt of room: only the standard width fits.
         let nearLeft = NSRect(x: 50, y: 100, width: 320, height: 300)
         let leftWidened = PanelWidthDrag.frame(from: nearLeft, edge: .leading, deltaX: -200, visible: visible)
-        XCTAssertEqual(leftWidened.minX, PanelPositioning.margin)
-        XCTAssertEqual(leftWidened.maxX, nearLeft.maxX)
+        XCTAssertEqual(leftWidened, nearLeft)
 
         let roomy = PanelWidthDrag.frame(from: panel(x: 600, y: 100), edge: .trailing, deltaX: 500, visible: visible)
         XCTAssertEqual(roomy.width, 480)

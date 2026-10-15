@@ -6,6 +6,7 @@ struct SettingsSection: View {
     @ObservedObject var updater: UpdaterBase
     @ObservedObject var pluginManager: PluginManager
     var onOpenUpdater: (() -> Void)?
+    var maxHeight: CGFloat = AppChrome.settingsScrollViewportHeight
     @ObservedObject private var themeManager = ThemeManager.shared
     @StateObject private var notificationPermission: NotificationPermissionController
     @AppStorage("appearanceMode") private var appearanceMode = "system"
@@ -16,11 +17,13 @@ struct SettingsSection: View {
         updater: UpdaterBase,
         pluginManager: PluginManager,
         onOpenUpdater: (() -> Void)? = nil,
+        maxHeight: CGFloat = AppChrome.settingsScrollViewportHeight,
         notificationPermission: NotificationPermissionController = NotificationPermissionController()
     ) {
         self.updater = updater
         self.pluginManager = pluginManager
         self.onOpenUpdater = onOpenUpdater
+        self.maxHeight = maxHeight
         _notificationPermission = StateObject(wrappedValue: notificationPermission)
     }
 
@@ -28,7 +31,7 @@ struct SettingsSection: View {
         ScrollView(showsIndicators: false) {
             settingsContent
         }
-        .frame(maxHeight: AppChrome.settingsScrollViewportHeight)
+        .frame(maxHeight: maxHeight)
         .onAppear { notificationPermission.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             notificationPermission.refresh()
@@ -96,10 +99,10 @@ struct SettingsSection: View {
                 groupedDivider
                 fileAccessRow
             }
+
+            SettingsFooter()
         }
         .padding(6)
-        .background(Color.groupedContentBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(AppChrome.settingsContentPadding)
     }
 
@@ -481,19 +484,3 @@ struct ClaudeCodeInstallButton: View {
     }
 }
 /// Amber pill action button shared by the plugin rows and the empty state.
-struct AmberActionButton: View {
-    let label: LocalizedStringKey
-    let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(Color.accentButtonText)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Color.amber)
-                .clipShape(RoundedRectangle(cornerRadius: AppChrome.controlCornerRadius))
-        }
-        .buttonStyle(.plain)
-    }
-}

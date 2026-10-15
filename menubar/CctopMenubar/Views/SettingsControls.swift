@@ -181,3 +181,20 @@ struct LanguageSettingsRow: View {
         .onChange(of: selection) { $0.apply() }
     }
 }
+
+struct AmberActionButton: View {
+    let label: LocalizedStringKey
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.accentButtonText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.amber)
+                .clipShape(RoundedRectangle(cornerRadius: AppChrome.controlCornerRadius))
+        }
+        .buttonStyle(.plain)
+    }
+}

@@ -161,7 +161,6 @@ final class ThemeManagerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(AppChrome.settingsContentPaddingBottom, 6)
         XCTAssertGreaterThan(AppChrome.overlayMinimumContentHeight, 0)
         XCTAssertLessThan(AppChrome.overlayMinimumContentHeight, CGFloat.infinity)
-        XCTAssertEqual(AppChrome.settingsOverlayVerticalPadding, 0)
         XCTAssertGreaterThan(AppChrome.settingsScrollViewportHeight, AppChrome.overlayMinimumContentHeight)
     }
 }

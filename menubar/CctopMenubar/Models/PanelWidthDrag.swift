@@ -18,8 +18,9 @@ enum PanelWidthDrag {
         return nil
     }
 
-    /// The frame while dragging: follows the pointer within the presets' range, and the moving
-    /// edge stops short of the screen's visible edge.
+    /// The frame while dragging. The width jumps between presets as the pointer passes each
+    /// midpoint, so what shows is what a release keeps; a preset that would push the moving edge
+    /// past the screen's visible edge is skipped.
     static func frame(
         from start: NSRect, edge: PanelResizeEdge, deltaX: CGFloat, visible: NSRect? = nil
     ) -> NSRect {
@@ -31,8 +32,12 @@ enum PanelWidthDrag {
                 : visible.maxX - PanelPositioning.margin - start.minX
             widest = max(PanelWidth.range.lowerBound, min(widest, room))
         }
-        let width = min(max(proposed, PanelWidth.range.lowerBound), widest)
-        return frame(start, holding: edge, width: width)
+        let pointerWidth = min(max(proposed, PanelWidth.range.lowerBound), widest)
+        let preset = PanelWidth.allCases
+            .filter { CGFloat($0.rawValue) <= widest }
+            .min { abs(CGFloat($0.rawValue) - pointerWidth) < abs(CGFloat($1.rawValue) - pointerWidth) }
+            ?? .standard
+        return frame(start, holding: edge, width: CGFloat(preset.rawValue))
     }
 
     /// The frame a released drag settles on: the nearest preset, same edge held.

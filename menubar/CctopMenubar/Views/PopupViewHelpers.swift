@@ -43,13 +43,12 @@ enum PopupConfirmation: Identifiable, Equatable {
 }
 
 enum PopupOverlay: Equatable {
-    case settings, about
+    case settings
 }
 
 @MainActor
 class OverlayController: ObservableObject {
     @Published var active: PopupOverlay?
-    @Published var hideContent = false
 }
 
 enum PanelNavAction {
@@ -119,23 +118,6 @@ struct PanelAccentHairline: View {
     }
 }
 
-// MARK: - Roll-up animation
-
-struct RollUpEffect: ViewModifier {
-    var progress: CGFloat
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-
-    func body(content: Content) -> some View {
-        content.mask {
-            Color.black.scaleEffect(y: progress, anchor: .top)
-        }
-    }
-}
-
 struct TabButtonView: View {
     let label: String
     let count: Int
@@ -201,63 +183,6 @@ struct TabButtonView: View {
     }
 }
 
-// MARK: - Footer update status
-
-enum FooterUpdateStatusState: Equatable {
-    case available(version: String)
-    case downloading(version: String)
-
-    var version: String {
-        switch self {
-        case .available(let version), .downloading(let version):
-            return version
-        }
-    }
-}
-
-struct FooterUpdateStatusView: View {
-    let state: FooterUpdateStatusState
-    let action: () -> Void
-    @State private var isHovered = false
-
-    var body: some View {
-        switch state {
-        case .available:
-            Button(action: action) {
-                Text("Update")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color.accentButtonText)
-                    .lineLimit(1)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(Color.amber.opacity(isHovered ? 0.90 : 1.0))
-                    .clipShape(RoundedRectangle(cornerRadius: AppChrome.controlCornerRadius, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .onHover { isHovered = $0 }
-            .help("Open updater for v\(state.version)")
-            .accessibilityLabel("Open cctop updater")
-            .accessibilityHint("Opens the updater for cctop v\(state.version).")
-        case .downloading:
-            HStack(spacing: 4) {
-                ProgressView()
-                    .controlSize(.mini)
-                    .frame(width: 10, height: 10)
-                    .accessibilityHidden(true)
-                Text("Downloading")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color.textSecondary)
-                    .lineLimit(1)
-            }
-            .fixedSize(horizontal: true, vertical: false)
-            .help("Downloading cctop v\(state.version)")
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Downloading cctop update")
-            .accessibilityHint("cctop v\(state.version) is downloading.")
-        }
-    }
-}
-
 extension PopupView {
     func requestHideSession(_ row: PanelSessionRow) {
         guard let confirmation = ManualSessionHideConfirmation(
@@ -315,6 +240,8 @@ struct PanelContentView: View {
     var onCleanupTabHidden: () -> Void = {}
     /// Called (async on main) whenever content layout changes so the host can resize the panel.
     var onLayoutChanged: () -> Void = {}
+    /// Reports the top bar's button frames (top-left origin) so the panel lets clicks reach them.
+    var onHeaderControlsChanged: ([CGRect]) -> Void = { _ in }
     @ObservedObject private var themeManager = ThemeManager.shared
     @AppStorage(PanelWidth.defaultsKey) private var panelWidth = PanelWidth.standard.rawValue
     @StateObject private var overlayController = OverlayController()
@@ -341,6 +268,8 @@ struct PanelContentView: View {
             maxListHeight: heightLimit.maxHeight
         )
         .frame(width: resizeState.width ?? CGFloat(panelWidth))
+        .coordinateSpace(name: PanelHeaderControlFramesKey.coordinateSpace)
+        .onPreferenceChange(PanelHeaderControlFramesKey.self) { onHeaderControlsChanged($0) }
         .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()

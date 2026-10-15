@@ -14,8 +14,11 @@ class FloatingPanel: NSPanel {
     private var edgeTrackingArea: NSTrackingArea?
     private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
-    /// Height of the header drag zone (shared with HeaderView).
+    /// Height of the header drag zone (shared with PanelTopBar).
     private let headerDragHeight = AppChrome.headerHeight
+    /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
+    /// the rest of the bar drags the panel.
+    var headerControlRects: [CGRect] = []
     static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
 
     enum HeaderClickAction: Equatable {
@@ -132,32 +135,16 @@ class FloatingPanel: NSPanel {
                 y: startOrigin.y + current.y - startLocation.y
             )
             if let screen = PanelSnap.screen(pointer: current, frame: next, in: screens) {
-                next = PanelSnap.keptOnScreen(next, visible: screen.visibleFrame)
+                next = PanelSnap.settled(next, visible: screen.visibleFrame)
             }
             setFrameOrigin(next.origin)
         }
 
-        var landed = frame
-        if sawDragEvents,
-           let screen = PanelSnap.screen(pointer: NSEvent.mouseLocation, frame: frame, in: screens) {
-            landed = PanelSnap.settled(frame, visible: screen.visibleFrame)
-            if landed != frame { settle(at: landed) }
-        }
-
         if Self.shouldPersistDrag(
             sawDragEvents: sawDragEvents,
-            originMoved: landed.origin != startOrigin
+            originMoved: frame.origin != startOrigin
         ) {
-            panelDelegate?.panelDidDrag(originX: landed.origin.x, topY: landed.maxY)
-        }
-    }
-
-    /// Glides the released panel against the screen edge it was dropped near.
-    private func settle(at target: NSRect) {
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = PanelSnap.settleDuration
-            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
-            animator().setFrame(target, display: true)
+            panelDelegate?.panelDidDrag(originX: frame.origin.x, topY: frame.maxY)
         }
     }
 
@@ -239,6 +226,9 @@ class FloatingPanel: NSPanel {
     }
 
     private func isInHeaderArea(_ event: NSEvent) -> Bool {
-        event.locationInWindow.y >= frame.height - headerDragHeight
+        let point = event.locationInWindow
+        guard point.y >= frame.height - headerDragHeight else { return false }
+        let topLeft = CGPoint(x: point.x, y: frame.height - point.y)
+        return !headerControlRects.contains { $0.insetBy(dx: -2, dy: -2).contains(topLeft) }
     }
 }
