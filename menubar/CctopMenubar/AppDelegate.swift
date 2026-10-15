@@ -41,6 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     @MainActor lazy var panelWidthAnimator = PanelWidthAnimator { [weak self] frame in
         self?.applyDraggedWidth(frame)
     }
+    @MainActor lazy var panelHover = PanelHoverController()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -97,6 +98,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         )
         panel.contentView = hostingView
         panel.panelDelegate = self
+        setupPanelHover()
 
         applyAppearance()
         registerShortcuts()
@@ -333,7 +335,7 @@ extension AppDelegate {
         ))
     }
 
-    @MainActor private var panelVisibleInActiveSpace: Bool {
+    @MainActor var panelVisibleInActiveSpace: Bool {
         panel.isVisible && panel.isOnActiveSpace
     }
 

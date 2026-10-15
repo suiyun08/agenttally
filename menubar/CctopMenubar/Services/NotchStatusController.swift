@@ -27,6 +27,8 @@ class NotchStatusController {
 
     /// Called when the notch pill is clicked.
     var onPillClicked: (() -> Void)?
+    /// Called with each new pill's content view, for hover tracking.
+    var onPillViewCreated: ((NSView) -> Void)?
 
     /// Last counts received, used when creating or updating the panel.
     private(set) var lastCounts = StatusCounts.zero
@@ -73,6 +75,7 @@ class NotchStatusController {
         newPanel.contentView = hosting
         newPanel.setFrame(frame, display: true)
         newPanel.orderFrontRegardless()
+        onPillViewCreated?(hosting)
 
         self.panel = newPanel
         self.hostingView = hosting

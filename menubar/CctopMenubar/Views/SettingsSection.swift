@@ -97,6 +97,8 @@ struct SettingsSection: View {
                     } catch { launchAtLogin = SMAppService.mainApp.status == .enabled }
                 }
                 groupedDivider
+                HoverToOpenSettingsRow()
+                groupedDivider
                 NotificationSettingsGroup(notificationPermission: notificationPermission)
                 groupedDivider
                 fileAccessRow
