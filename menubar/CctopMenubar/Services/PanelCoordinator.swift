@@ -7,7 +7,8 @@ enum PanelMode: Equatable {
     case hidden
     case normal
     /// Opened by resting the pointer on the menu bar dots: shown without taking keyboard focus,
-    /// and closed again once the pointer moves away. A click or drag pins it as `.normal`.
+    /// and closed again once the pointer moves away, even after clicks inside it. Only clicking
+    /// the dots or the toggle shortcut pins it as `.normal`.
     case peek
     case navigate(origin: NavigateOrigin)
 }
@@ -39,8 +40,6 @@ enum PanelEvent {
     case pointerRested(panelVisibleInActiveSpace: Bool = true)
     /// The pointer stayed off the dots and the panel for the whole grace period.
     case pointerLeft
-    /// A mouse button went down inside the panel.
-    case panelClicked
 }
 
 enum PanelAction: Equatable {
@@ -102,14 +101,17 @@ struct PanelCoordinator {
         }
     }
 
-    /// A click on the dots or the panel pins a peek instead of closing it, so the habit of
-    /// clicking the dots never takes away the panel the pointer just opened.
+    /// Clicking the dots (or the toggle shortcut) pins a peek instead of closing it, so that habit
+    /// never takes away the panel the pointer just opened. Clicks inside leave it a peek, and the
+    /// keys work there once a click has given the panel focus.
     private static func handlePeek(event: PanelEvent, state: PanelState) -> Result {
         switch event {
         case .menubarIconClicked:
             return openPanelResult()
-        case .panelClicked:
-            return Result(state: PanelState(mode: .normal), actions: [.startNavKeyMonitor])
+        case .escape:
+            return Result(state: state, actions: [.postNavAction(.escape)])
+        case .navKey(let action):
+            return Result(state: state, actions: [.postNavAction(action)])
         case .pointerLeft:
             return Result(state: PanelState(mode: .hidden), actions: [.dismissPanel])
         case .navigateShortcut:
@@ -196,7 +198,7 @@ struct PanelCoordinator {
 
     /// Show the panel as a peek, leaving keyboard focus with the app the user is in.
     private static func peekResult() -> Result {
-        Result(state: PanelState(mode: .peek), actions: [.peekPanel, .postNavAction(.reset)])
+        Result(state: PanelState(mode: .peek), actions: [.peekPanel, .startNavKeyMonitor, .postNavAction(.reset)])
     }
 
     /// Show a closed panel directly in navigate mode.

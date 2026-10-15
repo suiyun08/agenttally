@@ -7,8 +7,6 @@ import AppKit
     func panelWidthDragDidBegin(edge: PanelResizeEdge)
     func panelWidthDragDidMove(to frame: NSRect)
     func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge)
-    /// A mouse button went down anywhere in the panel, before the panel handles it.
-    func panelReceivedMouseDown()
 }
 
 class FloatingPanel: NSPanel {
@@ -164,9 +162,6 @@ class FloatingPanel: NSPanel {
     // MARK: - Header drag via tight event-tracking loop
 
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown || event.type == .rightMouseDown {
-            panelDelegate?.panelReceivedMouseDown()
-        }
         if event.type == .leftMouseDown,
            let edge = PanelWidthDrag.edge(atX: event.locationInWindow.x, panelWidth: frame.width) {
             handleWidthDrag(holding: edge)

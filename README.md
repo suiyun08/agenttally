@@ -41,8 +41,9 @@ developed on its own.
   read yet is a hollow ring. The dots sit on a small translucent pill so they stay readable
   over any wallpaper, and move beside the camera notch when the menu bar has no room.
 - **Hover to peek.** Rest the pointer on the dots and the panel opens without taking keyboard
-  focus from the app you are typing in. Move away and it closes; click it and it stays. Turn it
-  off in **Settings › General › Open on Hover**.
+  focus from the app you are typing in. Move away and it closes, even after you click a session
+  in it. Click the dots or press the toggle shortcut to keep the panel open. Turn hovering off in
+  **Settings › General › Open on Hover**.
 - **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
   unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
 - **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
