@@ -24,7 +24,7 @@ enum PanelSurfaceStyle: Equatable {
 /// The theme color laid evenly over the glass. One even layer keeps the panel a single surface;
 /// the glass draws its own rim.
 enum PanelGlassTint {
-    static let opacity: CGFloat = 0.6
+    static let opacity: CGFloat = 0.4
 }
 
 struct PanelSurfaceBackground: View {
