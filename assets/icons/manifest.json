@@ -38,6 +38,14 @@
     "source_url": "https://pi.dev/logo.svg"
   },
   {
+    "id": "deepseek",
+    "label": "DeepSeek Harness (DSH)",
+    "file": "deepseek.svg",
+    "format": "svg",
+    "source": "Simple Icons DeepSeek SVG (CC0), filled with DeepSeek blue #4D6BFE",
+    "source_url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/deepseek.svg"
+  },
+  {
     "id": "cmux",
     "label": "cmux",
     "file": "cmux.svg",
