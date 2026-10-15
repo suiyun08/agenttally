@@ -97,7 +97,7 @@ enum AlertSoundEvent: CaseIterable {
     /// Plays this event's chosen sound. Independent of notifications: banners off still ring.
     @MainActor func ring() {
         let sound = sound()
-        alertSoundLogger.info("Ringing \(sound.rawValue, privacy: .public) for \(String(describing: self), privacy: .public)")
+        alertSoundLogger.notice("Ringing \(sound.rawValue, privacy: .public) for \(String(describing: self), privacy: .public)")
         sound.play()
     }
 
