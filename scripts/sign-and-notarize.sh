@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# sign-and-notarize.sh - Sign and notarize the cctop.app bundle
+# sign-and-notarize.sh - Sign and notarize the AgentTally.app bundle
 #
 # Usage:
-#   ./scripts/sign-and-notarize.sh dist/cctop.app
-#   ./scripts/sign-and-notarize.sh --dry-run dist/cctop.app
-#   ./scripts/sign-and-notarize.sh --sign-only dist/cctop.app
+#   ./scripts/sign-and-notarize.sh dist/AgentTally.app
+#   ./scripts/sign-and-notarize.sh --dry-run dist/AgentTally.app
+#   ./scripts/sign-and-notarize.sh --sign-only dist/AgentTally.app
 #
 # Required environment variables (unless --dry-run):
 #   APPLE_IDENTITY       - Signing identity (e.g. "Developer ID Application: Name (TEAMID)")

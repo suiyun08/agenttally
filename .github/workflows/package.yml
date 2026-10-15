@@ -1,6 +1,6 @@
 name: Package
 
-# Fork-only: build an ad-hoc signed cctop.app for personal use.
+# Fork-only: build an ad-hoc signed AgentTally.app for personal use.
 # No Developer ID or notarization, so the app runs with Sparkle updates disabled.
 on:
   workflow_dispatch:
@@ -49,8 +49,8 @@ jobs:
       - name: Upload zip artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cctop-macOS-arm64
-          path: dist/cctop-macOS.zip
+          name: AgentTally-macOS-arm64
+          path: dist/AgentTally-macOS.zip
           retention-days: 7
 
   snapshots:

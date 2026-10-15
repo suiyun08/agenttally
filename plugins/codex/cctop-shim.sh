@@ -8,8 +8,8 @@ EVENT="$1"
 
 for CANDIDATE in \
     "$HOME/.cctop/bin/cctop-hook" \
-    "/Applications/cctop.app/Contents/MacOS/cctop-hook" \
-    "$HOME/Applications/cctop.app/Contents/MacOS/cctop-hook"
+    "/Applications/AgentTally.app/Contents/MacOS/cctop-hook" \
+    "$HOME/Applications/AgentTally.app/Contents/MacOS/cctop-hook"
 do
     if [ -x "$CANDIDATE" ]; then
         exec "$CANDIDATE" "$EVENT" --harness codex

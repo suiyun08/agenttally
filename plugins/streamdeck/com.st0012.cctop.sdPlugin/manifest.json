@@ -23,7 +23,7 @@
     }
   ],
   "ApplicationsToMonitor": {
-    "mac": ["com.st0012.CctopMenubar"]
+    "mac": ["io.github.suiyun08.AgentTally"]
   },
   "Profiles": [
     {

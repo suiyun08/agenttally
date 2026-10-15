@@ -241,8 +241,8 @@ struct SettingsSection: View {
                 }
                 .buttonStyle(.plain)
                 .help("Open updater for v\(version)")
-                .accessibilityLabel("Open cctop updater")
-                .accessibilityHint("Opens the updater for cctop v\(version).")
+                .accessibilityLabel("Open AgentTally updater")
+                .accessibilityHint("Opens the updater for AgentTally v\(version).")
             }
         } else if let reason = updater.disabledReason {
             settingsGroup {

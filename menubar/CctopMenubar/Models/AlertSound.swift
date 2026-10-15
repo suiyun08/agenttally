@@ -1,7 +1,7 @@
 import AppKit
 import os
 
-private let alertSoundLogger = Logger(subsystem: "com.st0012.CctopMenubar", category: "AlertSound")
+private let alertSoundLogger = Logger(subsystem: "io.github.suiyun08.AgentTally", category: "AlertSound")
 
 /// A sound cctop plays when a session needs a look. Bundled sounds ship as `<rawValue>.caf`
 /// in the app's resources.

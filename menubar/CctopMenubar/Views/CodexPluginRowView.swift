@@ -214,7 +214,7 @@ private struct CodexHookTrustInstructions: View {
                     .foregroundStyle(Color.textPrimary)
                 Text(
                     "The hooks are installed, but Codex won't run them until "
-                        + "you trust them. Sessions won't appear in cctop until then."
+                        + "you trust them. Sessions won't appear in AgentTally until then."
                 )
                 .font(.system(size: 10))
                 .foregroundStyle(Color.textMuted)

@@ -29,7 +29,7 @@ struct EmptyStateView: View {
 
     private var heroMark: some View {
         VStack(spacing: 6) {
-            Text("cctop_")
+            Text("agenttally_")
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                 .foregroundStyle(Color.amber)
                 .tracking(0.5)
@@ -67,7 +67,7 @@ struct EmptyStateView: View {
             return String(localized: "Codex hooks are disabled \u{2014} enable them before sessions can appear.")
         }
         if codexHooksUntrusted {
-            return String(localized: "cctop's hooks are installed, but Codex needs to trust them first.")
+            return String(localized: "AgentTally's hooks are installed, but Codex needs to trust them first.")
         }
         return String(localized: "Install the plugin or hooks for your AI tool to see live status here.")
     }

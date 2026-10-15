@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 private let cctopIdentityMigrationQueue = DispatchQueue(
-    label: "com.st0012.CctopMenubar.SessionIdentityMigration",
+    label: "io.github.suiyun08.AgentTally.SessionIdentityMigration",
     qos: .utility
 )
 

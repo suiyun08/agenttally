@@ -814,12 +814,12 @@ final class SessionTests: XCTestCase {
         ))
 
         XCTAssertEqual(confirmation.id, "hide:11111111-1111-4111-8111-111111111111")
-        XCTAssertEqual(confirmation.title, "Hide “Investigate lifecycle” from cctop?")
+        XCTAssertEqual(confirmation.title, "Hide “Investigate lifecycle” from AgentTally?")
         XCTAssertEqual(confirmation.primaryButtonTitle, "Hide Session")
         XCTAssertEqual(
             confirmation.message,
             "It will disappear from the panel, notifications, Navigate mode, and Stream Deck. "
-                + "This does not stop or delete the underlying session; cctop will keep it available for lifecycle and Cleanup. "
+                + "This does not stop or delete the underlying session; AgentTally will keep it available for lifecycle and Cleanup. "
                 + "You cannot show it again while its local session record exists."
         )
         XCTAssertEqual(confirmation.identity, identity)
@@ -3245,5 +3245,40 @@ final class DSHPluginInstallerTests: XCTestCase {
     func testRemovingTheOnlyRowLeavesAnEmptyListNotAnEmptyFile() {
         let patched = DSHPluginInstaller.patchAdding(pluginPath: plugin, to: nil)
         XCTAssertEqual(DSHPluginInstaller.patchRemoving(from: patched), "[]\n")
+    }
+}
+
+final class LegacySettingsMigrationTests: XCTestCase {
+    func testCopiesOnlySettingsTheNewAppLacks() {
+        let legacy: [String: Any] = [
+            "appLanguage": "zh-Hans", "panelWidth": 400, "appearanceMode": "dark", "SULastCheckTime": Date(),
+        ]
+        let current: [String: Any] = ["panelWidth": 480]
+        let copied = LegacySettingsMigration.settingsToCopy(legacy: legacy, current: current)
+        XCTAssertEqual(Set(copied.keys), ["appLanguage", "appearanceMode"])
+        XCTAssertEqual(copied["appLanguage"] as? String, "zh-Hans")
+    }
+
+    /// Uses throwaway domains for both identities, never the real cctop preferences.
+    func testRunsOnceAndAsksForARelaunchWhenItCopiesALanguage() throws {
+        let suite = "cctop-migration-\(UUID().uuidString)"
+        let legacy = "cctop-migration-legacy-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            defaults.removePersistentDomain(forName: legacy)
+        }
+        defaults.setPersistentDomain(["AppleLanguages": ["zh-Hans"], "appLanguage": "zh-Hans"], forName: legacy)
+        XCTAssertTrue(LegacySettingsMigration.run(into: defaults, currentDomain: suite, legacyDomain: legacy))
+        XCTAssertEqual(defaults.string(forKey: "appLanguage"), "zh-Hans")
+        XCTAssertFalse(
+            LegacySettingsMigration.run(into: defaults, currentDomain: suite, legacyDomain: legacy), "runs only once"
+        )
+    }
+
+    func testDoesNothingWhenStillRunningUnderTheOldIdentity() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "cctop-migration-\(UUID().uuidString)"))
+        let legacy = "cctop-migration-legacy-\(UUID().uuidString)"
+        XCTAssertFalse(LegacySettingsMigration.run(into: defaults, currentDomain: legacy, legacyDomain: legacy))
     }
 }

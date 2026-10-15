@@ -81,7 +81,7 @@ final class WorktreeCleanupTests: XCTestCase {
         guard case .refused(let preflightCandidate) = result else {
             return XCTFail("Expected removal to be refused once the path became active, got \(result)")
         }
-        XCTAssertEqual(preflightCandidate.state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(preflightCandidate.state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testActiveProjectPathIsIgnored() {
@@ -95,7 +95,7 @@ final class WorktreeCleanupTests: XCTestCase {
             activeProjectPaths: [path]
         )
 
-        XCTAssertEqual(candidates[0].state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(candidates[0].state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testActiveProjectPathDescendantIsIgnored() {
@@ -109,7 +109,7 @@ final class WorktreeCleanupTests: XCTestCase {
             activeProjectPaths: ["/Users/dev/.codex/worktrees/billing-api/pkg"]
         )
 
-        XCTAssertEqual(candidates[0].state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(candidates[0].state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testActiveProjectPathResolvingToCandidateRootIsIgnored() {
@@ -125,7 +125,7 @@ final class WorktreeCleanupTests: XCTestCase {
             activeProjectPaths: [aliasPath]
         )
 
-        XCTAssertEqual(candidates[0].state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(candidates[0].state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testScannerDoesNotResolveUnrelatedActiveProjectPaths() {
@@ -3527,7 +3527,7 @@ final class WorktreeCleanupTests: XCTestCase {
         )
 
         let result = service.executeConfirmed(
-            .blocked(candidate, "Git status could not be read, so cctop cannot verify what removal would delete."),
+            .blocked(candidate, "Git status could not be read, so AgentTally cannot verify what removal would delete."),
             cleanupSources: [session],
             activeProjectPaths: []
         )
@@ -4428,7 +4428,7 @@ final class WorktreeCleanupTests: XCTestCase {
         guard case .refused(let preflightCandidate) = result else {
             return XCTFail("Expected removal to be refused once the path became active, got \(result)")
         }
-        XCTAssertEqual(preflightCandidate.state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(preflightCandidate.state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testRemovalServiceRefusesStaleCleanCandidateWhenActiveDescendantAppearsBeforePreflight() {
@@ -4454,7 +4454,7 @@ final class WorktreeCleanupTests: XCTestCase {
         guard case .refused(let preflightCandidate) = result else {
             return XCTFail("Expected removal to be refused once a descendant path became active, got \(result)")
         }
-        XCTAssertEqual(preflightCandidate.state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(preflightCandidate.state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testRemovalServiceRefusesStaleCleanCandidateWhenActiveAliasAppearsBeforePreflight() {
@@ -4485,7 +4485,7 @@ final class WorktreeCleanupTests: XCTestCase {
         guard case .refused(let preflightCandidate) = result else {
             return XCTFail("Expected removal to be refused once an alias path became active, got \(result)")
         }
-        XCTAssertEqual(preflightCandidate.state, .ignored(["Active cctop session is using this path"]))
+        XCTAssertEqual(preflightCandidate.state, .ignored(["Active AgentTally session is using this path"]))
     }
 
     func testRemovalServiceSelectsForceActionForUnknownBranchWithoutInvokingGit() {
@@ -4626,7 +4626,7 @@ final class WorktreeCleanupTests: XCTestCase {
         guard case .blocked(_, let reason) = action else {
             return XCTFail("Expected unknown branch without a main checkout to stay blocked, got \(action)")
         }
-        XCTAssertEqual(reason, "The main checkout path could not be verified, so cctop cannot run worktree removal safely.")
+        XCTAssertEqual(reason, "The main checkout path could not be verified, so AgentTally cannot run worktree removal safely.")
         XCTAssertNil(WorktreeRemovalConfirmation.review(for: action))
     }
 
@@ -4740,7 +4740,7 @@ final class WorktreeCleanupTests: XCTestCase {
             branchName: "feature/invoices",
             lastActiveAt: now,
             storageBytes: 1_024,
-            state: .ignored(["Active cctop session is using this path"]),
+            state: .ignored(["Active AgentTally session is using this path"]),
             checks: []
         )
         var didRunGit = false

@@ -7,11 +7,11 @@ set -euo pipefail
 #   brew install create-dmg
 #
 # Usage:
-#   ./scripts/create-dmg.sh                        # Uses dist/cctop.app
-#   ./scripts/create-dmg.sh path/to/cctop.app      # Custom .app path
+#   ./scripts/create-dmg.sh                        # Uses dist/AgentTally.app
+#   ./scripts/create-dmg.sh path/to/AgentTally.app      # Custom .app path
 #   ./scripts/create-dmg.sh --arch arm64            # Set arch suffix in output filename
 #
-# Output: dist/cctop-macOS-<arch>.dmg (or dist/cctop-macOS.dmg if no arch)
+# Output: dist/AgentTally-macOS-<arch>.dmg (or dist/AgentTally-macOS.dmg if no arch)
 
 ARCH=""
 APP_PATH=""
@@ -27,7 +27,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DIST_DIR="$REPO_ROOT/dist"
 
-APP_PATH="${APP_PATH:-$DIST_DIR/cctop.app}"
+APP_PATH="${APP_PATH:-$DIST_DIR/AgentTally.app}"
 
 if [ ! -d "$APP_PATH" ]; then
     echo "Error: $APP_PATH not found. Build with ./scripts/bundle-macos.sh first."
@@ -40,9 +40,9 @@ if ! command -v create-dmg &>/dev/null; then
 fi
 
 if [ -n "$ARCH" ]; then
-    DMG_NAME="cctop-macOS-${ARCH}.dmg"
+    DMG_NAME="AgentTally-macOS-${ARCH}.dmg"
 else
-    DMG_NAME="cctop-macOS.dmg"
+    DMG_NAME="AgentTally-macOS.dmg"
 fi
 
 DMG_PATH="$DIST_DIR/$DMG_NAME"
@@ -57,9 +57,9 @@ create-dmg \
     --window-pos 200 120 \
     --window-size 600 400 \
     --icon-size 100 \
-    --icon "cctop.app" 175 190 \
+    --icon "AgentTally.app" 175 190 \
     --app-drop-link 425 190 \
-    --hide-extension "cctop.app" \
+    --hide-extension "AgentTally.app" \
     --no-internet-enable \
     "$DMG_PATH" \
     "$APP_PATH"

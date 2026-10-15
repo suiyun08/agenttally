@@ -21,7 +21,7 @@ struct PanelTopBar: View {
             PanelChromeButton(isSelected: page == .sessions, action: { onSelect(.sessions) }) {
                 HStack(spacing: 7) {
                     PanelStatusLights(counts: counts)
-                    Text(verbatim: "cctop")
+                    Text(verbatim: AppBrand.name)
                         .font(.system(size: 12.5, weight: .semibold))
                         .tracking(-0.1)
                 }

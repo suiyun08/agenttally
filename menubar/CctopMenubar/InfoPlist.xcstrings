@@ -8,13 +8,49 @@
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "cctop needs to control terminal apps to focus the correct window when you click a session."
+            "value": "AgentTally needs to control terminal apps to focus the correct window when you click a session."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "cctop 需要控制终端类 App，才能在你点击会话时跳到对应的窗口。"
+            "value": "代理指示需要控制终端类 App，才能在你点击会话时跳到对应的窗口。"
+          }
+        }
+      }
+    },
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AgentTally"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AgentTally"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示"
           }
         }
       }

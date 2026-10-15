@@ -160,7 +160,7 @@ extension AppDelegate {
     }
 
     private static let urlLogger = Logger(
-        subsystem: "com.st0012.CctopMenubar",
+        subsystem: "io.github.suiyun08.AgentTally",
         category: "URLCommands"
     )
 }

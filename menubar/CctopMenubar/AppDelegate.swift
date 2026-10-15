@@ -54,7 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard !Self.isXcodeTestHost else { return }
+        guard !Self.isXcodeTestHost, !relaunchedForLegacySettings() else { return }
         BackgroundCursor.enable()
         UserDefaults.standard.register(defaults: ["notificationsEnabled": true])
         notificationPermissionReconciler.refresh()
@@ -438,6 +438,14 @@ extension AppDelegate {
 // MARK: - Hook binary installation
 extension AppDelegate {
     /// Symlinks cctop-hook from the app bundle into ~/.cctop/bin/ so hooks can find it.
+    /// First run as AgentTally: bring cctop's settings along. A copied language takes effect
+    /// only at launch, so the app relaunches; returns true when it did.
+    @MainActor private func relaunchedForLegacySettings() -> Bool {
+        guard LegacySettingsMigration.run() else { return false }
+        AppLanguage.relaunchApp()
+        return true
+    }
+
     func installHookBinaryIfNeeded() {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
