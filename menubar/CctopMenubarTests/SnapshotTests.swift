@@ -49,7 +49,7 @@ func renderPanelScreenshot(
         ? AnyView(styled.padding(20).background(snapshotWallpaper))
         : AnyView(styled)
 
-    let window = NSWindow(
+    let window = RetinaSnapshotWindow(
         contentRect: NSRect(x: 0, y: 0, width: width + (overWallpaper ? 40 : 0), height: 500),
         styleMask: [.borderless],
         backing: .buffered,
@@ -99,6 +99,12 @@ private var snapshotWallpaper: some View {
         Circle().fill(Color.yellow).frame(width: 160).offset(x: -90, y: -120)
         Rectangle().fill(Color.teal).frame(width: 90, height: 260).offset(x: 120, y: 80)
     }
+}
+
+/// Claims a Retina backing scale, so layers and text render at 2x on CI runners that have no
+/// Retina display instead of being drawn at 1x and scaled up.
+private final class RetinaSnapshotWindow: NSWindow {
+    override var backingScaleFactor: CGFloat { 2 }
 }
 
 func worstCaseReviewCleanupCandidate(now: Date = Date()) -> WorktreeCleanupCandidate {
