@@ -23,7 +23,8 @@ func inertPluginManager() -> PluginManager {
 @MainActor
 @discardableResult
 func renderPanelScreenshot(
-    view: some View, colorScheme: ColorScheme, directoryName: String, filename: String, width: CGFloat = 320
+    view: some View, colorScheme: ColorScheme, directoryName: String, filename: String, width: CGFloat = 320,
+    overWallpaper: Bool = false
 ) throws -> NSSize {
     let docsDir = snapshotOutputDirectory(named: directoryName)
     let outputPath = "\(docsDir)/\(filename)"
@@ -42,16 +43,21 @@ func renderPanelScreenshot(
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
         .environment(\.colorScheme, colorScheme)
+    // A busy backdrop stands in for the desktop, so the tint's translucency and the panel's
+    // layering show. Offscreen rendering cannot sample real glass.
+    let framed = overWallpaper
+        ? AnyView(styled.padding(20).background(snapshotWallpaper))
+        : AnyView(styled)
 
     let window = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: width, height: 500),
+        contentRect: NSRect(x: 0, y: 0, width: width + (overWallpaper ? 40 : 0), height: 500),
         styleMask: [.borderless],
         backing: .buffered,
         defer: false
     )
     window.appearance = NSAppearance(named: appearance)
 
-    let hostingView = NSHostingView(rootView: styled)
+    let hostingView = NSHostingView(rootView: framed)
     window.contentView = hostingView
 
     let fittingSize = hostingView.fittingSize
@@ -73,6 +79,17 @@ func renderPanelScreenshot(
     try pngData.write(to: URL(fileURLWithPath: outputPath))
     print("Screenshot saved to: \(outputPath)")
     return fittingSize
+}
+
+private var snapshotWallpaper: some View {
+    ZStack {
+        LinearGradient(
+            colors: [.orange, .pink, .purple, .blue],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        )
+        Circle().fill(Color.yellow).frame(width: 160).offset(x: -90, y: -120)
+        Rectangle().fill(Color.teal).frame(width: 90, height: 260).offset(x: 120, y: 80)
+    }
 }
 
 func worstCaseReviewCleanupCandidate(now: Date = Date()) -> WorktreeCleanupCandidate {
@@ -184,6 +201,26 @@ final class SnapshotTests: XCTestCase {
         let view = SettingsSection(updater: DisabledUpdater(), pluginManager: pm)
         try renderScreenshot(view: view, colorScheme: .light, filename: "onboarding-settings-light.png", width: 360)
         try renderScreenshot(view: view, colorScheme: .dark, filename: "onboarding-settings-dark.png", width: 360)
+    }
+
+    func testGenerateGlassPreviewScreenshots() throws {
+        let sessions = PopupView(
+            userSessions: userSessions(fromDataFixtures: SessionData.qaShowcase),
+            updater: DisabledUpdater(),
+            pluginManager: inertPluginManager()
+        )
+        let settings = SettingsSection(updater: DisabledUpdater(), pluginManager: inertPluginManager())
+        for scheme in [ColorScheme.light, .dark] {
+            let name = scheme == .dark ? "dark" : "light"
+            try renderPanelScreenshot(
+                view: sessions, colorScheme: scheme, directoryName: "cctop-screenshots",
+                filename: "glass-preview-sessions-\(name).png", overWallpaper: true
+            )
+            try renderPanelScreenshot(
+                view: settings, colorScheme: scheme, directoryName: "cctop-screenshots",
+                filename: "glass-preview-settings-\(name).png", overWallpaper: true
+            )
+        }
     }
 
     func testGenerateNotificationSoundSettingsScreenshot() throws {

@@ -3077,12 +3077,70 @@ final class PanelSurfaceStyleTests: XCTestCase {
         XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: false, liquidGlassAvailable: true), .liquidGlass)
         XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: false, liquidGlassAvailable: false), .blur)
     }
+}
 
-    func testTintLayersAddUpToTheCenterOpacity() {
-        let edge = PanelGlassTint.edgeOpacity
-        let inner = PanelGlassTint.innerOpacity()
-        XCTAssertEqual(edge + inner * (1 - edge), PanelGlassTint.centerOpacity, accuracy: 0.0001)
-        XCTAssertLessThan(edge, PanelGlassTint.centerOpacity)
-        XCTAssertEqual(PanelGlassTint.innerOpacity(center: 0.2, edge: 0.3), 0)
+final class PanelSnapTests: XCTestCase {
+    private let visible = NSRect(x: 0, y: 0, width: 1512, height: 949)
+
+    private func panel(x xPos: CGFloat, y yPos: CGFloat) -> NSRect {
+        NSRect(x: xPos, y: yPos, width: 320, height: 300)
+    }
+
+    func testDropFarFromEveryEdgeStaysPut() {
+        XCTAssertEqual(PanelSnap.settled(panel(x: 600, y: 300), visible: visible), panel(x: 600, y: 300))
+    }
+
+    func testDropNearASideOrTheBottomSettlesWithTheGap() {
+        XCTAssertEqual(PanelSnap.settled(panel(x: 10, y: 300), visible: visible).minX, 8)
+        XCTAssertEqual(PanelSnap.settled(panel(x: 1180, y: 300), visible: visible).maxX, 1512 - 8)
+        XCTAssertEqual(PanelSnap.settled(panel(x: 600, y: 12), visible: visible).minY, 8)
+    }
+
+    func testDropNearTheTopSettlesWhereThePanelOpensUnderTheMenuBar() {
+        let settled = PanelSnap.settled(panel(x: 600, y: 640), visible: visible)
+        XCTAssertEqual(settled.maxY, 949 - PanelPositioning.margin)
+        XCTAssertEqual(settled.minX, 600)
+    }
+
+    func testDropNearACornerSettlesIntoTheCorner() {
+        XCTAssertEqual(PanelSnap.settled(panel(x: 15, y: 15), visible: visible).origin, NSPoint(x: 8, y: 8))
+    }
+
+    func testDropPartlyOffScreenComesBackAndSettles() {
+        XCTAssertEqual(PanelSnap.settled(panel(x: -100, y: 300), visible: visible).minX, 8)
+        XCTAssertEqual(PanelSnap.settled(panel(x: 1400, y: 300), visible: visible).maxX, 1512 - 8)
+    }
+
+    func testDraggingNeverLeavesTheVisibleArea() {
+        let kept = PanelSnap.keptOnScreen(panel(x: 1400, y: 800), visible: visible)
+        XCTAssertEqual(kept.maxX, 1512)
+        XCTAssertEqual(kept.maxY, 949)
+        XCTAssertEqual(PanelSnap.keptOnScreen(panel(x: 600, y: 300), visible: visible), panel(x: 600, y: 300))
+    }
+
+    func testDragFollowsTheScreenUnderThePointer() {
+        let main = ScreenLayout(frame: NSRect(x: 0, y: 0, width: 1512, height: 982), visibleFrame: visible, key: "main")
+        let side = ScreenLayout(
+            frame: NSRect(x: 1512, y: 0, width: 1920, height: 1080),
+            visibleFrame: NSRect(x: 1512, y: 0, width: 1920, height: 1055), key: "side"
+        )
+        let frame = panel(x: 1400, y: 300)
+        XCTAssertEqual(PanelSnap.screen(pointer: NSPoint(x: 1600, y: 500), frame: frame, in: [main, side])?.key, "side")
+        XCTAssertEqual(PanelSnap.screen(pointer: nil, frame: frame, in: [main, side])?.key, "main")
+    }
+
+    func testWidthDragStopsShortOfTheScreenEdge() {
+        let nearRight = NSRect(x: 1100, y: 100, width: 320, height: 300)
+        let widened = PanelWidthDrag.frame(from: nearRight, edge: .trailing, deltaX: 200, visible: visible)
+        XCTAssertEqual(widened.maxX, 1512 - PanelPositioning.margin)
+        XCTAssertEqual(widened.minX, 1100)
+
+        let nearLeft = NSRect(x: 50, y: 100, width: 320, height: 300)
+        let leftWidened = PanelWidthDrag.frame(from: nearLeft, edge: .leading, deltaX: -200, visible: visible)
+        XCTAssertEqual(leftWidened.minX, PanelPositioning.margin)
+        XCTAssertEqual(leftWidened.maxX, nearLeft.maxX)
+
+        let roomy = PanelWidthDrag.frame(from: panel(x: 600, y: 100), edge: .trailing, deltaX: 500, visible: visible)
+        XCTAssertEqual(roomy.width, 480)
     }
 }

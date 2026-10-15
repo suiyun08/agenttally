@@ -21,19 +21,10 @@ enum PanelSurfaceStyle: Equatable {
     }
 }
 
-/// The theme color laid over the glass: mostly opaque behind the content so text stays crisp,
-/// thinning toward the rim so the edges read as glass.
+/// The theme color laid evenly over the glass. One even layer keeps the panel a single surface;
+/// the glass draws its own rim.
 enum PanelGlassTint {
-    static let centerOpacity: CGFloat = 0.75
-    static let edgeOpacity: CGFloat = 0.3
-    /// How far in from the rim the tint takes to reach its center strength.
-    static let fadeWidth: CGFloat = 20
-
-    /// The inner layer's opacity that, over the edge layer, adds up to the center opacity.
-    static func innerOpacity(center: CGFloat = centerOpacity, edge: CGFloat = edgeOpacity) -> CGFloat {
-        guard edge < 1 else { return 0 }
-        return max(0, (center - edge) / (1 - edge))
-    }
+    static let opacity: CGFloat = 0.6
 }
 
 struct PanelSurfaceBackground: View {
@@ -70,15 +61,7 @@ struct PanelSurfaceBackground: View {
     }
 
     private var tint: some View {
-        ZStack {
-            Color.panelBackground.opacity(PanelGlassTint.edgeOpacity)
-            Color.panelBackground.opacity(PanelGlassTint.innerOpacity())
-                .mask {
-                    shape
-                        .padding(PanelGlassTint.fadeWidth / 2)
-                        .blur(radius: PanelGlassTint.fadeWidth / 2)
-                }
-        }
+        Color.panelBackground.opacity(PanelGlassTint.opacity)
     }
 }
 

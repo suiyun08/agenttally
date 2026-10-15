@@ -144,7 +144,6 @@ struct TabButtonView: View {
     let isSelected: Bool
     let action: () -> Void
     @State private var isHovered = false
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: action) {
@@ -176,19 +175,14 @@ struct TabButtonView: View {
             .frame(maxWidth: .infinity, minHeight: 22, maxHeight: 22)
             .background {
                 if isSelected {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.segmentThumbBackground)
-                        .shadow(
-                            color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.16),
-                            radius: colorScheme == .dark ? 1 : 1.25,
-                            y: 1
-                        )
+                    Capsule(style: .continuous)
+                        .fill(Color.panelSelectionBackground)
                 } else if isHovered {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.panelSelectionBackground.opacity(0.62))
+                    Capsule(style: .continuous)
+                        .fill(Color.panelSelectionBackground.opacity(0.5))
                 }
             }
-            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
@@ -359,8 +353,21 @@ struct PanelContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
         .overlay(alignment: .leading) { PanelResizeGrip(edge: .leading, state: resizeState) }
         .overlay(alignment: .trailing) { PanelResizeGrip(edge: .trailing, state: resizeState) }
+        .modifier(NoFocusRings())
         .id(themeManager.themeId)
         .onChange(of: panelWidth) { _ in onLayoutChanged() }
+    }
+}
+
+/// The panel takes key focus to read the keyboard, and macOS then rings whichever button holds
+/// focus. Navigation here runs on its own key handling, so the rings only add noise.
+private struct NoFocusRings: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 14.0, *) {
+            content.focusEffectDisabled()
+        } else {
+            content
+        }
     }
 }
 

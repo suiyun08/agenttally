@@ -18,10 +18,20 @@ enum PanelWidthDrag {
         return nil
     }
 
-    /// The frame while dragging: follows the pointer within the presets' range.
-    static func frame(from start: NSRect, edge: PanelResizeEdge, deltaX: CGFloat) -> NSRect {
+    /// The frame while dragging: follows the pointer within the presets' range, and the moving
+    /// edge stops short of the screen's visible edge.
+    static func frame(
+        from start: NSRect, edge: PanelResizeEdge, deltaX: CGFloat, visible: NSRect? = nil
+    ) -> NSRect {
         let proposed = edge == .leading ? start.width - deltaX : start.width + deltaX
-        let width = min(max(proposed, PanelWidth.range.lowerBound), PanelWidth.range.upperBound)
+        var widest = PanelWidth.range.upperBound
+        if let visible {
+            let room = edge == .leading
+                ? start.maxX - (visible.minX + PanelPositioning.margin)
+                : visible.maxX - PanelPositioning.margin - start.minX
+            widest = max(PanelWidth.range.lowerBound, min(widest, room))
+        }
+        let width = min(max(proposed, PanelWidth.range.lowerBound), widest)
         return frame(start, holding: edge, width: width)
     }
 

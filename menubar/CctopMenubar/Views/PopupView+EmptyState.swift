@@ -8,9 +8,6 @@ extension PopupView {
         content()
             .padding(.vertical, verticalPadding)
             .frame(maxWidth: .infinity, minHeight: AppChrome.overlayMinimumContentHeight, alignment: .top)
-            .background {
-                PanelSurfaceBackground()
-            }
             .transition(.asymmetric(
                 insertion: .move(edge: .top),
                 removal: .modifier(

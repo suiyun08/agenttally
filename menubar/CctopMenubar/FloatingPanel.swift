@@ -110,6 +110,7 @@ class FloatingPanel: NSPanel {
         let startLocation = NSEvent.mouseLocation
         let startOrigin = frame.origin
         var sawDragEvents = false
+        let screens = NSScreen.screens.map(ScreenLayout.init)
 
         // Tight event-tracking loop — runs in eventTracking mode,
         // preventing SwiftUI layout passes from interleaving.
@@ -125,17 +126,38 @@ class FloatingPanel: NSPanel {
             sawDragEvents = true
 
             let current = NSEvent.mouseLocation
-            setFrameOrigin(NSPoint(
+            var next = frame
+            next.origin = NSPoint(
                 x: startOrigin.x + current.x - startLocation.x,
                 y: startOrigin.y + current.y - startLocation.y
-            ))
+            )
+            if let screen = PanelSnap.screen(pointer: current, frame: next, in: screens) {
+                next = PanelSnap.keptOnScreen(next, visible: screen.visibleFrame)
+            }
+            setFrameOrigin(next.origin)
+        }
+
+        var landed = frame
+        if sawDragEvents,
+           let screen = PanelSnap.screen(pointer: NSEvent.mouseLocation, frame: frame, in: screens) {
+            landed = PanelSnap.settled(frame, visible: screen.visibleFrame)
+            if landed != frame { settle(at: landed) }
         }
 
         if Self.shouldPersistDrag(
             sawDragEvents: sawDragEvents,
-            originMoved: frame.origin != startOrigin
+            originMoved: landed.origin != startOrigin
         ) {
-            panelDelegate?.panelDidDrag(originX: frame.origin.x, topY: frame.maxY)
+            panelDelegate?.panelDidDrag(originX: landed.origin.x, topY: landed.maxY)
+        }
+    }
+
+    /// Glides the released panel against the screen edge it was dropped near.
+    private func settle(at target: NSRect) {
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = PanelSnap.settleDuration
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
+            animator().setFrame(target, display: true)
         }
     }
 
@@ -158,7 +180,8 @@ class FloatingPanel: NSPanel {
 
             if event.type == .leftMouseUp { break }
             let next = PanelWidthDrag.frame(
-                from: startFrame, edge: edge, deltaX: NSEvent.mouseLocation.x - startLocation.x
+                from: startFrame, edge: edge, deltaX: NSEvent.mouseLocation.x - startLocation.x,
+                visible: screen?.visibleFrame
             )
             guard abs(next.width - current.width) >= 0.5 else { continue }
             current = next

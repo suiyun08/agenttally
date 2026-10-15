@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		PSN000010000000000000001 /* PanelSnap.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSN000020000000000000001 /* PanelSnap.swift */; };
 		PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSB000020000000000000001 /* PanelSurfaceBackground.swift */; };
 		BGC000010000000000000001 /* BackgroundCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BGC000020000000000000001 /* BackgroundCursor.swift */; };
 		SND050010000000000000001 /* cctop-simple.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND050020000000000000001 /* cctop-simple.caf */; };
@@ -214,6 +215,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		PSN000020000000000000001 /* PanelSnap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSnap.swift; sourceTree = "<group>"; };
 		PSB000020000000000000001 /* PanelSurfaceBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSurfaceBackground.swift; sourceTree = "<group>"; };
 		BGC000020000000000000001 /* BackgroundCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundCursor.swift; sourceTree = "<group>"; };
 		SND050020000000000000001 /* cctop-simple.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-simple.caf; path = Sounds/cctop-simple.caf; sourceTree = "<group>"; };
@@ -534,6 +536,7 @@
 				H10000020000000000000001 /* AppSettings.swift */,
 				ALS000020000000000000001 /* AlertSound.swift */,
 				PWD000020000000000000001 /* PanelWidthDrag.swift */,
+				PSN000020000000000000001 /* PanelSnap.swift */,
 				ATH000020000000000000001 /* AppTheme.swift */,
 				AGB000020000000000000001 /* AgentBadge.swift */,
 				TMG000020000000000000001 /* ThemeManager.swift */,
@@ -829,6 +832,7 @@
 				H10000010000000000000001 /* AppSettings.swift in Sources */,
 				ALS000010000000000000001 /* AlertSound.swift in Sources */,
 				PWD000010000000000000001 /* PanelWidthDrag.swift in Sources */,
+				PSN000010000000000000001 /* PanelSnap.swift in Sources */,
 				J10000010000000000000001 /* SettingsSection.swift in Sources */,
 				SDR000010000000000000001 /* StreamDeckPluginRowView.swift in Sources */,
 				JSPREV010000000000000001 /* SettingsSection+Preview.swift in Sources */,

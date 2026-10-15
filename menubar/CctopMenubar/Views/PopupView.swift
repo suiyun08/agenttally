@@ -142,8 +142,6 @@ struct PopupView: View {
             }
         }
         .padding(2)
-        .background(Color.segmentBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
