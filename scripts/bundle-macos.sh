@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# bundle-macos.sh - Build and bundle cctop.app (Swift-only)
+# bundle-macos.sh - Build and bundle AgentTally.app (Swift-only)
 #
 # Usage:
 #   ./scripts/bundle-macos.sh                  # Build and bundle (release)
 #   ./scripts/bundle-macos.sh --skip-build     # Bundle from existing release binaries
 #   ./scripts/bundle-macos.sh --arch arm64     # Build for specific architecture
 #
-# Output: dist/cctop.app, dist/cctop-macOS.zip
+# Output: dist/AgentTally.app, dist/AgentTally-macOS.zip
 
 SKIP_BUILD=false
 ARCH=""
@@ -53,7 +53,7 @@ echo "==> Assembling .app bundle..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-APP="$BUILD_DIR/cctop.app"
+APP="$BUILD_DIR/AgentTally.app"
 cp -R "$REPO_ROOT/menubar/build/Build/Products/Release/CctopMenubar.app" "$APP"
 
 # Copy cctop-hook into the app bundle
@@ -91,9 +91,9 @@ codesign --force --sign - "$APP"
 
 echo "==> Packaging..."
 cd "$BUILD_DIR"
-ditto -c -k --sequesterRsrc --keepParent cctop.app cctop-macOS.zip
+ditto -c -k --sequesterRsrc --keepParent AgentTally.app AgentTally-macOS.zip
 
-SIZE=$(du -sh cctop.app | cut -f1)
+SIZE=$(du -sh AgentTally.app | cut -f1)
 echo "==> Done! App size: $SIZE"
 echo "   App:  $APP"
-echo "   Zip:  $BUILD_DIR/cctop-macOS.zip"
+echo "   Zip:  $BUILD_DIR/AgentTally-macOS.zip"

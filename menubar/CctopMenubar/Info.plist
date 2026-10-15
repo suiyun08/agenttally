@@ -2,21 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleName</key>
+	<string>AgentTally</string>
+	<key>LSHasLocalizedDisplayName</key>
+	<true/>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/st0012/cctop/master/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/suiyun08/agenttally/master/appcast.xml</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUAutomaticallyUpdate</key>
 	<true/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>3600</integer>
-	<key>SUPublicEDKey</key>
-	<string>7Ts0HFX10tBXROh8uS9x2Gvuy+K5g3WT48FFYSIR51g=</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.st0012.CctopMenubar</string>
+			<string>io.github.suiyun08.AgentTally</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>cctop</string>

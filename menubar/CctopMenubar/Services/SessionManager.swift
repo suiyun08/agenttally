@@ -3,7 +3,7 @@ import Darwin.libproc
 import Foundation
 import os.log
 
-let sessionManagerLogger = Logger(subsystem: "com.st0012.CctopMenubar", category: "SessionManager")
+let sessionManagerLogger = Logger(subsystem: "io.github.suiyun08.AgentTally", category: "SessionManager")
 
 struct WorktreeCleanupSessionSnapshot {
     let cleanupSources: [SessionDataCleanupSource]

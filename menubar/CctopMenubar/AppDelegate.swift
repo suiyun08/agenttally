@@ -55,6 +55,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !Self.isXcodeTestHost else { return }
+        // First run as AgentTally: bring cctop's settings along; a copied language needs a relaunch.
+        if LegacySettingsMigration.run() {
+            AppLanguage.relaunchApp()
+            return
+        }
         BackgroundCursor.enable()
         UserDefaults.standard.register(defaults: ["notificationsEnabled": true])
         notificationPermissionReconciler.refresh()

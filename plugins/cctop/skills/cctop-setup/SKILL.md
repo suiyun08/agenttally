@@ -16,13 +16,13 @@ Helps install the cctop app required for session monitoring.
 
 ## Installation
 
-### Step 1: Check if cctop.app is installed
+### Step 1: Check if AgentTally.app is installed
 
 ```bash
-ls /Applications/cctop.app/Contents/MacOS/cctop-hook 2>/dev/null || ls ~/Applications/cctop.app/Contents/MacOS/cctop-hook 2>/dev/null
+ls /Applications/AgentTally.app/Contents/MacOS/cctop-hook 2>/dev/null || ls ~/Applications/AgentTally.app/Contents/MacOS/cctop-hook 2>/dev/null
 ```
 
-If not found, the user needs to install cctop.app.
+If not found, the user needs to install AgentTally.app.
 
 ### Step 2: Install cctop
 
@@ -32,18 +32,18 @@ brew install --cask st0012/cctop/cctop
 ```
 
 **Option B: Download from GitHub**
-Download the latest release from https://github.com/st0012/cctop/releases/latest and move `cctop.app` to `/Applications/`.
+Download the latest release from https://github.com/suiyun08/agenttally/releases/latest and move `AgentTally.app` to `/Applications/`.
 
 ### Step 3: Verify installation
 
 ```bash
-/Applications/cctop.app/Contents/MacOS/cctop-hook --version
+/Applications/AgentTally.app/Contents/MacOS/cctop-hook --version
 ```
 
 ### Step 4: Launch the app
 
 ```bash
-open /Applications/cctop.app
+open /Applications/AgentTally.app
 ```
 
 ## After Installation

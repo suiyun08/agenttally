@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		ABR000010000000000000001 /* AppBrand.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABR000020000000000000001 /* AppBrand.swift */; };
+		LSM000010000000000000001 /* LegacySettingsMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = LSM000020000000000000001 /* LegacySettingsMigration.swift */; };
 		DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSH000020000000000000001 /* DSHPluginInstaller.swift */; };
 		AGM000010000000000000001 /* AgentMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = AGM000020000000000000001 /* AgentMark.swift */; };
 		PTB000010000000000000001 /* PanelTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = PTB000020000000000000001 /* PanelTopBar.swift */; };
@@ -215,6 +217,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		ABR000020000000000000001 /* AppBrand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBrand.swift; sourceTree = "<group>"; };
+		LSM000020000000000000001 /* LegacySettingsMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacySettingsMigration.swift; sourceTree = "<group>"; };
 		DSH000020000000000000001 /* DSHPluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSHPluginInstaller.swift; sourceTree = "<group>"; };
 		AGM000020000000000000001 /* AgentMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentMark.swift; sourceTree = "<group>"; };
 		PTB000020000000000000001 /* PanelTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTopBar.swift; sourceTree = "<group>"; };
@@ -472,6 +476,7 @@
 				CRS000020000000000000001 /* ClientReadState.swift */,
 				BGC000020000000000000001 /* BackgroundCursor.swift */,
 				DSH000020000000000000001 /* DSHPluginInstaller.swift */,
+				LSM000020000000000000001 /* LegacySettingsMigration.swift */,
 				2A7407E2CADC40E1AE6CC64A /* SessionClassification.swift */,
 				B97A36AE9A264E049F3BA0E3 /* SessionManager+Classification.swift */,
 			);
@@ -579,6 +584,7 @@
 				PSB000020000000000000001 /* PanelSurfaceBackground.swift */,
 				PTB000020000000000000001 /* PanelTopBar.swift */,
 				AGM000020000000000000001 /* AgentMark.swift */,
+				ABR000020000000000000001 /* AppBrand.swift */,
 				JSPREV020000000000000001 /* SettingsSection+Preview.swift */,
 				CDXROW020000000000000001 /* CodexPluginRowView.swift */,
 				L10000020000000000000001 /* EmptyStateView.swift */,
@@ -879,6 +885,7 @@
 				PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */,
 				PTB000010000000000000001 /* PanelTopBar.swift in Sources */,
 				AGM000010000000000000001 /* AgentMark.swift in Sources */,
+				ABR000010000000000000001 /* AppBrand.swift in Sources */,
 				PPO000010000000000000001 /* PanelPositioning.swift in Sources */,
 				WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */,
 				WCM000010000000000000001 /* WorktreeCleanupCandidate+Mock.swift in Sources */,
@@ -898,6 +905,7 @@
 				CRS000010000000000000001 /* ClientReadState.swift in Sources */,
 				BGC000010000000000000001 /* BackgroundCursor.swift in Sources */,
 				DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */,
+				LSM000010000000000000001 /* LegacySettingsMigration.swift in Sources */,
 				307918FD1C8B47C79A1E8356 /* SessionClassification.swift in Sources */,
 				9AFFA6CFCA0D44C2B5B7942E /* SessionManager+Classification.swift in Sources */,
 				BE83AF0D2F044A299CD73467 /* TerminalInfo.swift in Sources */,
@@ -1073,13 +1081,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "cctop needs to control terminal apps to focus the correct window when you click a session.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_CFBundleDisplayName = AgentTally;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "AgentTally needs to control terminal apps to focus the correct window when you click a session.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.21.4;
 				OTHER_LDFLAGS = "-lsqlite3";
-				PRODUCT_BUNDLE_IDENTIFIER = com.st0012.CctopMenubar;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ENABLE_SPARKLE";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1099,13 +1108,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "cctop needs to control terminal apps to focus the correct window when you click a session.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_CFBundleDisplayName = AgentTally;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "AgentTally needs to control terminal apps to focus the correct window when you click a session.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.21.4;
 				OTHER_LDFLAGS = "-lsqlite3";
-				PRODUCT_BUNDLE_IDENTIFIER = com.st0012.CctopMenubar;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ENABLE_SPARKLE";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1146,7 +1156,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 0.21.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.st0012.CctopMenubarTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -1163,7 +1173,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 0.21.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.st0012.CctopMenubarTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;

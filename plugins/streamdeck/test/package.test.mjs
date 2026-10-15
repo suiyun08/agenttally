@@ -17,7 +17,7 @@ test("manifest targets the supported Stream Deck Node runtime", () => {
   assert.equal(manifest.Software.MinimumVersion, "7.1");
   assert.equal(manifest.OS[0].Platform, "mac");
   assert.deepEqual(manifest.ApplicationsToMonitor, {
-    mac: ["com.st0012.CctopMenubar"],
+    mac: ["io.github.suiyun08.AgentTally"],
   });
 });
 

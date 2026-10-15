@@ -489,7 +489,7 @@ final class WorktreeCleanupScenarioSnapshotTests: XCTestCase {
         storageStatus: WorktreeCleanupCheck.Status
     ) -> [WorktreeCleanupCheck] {
         [
-            WorktreeCleanupCheck(label: "No active cctop sessions here", status: .ok),
+            WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: .ok),
             WorktreeCleanupCheck(label: "Path is a registered linked worktree", status: .ok),
             WorktreeCleanupCheck(label: "No uncommitted tracked changes", status: .ok),
             WorktreeCleanupCheck(label: "No index-hidden tracked files", status: .ok),
@@ -534,7 +534,7 @@ final class WorktreeCleanupScenarioSnapshotTests: XCTestCase {
     ) -> [WorktreeCleanupCheck] {
         let needsReview = !state.reasons.isEmpty
         return [
-            WorktreeCleanupCheck(label: "No active cctop sessions here", status: .ok),
+            WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: .ok),
             WorktreeCleanupCheck(label: "Path is a registered linked worktree", status: .ok),
             WorktreeCleanupCheck(label: "No uncommitted tracked changes", status: needsReview ? .review : .ok),
             WorktreeCleanupCheck(label: "No untracked files", status: needsReview ? .review : .ok),

@@ -170,7 +170,7 @@ struct LanguageSettingsRow: View {
             .frame(minHeight: 25)
             if selection != AppLanguage.launchSelection {
                 SettingsSecondaryRow {
-                    Text("Restart cctop to apply the language")
+                    Text("Restart AgentTally to apply the language")
                         .font(.system(size: 10))
                         .foregroundStyle(Color.textMuted)
                     Spacer()

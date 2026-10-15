@@ -511,76 +511,6 @@
         }
       }
     },
-    "cctop could not find the Codex app. Install Codex, then try again.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop 找不到 Codex App。请安装 Codex 后重试。"
-          }
-        }
-      }
-    },
-    "cctop could not open this task because its Codex identifier is invalid. Open Codex and select the task manually.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这个任务的 Codex 标识无效，cctop 无法打开它。请打开 Codex 手动选择该任务。"
-          }
-        }
-      }
-    },
-    "cctop could not open this task in Codex. Open Codex, then try again.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop 无法在 Codex 中打开这个任务。请打开 Codex 后重试。"
-          }
-        }
-      }
-    },
-    "cctop v%@ is downloading.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop v%@ 正在下载。"
-          }
-        }
-      }
-    },
-    "cctop's hooks are installed, but Codex needs to trust them first.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop 的 hooks 已安装，但还需要在 Codex 里信任它们。"
-          }
-        }
-      }
-    },
-    "cctop, %@": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop，%@"
-          }
-        }
-      }
-    },
-    "cctop, no sessions": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cctop，没有会话"
-          }
-        }
-      }
-    },
     "Check for Updates": {
       "localizations": {
         "zh-Hans": {
@@ -991,26 +921,6 @@
         }
       }
     },
-    "Downloading cctop update": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在下载 cctop 更新"
-          }
-        }
-      }
-    },
-    "Downloading cctop v%@": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在下载 cctop v%@"
-          }
-        }
-      }
-    },
     "Downloading update": {
       "localizations": {
         "zh-Hans": {
@@ -1331,16 +1241,6 @@
         }
       }
     },
-    "Git status could not be read, so cctop cannot verify what removal would delete.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法读取 Git 状态，cctop 无法确认删除会影响哪些内容。"
-          }
-        }
-      }
-    },
     "Git will refuse removal if tracked changes or non-ignored untracked files appeared after this review.": {
       "localizations": {
         "zh-Hans": {
@@ -1367,16 +1267,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "隐藏会话"
-          }
-        }
-      }
-    },
-    "Hide “%@” from cctop?": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要在 cctop 中隐藏“%@”吗？"
           }
         }
       }
@@ -1567,16 +1457,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "集成"
-          }
-        }
-      }
-    },
-    "It will disappear from the panel, notifications, Navigate mode, and Stream Deck. This does not stop or delete the underlying session; cctop will keep it available for lifecycle and Cleanup. You cannot show it again while its local session record exists.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "它会从面板、通知、导航模式和 Stream Deck 中消失。这不会停止或删除会话本身；cctop 仍会保留它，用于生命周期判断和清理。只要它的本地会话记录还在，就无法重新显示。"
           }
         }
       }
@@ -1921,16 +1801,6 @@
         }
       }
     },
-    "Open cctop updater": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开 cctop 更新程序"
-          }
-        }
-      }
-    },
     "Open Claude": {
       "localizations": {
         "zh-Hans": {
@@ -2081,16 +1951,6 @@
         }
       }
     },
-    "Opens the updater for cctop v%@.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开 cctop v%@ 的更新程序。"
-          }
-        }
-      }
-    },
     "Pane": {
       "localizations": {
         "zh-Hans": {
@@ -2187,16 +2047,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "退出"
-          }
-        }
-      }
-    },
-    "Quit cctop": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "退出 cctop"
           }
         }
       }
@@ -2387,16 +2237,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "只在清理受保护文件夹里的 worktree 时需要。"
-          }
-        }
-      }
-    },
-    "Restart cctop to apply the language": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重启 cctop 后生效"
           }
         }
       }
@@ -2638,42 +2478,12 @@
         }
       }
     },
-    "The main checkout path could not be verified, so cctop cannot run worktree removal safely.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法确认主仓库路径，cctop 无法安全地删除 worktree。"
-          }
-        }
-      }
-    },
     "This removes local file changes and files in that worktree.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "这会删除该 worktree 里的本地改动和文件。"
-          }
-        }
-      }
-    },
-    "This worktree contains initialized submodules, which cctop cannot safely remove yet.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这个 worktree 包含已初始化的子模块，cctop 暂时无法安全删除。"
-          }
-        }
-      }
-    },
-    "This worktree has tracked files hidden by Git index flags, so cctop cannot verify local changes safely.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这个 worktree 有被 Git 索引标记隐藏的已跟踪文件，cctop 无法安全确认本地改动。"
           }
         }
       }
@@ -3124,6 +2934,206 @@
           "stringUnit": {
             "state": "translated",
             "value": "透明度"
+          }
+        }
+      }
+    },
+    "AgentTally could not find the Codex app. Install Codex, then try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示找不到 Codex App。请安装 Codex 后重试。"
+          }
+        }
+      }
+    },
+    "AgentTally could not open this task because its Codex identifier is invalid. Open Codex and select the task manually.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务的 Codex 标识无效，代理指示无法打开它。请打开 Codex 手动选择该任务。"
+          }
+        }
+      }
+    },
+    "AgentTally could not open this task in Codex. Open Codex, then try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示无法在 Codex 中打开这个任务。请打开 Codex 后重试。"
+          }
+        }
+      }
+    },
+    "AgentTally v%@ is downloading.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示 v%@ 正在下载。"
+          }
+        }
+      }
+    },
+    "AgentTally's hooks are installed, but Codex needs to trust them first.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示的 hooks 已安装，但还需要在 Codex 里信任它们。"
+          }
+        }
+      }
+    },
+    "AgentTally, %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示，%@"
+          }
+        }
+      }
+    },
+    "AgentTally, no sessions": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示，没有会话"
+          }
+        }
+      }
+    },
+    "Downloading AgentTally update": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在下载代理指示更新"
+          }
+        }
+      }
+    },
+    "Downloading AgentTally v%@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在下载代理指示 v%@"
+          }
+        }
+      }
+    },
+    "Git status could not be read, so AgentTally cannot verify what removal would delete.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取 Git 状态，代理指示无法确认删除会影响哪些内容。"
+          }
+        }
+      }
+    },
+    "Hide “%@” from AgentTally?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要在代理指示中隐藏“%@”吗？"
+          }
+        }
+      }
+    },
+    "Open AgentTally updater": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开代理指示更新程序"
+          }
+        }
+      }
+    },
+    "Opens the updater for AgentTally v%@.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开代理指示 v%@ 的更新程序。"
+          }
+        }
+      }
+    },
+    "Quit AgentTally": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出代理指示"
+          }
+        }
+      }
+    },
+    "Restart AgentTally to apply the language": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重启代理指示后生效"
+          }
+        }
+      }
+    },
+    "The main checkout path could not be verified, so AgentTally cannot run worktree removal safely.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法确认主仓库路径，代理指示无法安全地删除 worktree。"
+          }
+        }
+      }
+    },
+    "This worktree contains initialized submodules, which AgentTally cannot safely remove yet.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个 worktree 包含已初始化的子模块，代理指示暂时无法安全删除。"
+          }
+        }
+      }
+    },
+    "This worktree has tracked files hidden by Git index flags, so AgentTally cannot verify local changes safely.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个 worktree 有被 Git 索引标记隐藏的已跟踪文件，代理指示无法安全确认本地改动。"
+          }
+        }
+      }
+    },
+    "AgentTally": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理指示"
+          }
+        }
+      }
+    },
+    "It will disappear from the panel, notifications, Navigate mode, and Stream Deck. This does not stop or delete the underlying session; AgentTally will keep it available for lifecycle and Cleanup. You cannot show it again while its local session record exists.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它会从面板、通知、导航模式和 Stream Deck 中消失。这不会停止或删除会话本身；代理指示仍会保留它，用于生命周期判断和清理。只要它的本地会话记录还在，就无法重新显示。"
           }
         }
       }

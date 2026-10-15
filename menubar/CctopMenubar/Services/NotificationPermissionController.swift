@@ -236,7 +236,7 @@ private final class UserNotificationPermissionClient: NotificationPermissionClie
     }
 
     func openNotificationSettings() {
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.st0012.CctopMenubar"
+        let bundleID = Bundle.main.bundleIdentifier ?? "io.github.suiyun08.AgentTally"
         let appSettings = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(bundleID)")
 
         if let appSettings, NSWorkspace.shared.open(appSettings) {

@@ -145,8 +145,8 @@ struct WorktreeCleanupScanner {
         guard !isProtectedByActiveSession(context.path, activeProjectPaths: activeProjectPaths) else {
             return ignoredCandidate(
                 context: context,
-                state: .ignored(["Active cctop session is using this path"]),
-                checks: [WorktreeCleanupCheck(label: "No active cctop sessions here", status: .ignored)]
+                state: .ignored(["Active AgentTally session is using this path"]),
+                checks: [WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: .ignored)]
             )
         }
 
@@ -358,7 +358,7 @@ struct WorktreeCleanupScanner {
         let ignoredDirty = !Self.ignoredPaths(fromStatusEntries: statusEntries).isEmpty
         let commitCount = inspection.uniqueCommitCount
         return [
-            WorktreeCleanupCheck(label: "No active cctop sessions here", status: active ? .ok : .ignored),
+            WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: active ? .ok : .ignored),
             WorktreeCleanupCheck(label: "Path is a registered linked worktree", status: inspection.isLinkedWorktree ? .ok : .ignored),
             WorktreeCleanupCheck(label: "No uncommitted tracked changes", status: statusUnavailable || trackedDirty ? .review : .ok),
             WorktreeCleanupCheck(

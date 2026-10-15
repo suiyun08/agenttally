@@ -325,14 +325,14 @@ test("monitored cctop lifecycle events refresh stale key images without launchin
   writeState({ app_pid: 2_147_483_647 });
   controller.handleMessage({
     event: "applicationDidTerminate",
-    payload: { application: "com.st0012.CctopMenubar" },
+    payload: { application: "io.github.suiyun08.AgentTally" },
   });
   assert.ok(!decodeURIComponent(messages(socket, "setImage").at(-1).payload.image).includes("first"));
 
   writeState();
   controller.handleMessage({
     event: "applicationDidLaunch",
-    payload: { application: "com.st0012.CctopMenubar" },
+    payload: { application: "io.github.suiyun08.AgentTally" },
   });
   assert.ok(decodeURIComponent(messages(socket, "setImage").at(-1).payload.image).includes("first"));
   assert.equal(launches.length, 0);

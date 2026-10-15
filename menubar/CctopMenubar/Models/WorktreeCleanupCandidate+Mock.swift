@@ -19,7 +19,7 @@ extension WorktreeCleanupCandidate {
             storageBytes: storageBytes,
             state: state,
             checks: [
-                WorktreeCleanupCheck(label: "No active cctop sessions here", status: .ok),
+                WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: .ok),
                 WorktreeCleanupCheck(label: "Path is a registered linked worktree", status: .ok),
                 WorktreeCleanupCheck(label: "No uncommitted tracked changes", status: .ok),
                 WorktreeCleanupCheck(label: "No untracked files", status: .ok),

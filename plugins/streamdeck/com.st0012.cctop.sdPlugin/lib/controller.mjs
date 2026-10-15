@@ -8,7 +8,7 @@ import {
 
 export const SESSION_ACTION = "com.st0012.cctop.session";
 export const TOGGLE_ACTION = "com.st0012.cctop.toggle-panel";
-const CCTOP_APP_BUNDLE_ID = "com.st0012.CctopMenubar";
+const CCTOP_APP_BUNDLE_ID = "io.github.suiyun08.AgentTally";
 
 export function parseArgs(argv) {
   const args = { port: null, pluginUUID: null, registerEvent: null, info: {} };

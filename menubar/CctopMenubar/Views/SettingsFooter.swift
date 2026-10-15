@@ -17,7 +17,7 @@ struct SettingsFooter: View {
     /// The upstream credit stays: cctop's MIT license asks for it.
     private var footnote: some View {
         HStack(spacing: 4) {
-            Text(verbatim: "cctop v\(Bundle.main.appVersion)")
+            Text(verbatim: "\(AppBrand.name) v\(Bundle.main.appVersion)")
             Text(verbatim: "\u{00B7}")
             Text("Based on")
             Button {
@@ -48,7 +48,7 @@ private struct QuitRow: View {
     var body: some View {
         Button { NSApplication.shared.terminate(nil) } label: {
             HStack(spacing: 8) {
-                Text("Quit cctop")
+                Text("Quit AgentTally")
                 Spacer(minLength: 8)
                 Image(systemName: "power")
             }

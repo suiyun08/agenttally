@@ -63,11 +63,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain-db
 
-          ./scripts/sign-and-notarize.sh dist/cctop.app
+          ./scripts/sign-and-notarize.sh dist/AgentTally.app
 
           # Re-create the zip with signed app
-          rm -f dist/cctop-macOS.zip
-          cd dist && ditto -c -k --sequesterRsrc --keepParent cctop.app cctop-macOS.zip
+          rm -f dist/AgentTally-macOS.zip
+          cd dist && ditto -c -k --sequesterRsrc --keepParent AgentTally.app AgentTally-macOS.zip
 
           echo "signed=true" >> "$GITHUB_OUTPUT"
 
@@ -79,7 +79,7 @@ jobs:
           rm -f $RUNNER_TEMP/certificate.p12
 
       - name: Rename zip for release
-        run: mv dist/cctop-macOS.zip dist/cctop-macOS-${{ matrix.arch }}.zip
+        run: mv dist/AgentTally-macOS.zip dist/AgentTally-macOS-${{ matrix.arch }}.zip
 
       - name: Install create-dmg
         run: brew install create-dmg
@@ -90,14 +90,14 @@ jobs:
       - name: Upload zip artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cctop-macOS-${{ matrix.arch }}
-          path: dist/cctop-macOS-${{ matrix.arch }}.zip
+          name: AgentTally-macOS-${{ matrix.arch }}
+          path: dist/AgentTally-macOS-${{ matrix.arch }}.zip
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cctop-macOS-${{ matrix.arch }}-dmg
-          path: dist/cctop-macOS-${{ matrix.arch }}.dmg
+          name: AgentTally-macOS-${{ matrix.arch }}-dmg
+          path: dist/AgentTally-macOS-${{ matrix.arch }}.dmg
 
   release:
     name: Create Release
@@ -126,18 +126,18 @@ jobs:
 
           ### macOS (Apple Silicon)
           \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/cctop-macOS-arm64.zip -o cctop.zip
+          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/AgentTally-macOS-arm64.zip -o cctop.zip
           unzip cctop.zip
-          mv cctop.app /Applications/
-          open /Applications/cctop.app
+          mv AgentTally.app /Applications/
+          open /Applications/AgentTally.app
           \`\`\`
 
           ### macOS (Intel)
           \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/cctop-macOS-x86_64.zip -o cctop.zip
+          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/AgentTally-macOS-x86_64.zip -o cctop.zip
           unzip cctop.zip
-          mv cctop.app /Applications/
-          open /Applications/cctop.app
+          mv AgentTally.app /Applications/
+          open /Applications/AgentTally.app
           \`\`\`
 
           ### From source
@@ -145,7 +145,7 @@ jobs:
           \`\`\`bash
           git clone https://github.com/st0012/cctop && cd cctop
           ./scripts/bundle-macos.sh
-          cp -R dist/cctop.app /Applications/
+          cp -R dist/AgentTally.app /Applications/
           \`\`\`
 
           > This release is signed and notarized with Apple Developer ID.
@@ -159,10 +159,10 @@ jobs:
           draft: false
           generate_release_notes: true
           files: |
-            artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip
-            artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip
-            artifacts/cctop-macOS-arm64-dmg/cctop-macOS-arm64.dmg
-            artifacts/cctop-macOS-x86_64-dmg/cctop-macOS-x86_64.dmg
+            artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip
+            artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip
+            artifacts/AgentTally-macOS-arm64-dmg/AgentTally-macOS-arm64.dmg
+            artifacts/AgentTally-macOS-x86_64-dmg/AgentTally-macOS-x86_64.dmg
           body_path: ${{ runner.temp }}/release-body.md
 
   update-appcast:
@@ -218,7 +218,7 @@ jobs:
         run: |
           for arch in arm64 x86_64; do
             gh release download "v$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
-              --pattern "cctop-macOS-$arch.zip" --dir "artifacts/cctop-macOS-$arch"
+              --pattern "AgentTally-macOS-$arch.zip" --dir "artifacts/AgentTally-macOS-$arch"
           done
 
       - name: Install pinned Sparkle tools
@@ -243,8 +243,8 @@ jobs:
         run: |
           ./scripts/generate-appcast.sh \
             --version ${{ steps.version.outputs.version }} \
-            artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip \
-            artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip
+            artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip \
+            artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip
 
       - name: Validate appcast
         run: ./scripts/validate-appcast.sh
@@ -282,8 +282,8 @@ jobs:
       - name: Compute SHA256 hashes
         id: sha
         run: |
-          ARM64_SHA=$(sha256sum artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip | awk '{print $1}')
-          X86_64_SHA=$(sha256sum artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip | awk '{print $1}')
+          ARM64_SHA=$(sha256sum artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip | awk '{print $1}')
+          X86_64_SHA=$(sha256sum artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip | awk '{print $1}')
           echo "arm64=$ARM64_SHA" >> "$GITHUB_OUTPUT"
           echo "x86_64=$X86_64_SHA" >> "$GITHUB_OUTPUT"
 

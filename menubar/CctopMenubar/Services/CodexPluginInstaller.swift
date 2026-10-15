@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.st0012.CctopMenubar", category: "CodexPluginInstaller")
+private let logger = Logger(subsystem: "io.github.suiyun08.AgentTally", category: "CodexPluginInstaller")
 
 /// Installs, updates, and removes cctop's Codex hook entries.
 /// Installs a shim to `~/.codex/cctop-shim.sh`, merges cctop hook entries into

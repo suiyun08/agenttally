@@ -131,7 +131,7 @@ func worstCaseReviewCleanupCandidate(now: Date = Date()) -> WorktreeCleanupCandi
         storageBytes: 426 * 1_024 * 1_024,
         state: state,
         checks: [
-            WorktreeCleanupCheck(label: "No active cctop sessions here", status: .ok),
+            WorktreeCleanupCheck(label: "No active AgentTally sessions here", status: .ok),
             WorktreeCleanupCheck(label: "Path is a registered linked worktree", status: .ok),
             WorktreeCleanupCheck(label: "No uncommitted tracked changes", status: .review),
             WorktreeCleanupCheck(label: "No untracked files", status: .review),

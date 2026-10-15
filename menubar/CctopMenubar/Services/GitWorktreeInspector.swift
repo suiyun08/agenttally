@@ -2,7 +2,7 @@ import Foundation
 import os.log
 
 private let worktreeInspectorLogger = Logger(
-    subsystem: "com.st0012.CctopMenubar",
+    subsystem: "io.github.suiyun08.AgentTally",
     category: "GitWorktreeInspector"
 )
 
@@ -412,7 +412,7 @@ enum GitCommand {
 
 private final class PipeOutputReader {
     private let fileHandle: FileHandle
-    private let queue = DispatchQueue(label: "com.st0012.CctopMenubar.GitCommand.PipeOutputReader")
+    private let queue = DispatchQueue(label: "io.github.suiyun08.AgentTally.GitCommand.PipeOutputReader")
     private var data = Data()
 
     init(fileHandle: FileHandle) {

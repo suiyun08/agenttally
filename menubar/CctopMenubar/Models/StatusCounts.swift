@@ -131,7 +131,7 @@ struct StatusCounts: Equatable {
 
     /// Human-readable summary for VoiceOver / accessibility labels.
     var accessibilityLabel: String {
-        guard total > 0 else { return String(localized: "cctop, no sessions") }
+        guard total > 0 else { return String(localized: "AgentTally, no sessions") }
         var parts: [String] = []
         if permission > 0 {
             parts.append(
@@ -146,7 +146,7 @@ struct StatusCounts: Equatable {
         if working > 0 { parts.append(String(localized: "\(working) working")) }
         if idle > 0 { parts.append(String(localized: "\(idle) idle")) }
         let summary = parts.joined(separator: ", ")
-        return String(localized: "cctop, \(summary)")
+        return String(localized: "AgentTally, \(summary)")
     }
 }
 

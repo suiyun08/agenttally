@@ -2,7 +2,7 @@ import AppKit
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.st0012.CctopMenubar", category: "PluginManager")
+private let logger = Logger(subsystem: "io.github.suiyun08.AgentTally", category: "PluginManager")
 
 @MainActor
 class PluginManager: ObservableObject {
@@ -24,7 +24,7 @@ class PluginManager: ObservableObject {
     @Published var sdNeedsUpdate: Bool = false
 
     static let ccInstallCommand =
-        "claude plugin marketplace add st0012/cctop && claude plugin install cctop"
+        "claude plugin marketplace add suiyun08/agenttally && claude plugin install cctop"
 
     private let homeDirectory: URL
     private let ocPluginPath: URL

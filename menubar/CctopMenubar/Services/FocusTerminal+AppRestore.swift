@@ -8,13 +8,13 @@ enum FocusFailure: Equatable {
     var message: String {
         switch self {
         case .codexAppNotInstalled:
-            return String(localized: "cctop could not find the Codex app. Install Codex, then try again.")
+            return String(localized: "AgentTally could not find the Codex app. Install Codex, then try again.")
         case .codexTaskIdentifierInvalid:
             return String(
-                localized: "cctop could not open this task because its Codex identifier is invalid. Open Codex and select the task manually."
+                localized: "AgentTally could not open this task because its Codex identifier is invalid. Open Codex and select the task manually."
             )
         case .codexTaskOpenFailed:
-            return String(localized: "cctop could not open this task in Codex. Open Codex, then try again.")
+            return String(localized: "AgentTally could not open this task in Codex. Open Codex, then try again.")
         }
     }
 }

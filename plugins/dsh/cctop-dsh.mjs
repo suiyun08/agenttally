@@ -27,8 +27,8 @@ const TOOL_NAME_MAP = {
 export function findHookBinary(home = homedir(), exists = existsSync) {
   const candidates = [
     join(home, ".cctop/bin/cctop-hook"),
-    "/Applications/cctop.app/Contents/MacOS/cctop-hook",
-    join(home, "Applications/cctop.app/Contents/MacOS/cctop-hook"),
+    "/Applications/AgentTally.app/Contents/MacOS/cctop-hook",
+    join(home, "Applications/AgentTally.app/Contents/MacOS/cctop-hook"),
   ];
   return candidates.find((path) => exists(path)) ?? null;
 }

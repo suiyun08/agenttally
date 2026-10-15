@@ -1,11 +1,11 @@
 {
   "name": "cctop",
-  "description": "Monitor and navigate Claude Code sessions across workspaces",
+  "description": "Report Claude Code sessions to AgentTally, the menu bar session indicator",
   "version": "0.21.4",
   "author": {
-    "name": "Stan Lo",
-    "url": "https://github.com/st0012"
+    "name": "suiyun08",
+    "url": "https://github.com/suiyun08"
   },
-  "repository": "https://github.com/st0012/cctop",
+  "repository": "https://github.com/suiyun08/agenttally",
   "license": "MIT"
 }

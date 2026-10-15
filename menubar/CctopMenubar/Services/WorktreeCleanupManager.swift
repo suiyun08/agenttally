@@ -2,7 +2,7 @@ import Foundation
 import os.log
 
 private let worktreeCleanupLogger = Logger(
-    subsystem: "com.st0012.CctopMenubar",
+    subsystem: "io.github.suiyun08.AgentTally",
     category: "WorktreeCleanupManager"
 )
 
