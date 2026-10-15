@@ -57,7 +57,8 @@ class PluginManager: ObservableObject {
         self.piPluginPath = homeDirectory.appendingPathComponent(
             ".pi/agent/extensions/cctop.ts"
         )
-        self.dshPatchPath = homeDirectory.appendingPathComponent(".dsh/cordis.patch.yml")
+        // Resolved, so a patch kept as a symlink (e.g. into a dotfiles repo) is edited in place.
+        self.dshPatchPath = homeDirectory.appendingPathComponent(".dsh/cordis.patch.yml").resolvingSymlinksInPath()
         self.dshPluginPath = homeDirectory.appendingPathComponent(".cctop/dsh/cctop-dsh.mjs")
         self.ccPluginCacheDir = homeDirectory.appendingPathComponent(
             ".claude/plugins/cache/cctop/cctop"

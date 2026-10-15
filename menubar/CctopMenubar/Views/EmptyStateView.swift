@@ -241,6 +241,8 @@ struct EmptyStateView: View {
             success = pluginManager.installOpenCodePlugin()
         case .pi:
             success = pluginManager.installPiPlugin()
+        case .dsh:
+            success = pluginManager.installDSHPlugin()
         case .codex:
             runCodexInstall()
             return
@@ -297,6 +299,7 @@ struct EmptyStateView: View {
         case .claudeCode: return true   // Always supported
         case .opencode:   return pluginManager.ocConfigExists
         case .pi:         return pluginManager.piConfigExists
+        case .dsh:        return pluginManager.dshConfigExists
         case .codex:      return pluginManager.codexConfigExists
         }
     }
@@ -306,6 +309,7 @@ struct EmptyStateView: View {
         case .claudeCode: return pluginManager.ccInstalled
         case .opencode:   return pluginManager.ocInstalled
         case .pi:         return pluginManager.piInstalled
+        case .dsh:        return pluginManager.dshInstalled
         case .codex:      return pluginManager.codexInstalled
         }
     }
@@ -330,13 +334,14 @@ struct EmptyStateView: View {
 // MARK: - AgentKind
 
 private enum AgentKind: String, CaseIterable, Hashable {
-    case claudeCode, opencode, pi, codex
+    case claudeCode, opencode, pi, dsh, codex
 
     var displayName: String {
         switch self {
         case .claudeCode: return "Claude Code / Desktop"
         case .opencode:   return "opencode"
         case .pi:         return "pi"
+        case .dsh:        return "DSH"
         case .codex:      return "Codex CLI / Desktop"
         }
     }
@@ -346,6 +351,7 @@ private enum AgentKind: String, CaseIterable, Hashable {
         case .claudeCode: return .amber
         case .opencode:   return .opencodeBadge
         case .pi:         return .piBadge
+        case .dsh:        return Color(nsColor: AgentMark.deepSeekBlue)
         case .codex:      return .codexBadge
         }
     }
