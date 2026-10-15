@@ -22,9 +22,9 @@ enum PanelSurfaceStyle: Equatable {
 }
 
 /// The theme color laid evenly over the glass. One even layer keeps the panel a single surface;
-/// the glass draws its own rim.
+/// the glass draws its own rim. Kept light: on the clear glass this layer is what keeps text legible.
 enum PanelGlassTint {
-    static let opacity: CGFloat = 0.4
+    static let opacity: CGFloat = 0.25
 }
 
 struct PanelSurfaceBackground: View {
@@ -56,7 +56,8 @@ struct PanelSurfaceBackground: View {
 
     @ViewBuilder private var liquidGlass: some View {
         if #available(macOS 26.0, *) {
-            Color.clear.glassEffect(.regular, in: shape)
+            // Clear glass: far less frosting than .regular, so what is behind the panel shows.
+            Color.clear.glassEffect(.clear, in: shape)
         }
     }
 
