@@ -119,12 +119,6 @@ struct PanelAccentHairline: View {
     }
 }
 
-struct PanelSurfaceBackground: View {
-    var body: some View {
-        Color.panelBackground
-    }
-}
-
 // MARK: - Roll-up animation
 
 struct RollUpEffect: ViewModifier {
@@ -358,7 +352,9 @@ struct PanelContentView: View {
             PanelSurfaceBackground()
         }
         .overlay {
+            // Glass draws its own rim, so the hairline only has to hint at the edge.
             PanelAccentHairline(cornerRadius: AppChrome.panelCornerRadius)
+                .opacity(PanelSurfaceStyle.liquidGlassAvailable ? 0.5 : 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
         .overlay(alignment: .leading) { PanelResizeGrip(edge: .leading, state: resizeState) }

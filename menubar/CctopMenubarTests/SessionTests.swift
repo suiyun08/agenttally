@@ -3066,3 +3066,23 @@ final class AlertSoundTests: XCTestCase {
         XCTAssertNil(try request(status: .done).content.sound)
     }
 }
+
+final class PanelSurfaceStyleTests: XCTestCase {
+    func testReduceTransparencyAlwaysGetsTheSolidThemeColor() {
+        XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: true, liquidGlassAvailable: true), .solid)
+        XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: true, liquidGlassAvailable: false), .solid)
+    }
+
+    func testGlassOnMacOS26ElseTheClassicBlur() {
+        XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: false, liquidGlassAvailable: true), .liquidGlass)
+        XCTAssertEqual(PanelSurfaceStyle.resolve(reduceTransparency: false, liquidGlassAvailable: false), .blur)
+    }
+
+    func testTintLayersAddUpToTheCenterOpacity() {
+        let edge = PanelGlassTint.edgeOpacity
+        let inner = PanelGlassTint.innerOpacity()
+        XCTAssertEqual(edge + inner * (1 - edge), PanelGlassTint.centerOpacity, accuracy: 0.0001)
+        XCTAssertLessThan(edge, PanelGlassTint.centerOpacity)
+        XCTAssertEqual(PanelGlassTint.innerOpacity(center: 0.2, edge: 0.3), 0)
+    }
+}

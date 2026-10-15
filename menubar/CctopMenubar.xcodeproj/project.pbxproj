@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSB000020000000000000001 /* PanelSurfaceBackground.swift */; };
 		BGC000010000000000000001 /* BackgroundCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BGC000020000000000000001 /* BackgroundCursor.swift */; };
 		SND050010000000000000001 /* cctop-simple.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND050020000000000000001 /* cctop-simple.caf */; };
 		SND040010000000000000001 /* cctop-notification.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND040020000000000000001 /* cctop-notification.caf */; };
@@ -213,6 +214,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		PSB000020000000000000001 /* PanelSurfaceBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSurfaceBackground.swift; sourceTree = "<group>"; };
 		BGC000020000000000000001 /* BackgroundCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundCursor.swift; sourceTree = "<group>"; };
 		SND050020000000000000001 /* cctop-simple.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-simple.caf; path = Sounds/cctop-simple.caf; sourceTree = "<group>"; };
 		SND040020000000000000001 /* cctop-notification.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-notification.caf; path = Sounds/cctop-notification.caf; sourceTree = "<group>"; };
@@ -572,6 +574,7 @@
 				SCTRL0020000000000000001 /* SettingsControls.swift */,
 				NROW00020000000000000001 /* NotificationSettingsRow.swift */,
 				NSG000020000000000000001 /* NotificationSettingsGroup.swift */,
+				PSB000020000000000000001 /* PanelSurfaceBackground.swift */,
 				JSPREV020000000000000001 /* SettingsSection+Preview.swift */,
 				CDXROW020000000000000001 /* CodexPluginRowView.swift */,
 				L10000020000000000000001 /* EmptyStateView.swift */,
@@ -872,6 +875,7 @@
 				SCTRL0010000000000000001 /* SettingsControls.swift in Sources */,
 				NROW00010000000000000001 /* NotificationSettingsRow.swift in Sources */,
 				NSG000010000000000000001 /* NotificationSettingsGroup.swift in Sources */,
+				PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */,
 				PPO000010000000000000001 /* PanelPositioning.swift in Sources */,
 				WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */,
 				WCM000010000000000000001 /* WorktreeCleanupCandidate+Mock.swift in Sources */,
