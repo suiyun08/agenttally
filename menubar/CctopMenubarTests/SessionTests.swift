@@ -2919,3 +2919,137 @@ final class ClientReadStateTests: XCTestCase {
         XCTAssertNotNil(SessionSeenStore(defaults: defaults).seenAt(cctopSessionID: try XCTUnwrap(thread.cctopSessionId)))
     }
 }
+
+final class PanelWidthDragTests: XCTestCase {
+    private let start = NSRect(x: 1000, y: 100, width: 320, height: 300)
+
+    func testEdgeZonesSitInsideEachSide() {
+        XCTAssertEqual(PanelWidthDrag.edge(atX: 0, panelWidth: 320), .leading)
+        XCTAssertEqual(PanelWidthDrag.edge(atX: 5, panelWidth: 320), .leading)
+        XCTAssertNil(PanelWidthDrag.edge(atX: 6, panelWidth: 320))
+        XCTAssertNil(PanelWidthDrag.edge(atX: 160, panelWidth: 320))
+        XCTAssertNil(PanelWidthDrag.edge(atX: 314, panelWidth: 320))
+        XCTAssertEqual(PanelWidthDrag.edge(atX: 315, panelWidth: 320), .trailing)
+        XCTAssertEqual(PanelWidthDrag.edge(atX: 320, panelWidth: 320), .trailing)
+    }
+
+    func testLeadingEdgeDragFollowsPointerAndHoldsTrailingEdge() {
+        let frame = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -50)
+        XCTAssertEqual(frame.width, 370)
+        XCTAssertEqual(frame.maxX, start.maxX)
+        XCTAssertEqual(frame.minY, start.minY)
+        XCTAssertEqual(frame.height, start.height)
+    }
+
+    func testTrailingEdgeDragFollowsPointerAndHoldsLeadingEdge() {
+        let frame = PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 70)
+        XCTAssertEqual(frame.width, 390)
+        XCTAssertEqual(frame.minX, start.minX)
+    }
+
+    func testDragStaysWithinThePresetRange() {
+        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: 500).width, 480)
+        XCTAssertEqual(PanelWidthDrag.frame(from: start, edge: .trailing, deltaX: -100).width, 320)
+        let overLeading = PanelWidthDrag.frame(from: start, edge: .leading, deltaX: -500)
+        XCTAssertEqual(overLeading.width, 480)
+        XCTAssertEqual(overLeading.maxX, start.maxX)
+    }
+
+    func testReleaseSettlesOnTheNearestPreset() {
+        let cases: [(CGFloat, PanelWidth)] = [
+            (320, .standard), (359, .standard), (360, .standard), (361, .wide),
+            (400, .wide), (440, .wide), (441, .wider), (480, .wider),
+        ]
+        for (width, expected) in cases {
+            XCTAssertEqual(PanelWidth.nearest(to: width), expected, "width \(width)")
+        }
+    }
+
+    func testSettledFrameKeepsTheEdgeOppositeTheDraggedOne() {
+        let dragged = NSRect(x: 900, y: 100, width: 420, height: 300)
+        let leading = PanelWidthDrag.settled(from: dragged, edge: .leading)
+        XCTAssertEqual(leading.width, .wide)
+        XCTAssertEqual(leading.frame.width, 400)
+        XCTAssertEqual(leading.frame.maxX, dragged.maxX)
+        let trailing = PanelWidthDrag.settled(from: dragged, edge: .trailing)
+        XCTAssertEqual(trailing.frame.minX, dragged.minX)
+        XCTAssertEqual(trailing.frame.width, 400)
+    }
+}
+
+final class AlertSoundTests: XCTestCase {
+    private var suiteName = ""
+    private var defaults = UserDefaults.standard
+
+    override func setUpWithError() throws {
+        suiteName = "cctop-alert-sound-\(UUID().uuidString)"
+        defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testStatusesMapToTheTwoSoundEvents() {
+        XCTAssertEqual(AlertSoundEvent(status: .done), .done)
+        XCTAssertEqual(AlertSoundEvent(status: .waitingPermission), .needsYou)
+        XCTAssertEqual(AlertSoundEvent(status: .waitingInput), .needsYou)
+        XCTAssertEqual(AlertSoundEvent(status: .needsAttention), .needsYou)
+        for status in [SessionStatus.idle, .working, .compacting, .background] {
+            XCTAssertNil(AlertSoundEvent(status: status), "\(status)")
+        }
+    }
+
+    func testDefaultsAreNewNotificationForDoneAndBellForNeedsYou() {
+        XCTAssertEqual(AlertSoundEvent.done.sound(in: defaults), .newNotification)
+        XCTAssertEqual(AlertSoundEvent.needsYou.sound(in: defaults), .bell)
+        defaults.set("not-a-sound", forKey: AlertSoundEvent.done.defaultsKey)
+        XCTAssertEqual(AlertSoundEvent.done.sound(in: defaults), .newNotification)
+    }
+
+    func testEachEventKeepsItsOwnChoice() {
+        defaults.set(AlertSound.message.rawValue, forKey: AlertSoundEvent.done.defaultsKey)
+        defaults.set(AlertSound.silent.rawValue, forKey: AlertSoundEvent.needsYou.defaultsKey)
+        XCTAssertEqual(AlertSoundEvent.done.sound(in: defaults), .message)
+        XCTAssertEqual(AlertSoundEvent.needsYou.sound(in: defaults), .silent)
+    }
+
+    func testEveryBundledSoundShipsInTheApp() {
+        for sound in AlertSound.allCases {
+            guard let fileName = sound.fileName else { continue }
+            XCTAssertNotNil(Bundle.main.url(forResource: fileName, withExtension: nil), fileName)
+        }
+    }
+
+    func testOnlySilenceLeavesANotificationWithoutSound() {
+        for sound in AlertSound.allCases {
+            if sound == .silent {
+                XCTAssertNil(sound.notificationSound)
+            } else {
+                XCTAssertNotNil(sound.notificationSound, sound.rawValue)
+            }
+        }
+    }
+
+    private func request(status: SessionStatus) throws -> UNNotificationRequest {
+        let cctopSessionID = "22222222-2222-4222-8222-222222222222"
+        return try XCTUnwrap(SessionManager.notificationRequest(
+            forCctopSessionID: cctopSessionID,
+            displayData: SessionData.mock(id: "sound-session", cctopSessionId: cctopSessionID, status: status),
+            soundSettings: defaults
+        ))
+    }
+
+    func testNotificationRingsUnlessThatEventIsSetToNone() throws {
+        XCTAssertNotNil(try request(status: .done).content.sound)
+        XCTAssertNotNil(try request(status: .waitingInput).content.sound)
+
+        defaults.set(AlertSound.silent.rawValue, forKey: AlertSoundEvent.needsYou.defaultsKey)
+        XCTAssertNil(try request(status: .waitingInput).content.sound)
+        XCTAssertNil(try request(status: .needsAttention).content.sound)
+        XCTAssertNotNil(try request(status: .done).content.sound)
+
+        defaults.set(AlertSound.silent.rawValue, forKey: AlertSoundEvent.done.defaultsKey)
+        XCTAssertNil(try request(status: .done).content.sound)
+    }
+}

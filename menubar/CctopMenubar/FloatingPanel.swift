@@ -3,6 +3,9 @@ import AppKit
 @MainActor protocol FloatingPanelDelegate: AnyObject {
     func panelDidDrag(originX: CGFloat, topY: CGFloat)
     func panelDidRequestReset()
+    func panelWidthDragDidBegin()
+    func panelWidthDragDidMove(to frame: NSRect)
+    func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge)
 }
 
 class FloatingPanel: NSPanel {
@@ -72,6 +75,11 @@ class FloatingPanel: NSPanel {
     // MARK: - Header drag via tight event-tracking loop
 
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown,
+           let edge = PanelWidthDrag.edge(atX: event.locationInWindow.x, panelWidth: frame.width) {
+            handleWidthDrag(holding: edge)
+            return
+        }
         if event.type == .leftMouseDown {
             let headerClick = isInHeaderArea(event)
             if Self.shouldPrimeKeyWindowBeforeMouseDown(isKeyWindow: isKeyWindow, isHeaderClick: headerClick) {
@@ -121,6 +129,34 @@ class FloatingPanel: NSPanel {
         ) {
             panelDelegate?.panelDidDrag(originX: frame.origin.x, topY: frame.maxY)
         }
+    }
+
+    // MARK: - Side-edge width drag
+
+    private func handleWidthDrag(holding edge: PanelResizeEdge) {
+        let startLocation = NSEvent.mouseLocation
+        let startFrame = frame
+        var current = startFrame
+        panelDelegate?.panelWidthDragDidBegin()
+
+        while true {
+            guard let event = nextEvent(
+                matching: [.leftMouseDragged, .leftMouseUp],
+                until: .distantFuture,
+                inMode: .eventTracking,
+                dequeue: true
+            ) else { continue }
+
+            if event.type == .leftMouseUp { break }
+            let next = PanelWidthDrag.frame(
+                from: startFrame, edge: edge, deltaX: NSEvent.mouseLocation.x - startLocation.x
+            )
+            guard abs(next.width - current.width) >= 0.5 else { continue }
+            current = next
+            panelDelegate?.panelWidthDragDidMove(to: next)
+        }
+
+        panelDelegate?.panelWidthDragDidEnd(at: current, edge: edge)
     }
 
     private func isInHeaderArea(_ event: NSEvent) -> Bool {

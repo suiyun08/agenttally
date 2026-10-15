@@ -199,4 +199,32 @@ extension AppDelegate: FloatingPanelDelegate {
         panelGeometry.clearUserPosition(forPanelFrame: panel.frame, screens: screenLayouts)
         resetPanelToCurrentScreen(animate: true)
     }
+
+    @MainActor func panelWidthDragDidBegin() {
+        suppressResize = true
+    }
+
+    @MainActor func panelWidthDragDidMove(to frame: NSRect) {
+        applyDraggedWidth(frame)
+    }
+
+    @MainActor func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge) {
+        let settled = PanelWidthDrag.settled(from: frame, edge: edge)
+        UserDefaults.standard.set(settled.width.rawValue, forKey: PanelWidth.defaultsKey)
+        applyDraggedWidth(keptOnScreen(settled.frame))
+        panelLiveWidth.width = nil
+        // A panel the user placed by hand reopens where its new edges are.
+        if let key = panelScreenKey(), panelGeometry.savedPositions()[key] != nil {
+            panelDidDrag(originX: panel.frame.origin.x, topY: panel.frame.maxY)
+        }
+        suppressResize = false
+        resizePanel()
+    }
+
+    /// The content takes the new width first, so the window never shows it at the old one.
+    @MainActor private func applyDraggedWidth(_ frame: NSRect) {
+        panelLiveWidth.width = frame.width
+        panel.contentView?.layout()
+        panel.setFrame(frame, display: true)
+    }
 }

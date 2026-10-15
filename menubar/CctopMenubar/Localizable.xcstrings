@@ -2101,16 +2101,6 @@
         }
       }
     },
-    "Panel Width": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "面板宽度"
-          }
-        }
-      }
-    },
     "Path": {
       "localizations": {
         "zh-Hans": {
@@ -2571,16 +2561,6 @@
         }
       }
     },
-    "Standard": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "标准"
-          }
-        }
-      }
-    },
     "Start a Codex CLI session and trust the hooks when prompted": {
       "localizations": {
         "zh-Hans": {
@@ -2918,26 +2898,6 @@
         }
       }
     },
-    "Wide": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "宽"
-          }
-        }
-      }
-    },
-    "Wider": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更宽"
-          }
-        }
-      }
-    },
     "Will ask on first notification": {
       "localizations": {
         "zh-Hans": {
@@ -3054,6 +3014,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "写入 %@"
+          }
+        }
+      }
+    },
+    "New Notification": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新通知"
+          }
+        }
+      }
+    },
+    "Bell": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "铃铛"
+          }
+        }
+      }
+    },
+    "Message": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "消息"
+          }
+        }
+      }
+    },
+    "Chime": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
+    "Simple": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "简约"
+          }
+        }
+      }
+    },
+    "System Default": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统默认"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
+          }
+        }
+      }
+    },
+    "Finished Sound": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成提示音"
+          }
+        }
+      }
+    },
+    "Waiting Sound": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待回复提示音"
           }
         }
       }

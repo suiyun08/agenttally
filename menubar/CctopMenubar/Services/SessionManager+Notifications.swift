@@ -159,7 +159,8 @@ extension SessionManager {
 
     nonisolated static func notificationRequest(
         forCctopSessionID cctopSessionID: String,
-        displayData: SessionData
+        displayData: SessionData,
+        soundSettings: UserDefaults = .standard
     ) -> UNNotificationRequest? {
         guard let identifier = SessionIdentityPolicy.notificationRequestIdentifier(
                   forCctopSessionID: cctopSessionID
@@ -173,7 +174,11 @@ extension SessionManager {
         content.title = notification.title
         content.subtitle = notification.subtitle
         content.body = notification.body
-        content.sound = .default
+        if let event = AlertSoundEvent(status: displayData.status) {
+            content.sound = event.sound(in: soundSettings).notificationSound
+        } else {
+            content.sound = .default
+        }
         content.userInfo = userInfo
 
         return UNNotificationRequest(

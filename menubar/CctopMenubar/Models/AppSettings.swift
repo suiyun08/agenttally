@@ -70,7 +70,7 @@ enum AppLanguage: String, CaseIterable {
     }
 }
 
-/// Panel width presets. The panel resizes as soon as the choice changes.
+/// Panel width presets. Dragging a side edge of the panel settles on the nearest one.
 enum PanelWidth: Int, CaseIterable {
     case standard = 320
     case wide = 400
@@ -78,15 +78,15 @@ enum PanelWidth: Int, CaseIterable {
 
     static let defaultsKey = "panelWidth"
 
-    var label: String {
-        switch self {
-        case .standard: String(localized: "Standard")
-        case .wide: String(localized: "Wide")
-        case .wider: String(localized: "Wider")
-        }
-    }
-
     static var current: PanelWidth {
         PanelWidth(rawValue: UserDefaults.standard.integer(forKey: defaultsKey)) ?? .standard
+    }
+
+    /// The widths a drag can pass through on its way to a preset.
+    static let range = CGFloat(standard.rawValue)...CGFloat(wider.rawValue)
+
+    /// The preset a drag released at `width` settles on; a tie goes to the narrower one.
+    static func nearest(to width: CGFloat) -> PanelWidth {
+        allCases.min { abs(CGFloat($0.rawValue) - width) < abs(CGFloat($1.rawValue) - width) } ?? .standard
     }
 }

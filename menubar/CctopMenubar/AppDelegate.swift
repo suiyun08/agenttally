@@ -37,6 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
+    let panelLiveWidth = PanelLiveWidth()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -115,6 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             pluginManager: pluginManager,
             navigate: navigateController,
             heightLimit: panelHeightLimit,
+            liveWidth: panelLiveWidth,
             onOpenUpdater: { [weak self] in
                 Task { @MainActor in self?.openUpdaterFromPanel() }
             },

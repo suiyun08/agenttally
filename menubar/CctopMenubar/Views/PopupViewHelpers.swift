@@ -319,6 +319,7 @@ struct PanelContentView: View {
     @ObservedObject var pluginManager: PluginManager
     @ObservedObject var navigate: NavigateController
     @ObservedObject var heightLimit = PanelHeightLimit()
+    @ObservedObject var liveWidth = PanelLiveWidth()
     var onOpenUpdater: (() -> Void)?
     var onSelectCleanupRemovalAction: ((WorktreeCleanupCandidate) async -> WorktreeRemovalService.RemovalAction)?
     var onExecuteCleanupRemovalAction: ((WorktreeRemovalService.RemovalAction) async -> WorktreeRemovalService.RemovalResult)?
@@ -351,7 +352,7 @@ struct PanelContentView: View {
             onLayoutChanged: onLayoutChanged,
             maxListHeight: heightLimit.maxHeight
         )
-        .frame(width: CGFloat(panelWidth))
+        .frame(width: liveWidth.width ?? CGFloat(panelWidth))
         .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()
@@ -360,8 +361,23 @@ struct PanelContentView: View {
             PanelAccentHairline(cornerRadius: AppChrome.panelCornerRadius)
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
+        .overlay(alignment: .leading) { PanelResizeEdgeCursor() }
+        .overlay(alignment: .trailing) { PanelResizeEdgeCursor() }
         .id(themeManager.themeId)
         .onChange(of: panelWidth) { _ in onLayoutChanged() }
+    }
+}
+
+/// Shows the resize cursor over a side edge; `FloatingPanel` handles the drag itself.
+private struct PanelResizeEdgeCursor: View {
+    var body: some View {
+        Color.clear
+            .frame(width: PanelWidthDrag.edgeZone)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                (inside ? NSCursor.resizeLeftRight : NSCursor.arrow).set()
+            }
     }
 }
 

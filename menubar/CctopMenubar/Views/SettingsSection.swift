@@ -63,7 +63,8 @@ struct SettingsSection: View {
                     AmberSegmentedPicker(options: AppearanceMode.allCases.map { ($0.rawValue, $0.label) }, selection: $appearanceMode)
                 }
                 .onChange(of: appearanceMode) { _ in UserDefaults.standard.synchronize() }
-                LanguageAndWidthSettingsRows()
+                groupedDivider
+                LanguageSettingsRow()
             }
 
             sectionHeader("Shortcuts")
@@ -91,7 +92,7 @@ struct SettingsSection: View {
                     } catch { launchAtLogin = SMAppService.mainApp.status == .enabled }
                 }
                 groupedDivider
-                NotificationSettingsRow(notificationPermission: notificationPermission)
+                NotificationSettingsGroup(notificationPermission: notificationPermission)
                 groupedDivider
                 fileAccessRow
             }

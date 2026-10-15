@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		SND050010000000000000001 /* cctop-simple.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND050020000000000000001 /* cctop-simple.caf */; };
+		SND040010000000000000001 /* cctop-notification.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND040020000000000000001 /* cctop-notification.caf */; };
+		SND030010000000000000001 /* cctop-new-notification.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND030020000000000000001 /* cctop-new-notification.caf */; };
+		SND020010000000000000001 /* cctop-message.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND020020000000000000001 /* cctop-message.caf */; };
+		SND010010000000000000001 /* cctop-bell.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND010020000000000000001 /* cctop-bell.caf */; };
+		NSG000010000000000000001 /* NotificationSettingsGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSG000020000000000000001 /* NotificationSettingsGroup.swift */; };
+		ALS000010000000000000001 /* AlertSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = ALS000020000000000000001 /* AlertSound.swift */; };
+		PWD000010000000000000001 /* PanelWidthDrag.swift in Sources */ = {isa = PBXBuildFile; fileRef = PWD000020000000000000001 /* PanelWidthDrag.swift */; };
 		F3E2942A590F45E88162D217 /* AppDelegate+URLCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6674CA488EE4C65B28AE4B3 /* AppDelegate+URLCommands.swift */; };
 		F7FD2797EBCC4E29B60CAA8E /* AppDelegate+PanelEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6FC4F60BBCB4F0486A3A3CB /* AppDelegate+PanelEvents.swift */; };
 		E635A5CC52AD4500BC598EEF /* AppDelegate+PanelGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32C0340D28BC497986926D02 /* AppDelegate+PanelGeometry.swift */; };
@@ -204,6 +212,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		SND050020000000000000001 /* cctop-simple.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-simple.caf; path = Sounds/cctop-simple.caf; sourceTree = "<group>"; };
+		SND040020000000000000001 /* cctop-notification.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-notification.caf; path = Sounds/cctop-notification.caf; sourceTree = "<group>"; };
+		SND030020000000000000001 /* cctop-new-notification.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-new-notification.caf; path = Sounds/cctop-new-notification.caf; sourceTree = "<group>"; };
+		SND020020000000000000001 /* cctop-message.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-message.caf; path = Sounds/cctop-message.caf; sourceTree = "<group>"; };
+		SND010020000000000000001 /* cctop-bell.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-bell.caf; path = Sounds/cctop-bell.caf; sourceTree = "<group>"; };
+		NSG000020000000000000001 /* NotificationSettingsGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsGroup.swift; sourceTree = "<group>"; };
+		ALS000020000000000000001 /* AlertSound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSound.swift; sourceTree = "<group>"; };
+		PWD000020000000000000001 /* PanelWidthDrag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelWidthDrag.swift; sourceTree = "<group>"; };
 		D6674CA488EE4C65B28AE4B3 /* AppDelegate+URLCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+URLCommands.swift"; sourceTree = "<group>"; };
 		C6FC4F60BBCB4F0486A3A3CB /* AppDelegate+PanelEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PanelEvents.swift"; sourceTree = "<group>"; };
 		32C0340D28BC497986926D02 /* AppDelegate+PanelGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PanelGeometry.swift"; sourceTree = "<group>"; };
@@ -469,6 +485,11 @@
 			children = (
 				AC0000020000000000000001 /* Assets.xcassets */,
 				L10N00020000000000000001 /* Localizable.xcstrings */,
+				SND050020000000000000001 /* cctop-simple.caf */,
+				SND040020000000000000001 /* cctop-notification.caf */,
+				SND030020000000000000001 /* cctop-new-notification.caf */,
+				SND020020000000000000001 /* cctop-message.caf */,
+				SND010020000000000000001 /* cctop-bell.caf */,
 				L10N00040000000000000001 /* InfoPlist.xcstrings */,
 				M10000010000000000000001 /* CctopMenubar.entitlements */,
 				A10000020000000000000001 /* CctopApp.swift */,
@@ -506,6 +527,8 @@
 				N10000060000000000000001 /* Config.swift */,
 				F10000020000000000000001 /* SessionData+Mock.swift */,
 				H10000020000000000000001 /* AppSettings.swift */,
+				ALS000020000000000000001 /* AlertSound.swift */,
+				PWD000020000000000000001 /* PanelWidthDrag.swift */,
 				ATH000020000000000000001 /* AppTheme.swift */,
 				AGB000020000000000000001 /* AgentBadge.swift */,
 				TMG000020000000000000001 /* ThemeManager.swift */,
@@ -545,6 +568,7 @@
 				SDR000020000000000000001 /* StreamDeckPluginRowView.swift */,
 				SCTRL0020000000000000001 /* SettingsControls.swift */,
 				NROW00020000000000000001 /* NotificationSettingsRow.swift */,
+				NSG000020000000000000001 /* NotificationSettingsGroup.swift */,
 				JSPREV020000000000000001 /* SettingsSection+Preview.swift */,
 				CDXROW020000000000000001 /* CodexPluginRowView.swift */,
 				L10000020000000000000001 /* EmptyStateView.swift */,
@@ -742,6 +766,11 @@
 			files = (
 				AC0000010000000000000001 /* Assets.xcassets in Resources */,
 				L10N00010000000000000001 /* Localizable.xcstrings in Resources */,
+				SND050010000000000000001 /* cctop-simple.caf in Resources */,
+				SND040010000000000000001 /* cctop-notification.caf in Resources */,
+				SND030010000000000000001 /* cctop-new-notification.caf in Resources */,
+				SND020010000000000000001 /* cctop-message.caf in Resources */,
+				SND010010000000000000001 /* cctop-bell.caf in Resources */,
 				L10N00030000000000000001 /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -792,6 +821,8 @@
 				G10000010000000000000001 /* FloatingPanel.swift in Sources */,
 				G10000030000000000000001 /* AppDelegate.swift in Sources */,
 				H10000010000000000000001 /* AppSettings.swift in Sources */,
+				ALS000010000000000000001 /* AlertSound.swift in Sources */,
+				PWD000010000000000000001 /* PanelWidthDrag.swift in Sources */,
 				J10000010000000000000001 /* SettingsSection.swift in Sources */,
 				SDR000010000000000000001 /* StreamDeckPluginRowView.swift in Sources */,
 				JSPREV010000000000000001 /* SettingsSection+Preview.swift in Sources */,
@@ -837,6 +868,7 @@
 				SCN000010000000000000001 /* StatusCounts.swift in Sources */,
 				SCTRL0010000000000000001 /* SettingsControls.swift in Sources */,
 				NROW00010000000000000001 /* NotificationSettingsRow.swift in Sources */,
+				NSG000010000000000000001 /* NotificationSettingsGroup.swift in Sources */,
 				PPO000010000000000000001 /* PanelPositioning.swift in Sources */,
 				WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */,
 				WCM000010000000000000001 /* WorktreeCleanupCandidate+Mock.swift in Sources */,
