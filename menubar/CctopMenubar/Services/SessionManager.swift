@@ -208,6 +208,7 @@ class SessionManager: ObservableObject {
         userSessions = newUserSessions
         if let oldUserSessions {
             syncTransitionNotifications(for: newUserSessions, oldUserSessions: oldUserSessions)
+            ringTransitionSounds(for: newUserSessions, oldUserSessions: oldUserSessions)
         }
     }
 

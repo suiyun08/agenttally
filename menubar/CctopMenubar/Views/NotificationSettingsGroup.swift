@@ -1,28 +1,20 @@
 import SwiftUI
 
-/// The Notifications toggle and, while notifications are on, one sound picker per event.
+/// The Notifications toggle and one sound picker per event. Sounds ring on their own, so the
+/// pickers stay even with notifications off.
 struct NotificationSettingsGroup: View {
     @ObservedObject var notificationPermission: NotificationPermissionController
 
     var body: some View {
         VStack(spacing: 0) {
             NotificationSettingsRow(notificationPermission: notificationPermission)
-            if showsSounds {
-                ForEach(AlertSoundEvent.allCases, id: \.self) { event in
-                    Rectangle()
-                        .fill(Color.groupedRowBorder)
-                        .frame(height: 0.5)
-                        .padding(.leading, AppChrome.settingsDividerLeadingPadding)
-                    AlertSoundSettingsRow(event: event)
-                }
+            ForEach(AlertSoundEvent.allCases, id: \.self) { event in
+                Rectangle()
+                    .fill(Color.groupedRowBorder)
+                    .frame(height: 0.5)
+                    .padding(.leading, AppChrome.settingsDividerLeadingPadding)
+                AlertSoundSettingsRow(event: event)
             }
-        }
-    }
-
-    private var showsSounds: Bool {
-        switch notificationPermission.state {
-        case .enabled, .pendingSystemPermission: true
-        case .off, .enabling, .needsSystemPermission, .failed: false
         }
     }
 }
@@ -53,7 +45,7 @@ struct AlertSoundSettingsRow: View {
             .labelsHidden()
             .controlSize(.small)
             .fixedSize()
-            .onChange(of: selection) { AlertSound(rawValue: $0)?.preview() }
+            .onChange(of: selection) { AlertSound(rawValue: $0)?.play() }
         }
         .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
         .padding(.vertical, 4)

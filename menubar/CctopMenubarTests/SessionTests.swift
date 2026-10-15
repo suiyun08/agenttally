@@ -3053,36 +3053,64 @@ final class AlertSoundTests: XCTestCase {
         }
     }
 
-    func testOnlySilenceLeavesANotificationWithoutSound() {
-        for sound in AlertSound.allCases {
-            if sound == .silent {
-                XCTAssertNil(sound.notificationSound)
-            } else {
-                XCTAssertNotNil(sound.notificationSound, sound.rawValue)
-            }
+    func testNotificationsCarryNoSoundBecauseCctopRingsItself() throws {
+        let cctopSessionID = "22222222-2222-4222-8222-222222222222"
+        for status in [SessionStatus.done, .waitingInput, .waitingPermission] {
+            let request = try XCTUnwrap(SessionManager.notificationRequest(
+                forCctopSessionID: cctopSessionID,
+                displayData: SessionData.mock(id: "sound-session", cctopSessionId: cctopSessionID, status: status)
+            ))
+            XCTAssertNil(request.content.sound, "\(status)")
         }
     }
 
-    private func request(status: SessionStatus) throws -> UNNotificationRequest {
-        let cctopSessionID = "22222222-2222-4222-8222-222222222222"
-        return try XCTUnwrap(SessionManager.notificationRequest(
-            forCctopSessionID: cctopSessionID,
-            displayData: SessionData.mock(id: "sound-session", cctopSessionId: cctopSessionID, status: status),
-            soundSettings: defaults
-        ))
+    private func sessions(_ statuses: [String: SessionStatus]) -> [UserSession] {
+        userSessions(fromDataFixtures: statuses.keys.sorted().map { id in
+            SessionData.mock(id: "session-\(id)", cctopSessionId: id, status: statuses[id] ?? .idle)
+        })
     }
 
-    func testNotificationRingsUnlessThatEventIsSetToNone() throws {
-        XCTAssertNotNil(try request(status: .done).content.sound)
-        XCTAssertNotNil(try request(status: .waitingInput).content.sound)
+    private let first = "33333333-3333-4333-8333-333333333331"
+    private let second = "33333333-3333-4333-8333-333333333332"
 
-        defaults.set(AlertSound.silent.rawValue, forKey: AlertSoundEvent.needsYou.defaultsKey)
-        XCTAssertNil(try request(status: .waitingInput).content.sound)
-        XCTAssertNil(try request(status: .needsAttention).content.sound)
-        XCTAssertNotNil(try request(status: .done).content.sound)
+    func testFinishingATurnRingsTheDoneSound() {
+        let events = AlertSoundEvent.events(
+            newUserSessions: sessions([first: .done]), oldUserSessions: sessions([first: .working])
+        )
+        XCTAssertEqual(events, [.done])
+    }
 
-        defaults.set(AlertSound.silent.rawValue, forKey: AlertSoundEvent.done.defaultsKey)
-        XCTAssertNil(try request(status: .done).content.sound)
+    func testNeedingTheUserRingsTheWaitingSound() {
+        for status in [SessionStatus.waitingPermission, .waitingInput, .needsAttention] {
+            let events = AlertSoundEvent.events(
+                newUserSessions: sessions([first: status]), oldUserSessions: sessions([first: .working])
+            )
+            XCTAssertEqual(events, [.needsYou], "\(status)")
+        }
+    }
+
+    func testNoRingWithoutAChangeIntoTheEvent() {
+        // Still finished, back to work, a question turning into a permission ask.
+        let pairs: [(SessionStatus, SessionStatus)] = [(.done, .done), (.done, .working), (.waitingInput, .waitingPermission)]
+        for (old, new) in pairs {
+            let events = AlertSoundEvent.events(
+                newUserSessions: sessions([first: new]), oldUserSessions: sessions([first: old])
+            )
+            XCTAssertTrue(events.isEmpty, "\(old) -> \(new)")
+        }
+    }
+
+    func testSessionsFirstSeenRingNothingSoLaunchStaysQuiet() {
+        let events = AlertSoundEvent.events(newUserSessions: sessions([first: .done, second: .waitingPermission]), oldUserSessions: [])
+        XCTAssertTrue(events.isEmpty)
+    }
+
+    func testSeveralSessionsChangingInOneRefreshCollapseToOneEventEach() {
+        let events = AlertSoundEvent.events(
+            newUserSessions: sessions([first: .done, second: .done]),
+            oldUserSessions: sessions([first: .working, second: .working])
+        )
+        XCTAssertEqual(events, [.done])
     }
 }
 

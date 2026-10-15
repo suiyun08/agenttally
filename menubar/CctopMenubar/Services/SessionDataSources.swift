@@ -18,6 +18,8 @@ struct SessionDataSources {
     var seenSessions: SessionSeenStore = .live
     /// Read state the clients keep themselves. Only `.live()` reads real client files.
     var clientReadState: any ClientReadStateProviding = NoClientReadState()
+    /// Rings a session event's sound. Only `.live()` makes noise.
+    var playAlertSound: @MainActor (AlertSoundEvent) -> Void = { _ in }
     var now: () -> Date
 
     /// A function rather than a stored constant so `Config.sessionsDir()` is resolved
@@ -32,6 +34,7 @@ struct SessionDataSources {
             processAlive: { $0.isAlive },
             notificationsEnabled: { UserDefaults.standard.bool(forKey: "notificationsEnabled") },
             clientReadState: ClientReadStateLookup(),
+            playAlertSound: { $0.ring() },
             now: Date.init
         )
     }

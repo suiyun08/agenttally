@@ -114,6 +114,14 @@ extension SessionManager {
         }
     }
 
+    /// One sound per refresh, so overlapping sounds never cut each other off; a session that
+    /// needs the user outranks a finished turn.
+    func ringTransitionSounds(for newUserSessions: [UserSession], oldUserSessions: [UserSession]) {
+        let events = AlertSoundEvent.events(newUserSessions: newUserSessions, oldUserSessions: oldUserSessions)
+        guard let event = [AlertSoundEvent.needsYou, .done].first(where: events.contains) else { return }
+        dataSources.playAlertSound(event)
+    }
+
     nonisolated static func notificationActions(
         newUserSessions: [UserSession],
         oldUserSessions: [UserSession],
@@ -159,8 +167,7 @@ extension SessionManager {
 
     nonisolated static func notificationRequest(
         forCctopSessionID cctopSessionID: String,
-        displayData: SessionData,
-        soundSettings: UserDefaults = .standard
+        displayData: SessionData
     ) -> UNNotificationRequest? {
         guard let identifier = SessionIdentityPolicy.notificationRequestIdentifier(
                   forCctopSessionID: cctopSessionID
@@ -174,11 +181,8 @@ extension SessionManager {
         content.title = notification.title
         content.subtitle = notification.subtitle
         content.body = notification.body
-        if let event = AlertSoundEvent(status: displayData.status) {
-            content.sound = event.sound(in: soundSettings).notificationSound
-        } else {
-            content.sound = .default
-        }
+        // Silent: cctop rings the chosen sound itself, with or without banners.
+        content.sound = nil
         content.userInfo = userInfo
 
         return UNNotificationRequest(
