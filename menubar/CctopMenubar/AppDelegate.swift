@@ -440,7 +440,7 @@ extension AppDelegate {
     /// Symlinks cctop-hook from the app bundle into ~/.cctop/bin/ so hooks can find it.
     /// First run as AgentTally: bring cctop's settings along. A copied language takes effect
     /// only at launch, so the app relaunches; returns true when it did.
-    private func relaunchedForLegacySettings() -> Bool {
+    @MainActor private func relaunchedForLegacySettings() -> Bool {
         guard LegacySettingsMigration.run() else { return false }
         AppLanguage.relaunchApp()
         return true
