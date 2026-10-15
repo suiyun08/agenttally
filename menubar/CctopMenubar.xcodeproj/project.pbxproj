@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AGM000010000000000000001 /* AgentMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = AGM000020000000000000001 /* AgentMark.swift */; };
 		PTB000010000000000000001 /* PanelTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = PTB000020000000000000001 /* PanelTopBar.swift */; };
 		PSN000010000000000000001 /* PanelSnap.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSN000020000000000000001 /* PanelSnap.swift */; };
 		PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSB000020000000000000001 /* PanelSurfaceBackground.swift */; };
@@ -213,6 +214,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AGM000020000000000000001 /* AgentMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentMark.swift; sourceTree = "<group>"; };
 		PTB000020000000000000001 /* PanelTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTopBar.swift; sourceTree = "<group>"; };
 		PSN000020000000000000001 /* PanelSnap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSnap.swift; sourceTree = "<group>"; };
 		PSB000020000000000000001 /* PanelSurfaceBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSurfaceBackground.swift; sourceTree = "<group>"; };
@@ -573,6 +575,7 @@
 				NSG000020000000000000001 /* NotificationSettingsGroup.swift */,
 				PSB000020000000000000001 /* PanelSurfaceBackground.swift */,
 				PTB000020000000000000001 /* PanelTopBar.swift */,
+				AGM000020000000000000001 /* AgentMark.swift */,
 				JSPREV020000000000000001 /* SettingsSection+Preview.swift */,
 				CDXROW020000000000000001 /* CodexPluginRowView.swift */,
 				L10000020000000000000001 /* EmptyStateView.swift */,
@@ -872,6 +875,7 @@
 				NSG000010000000000000001 /* NotificationSettingsGroup.swift in Sources */,
 				PSB000010000000000000001 /* PanelSurfaceBackground.swift in Sources */,
 				PTB000010000000000000001 /* PanelTopBar.swift in Sources */,
+				AGM000010000000000000001 /* AgentMark.swift in Sources */,
 				PPO000010000000000000001 /* PanelPositioning.swift in Sources */,
 				WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */,
 				WCM000010000000000000001 /* WorktreeCleanupCandidate+Mock.swift in Sources */,

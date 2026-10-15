@@ -110,21 +110,34 @@ final class StatusCountsUserSessionInitTests: XCTestCase {
         let claudeWorking = SessionData.mock(id: "cc-working", status: .working, pid: 1)
         let claudePermission = SessionData.mock(id: "cc-permission", status: .waitingPermission, pid: 2)
         let opencode = SessionData.mock(id: "oc", status: .needsAttention, pid: 3, source: SessionData.opencodeSource)
+        let pi = SessionData.mock(id: "pi", status: .working, pid: 4, source: SessionData.piSource)
+        let dsh = SessionData.mock(id: "dsh", status: .working, pid: 5, source: SessionData.dshSource)
+        let aider = SessionData.mock(id: "aider", status: .working, pid: 6, source: "aider")
 
         let counts = StatusCounts(userSessions: userSessions(fromDataFixtures: [
-            codexDone, codexWorking, claudeWorking, claudePermission, opencode,
+            codexDone, codexWorking, claudeWorking, claudePermission, opencode, pi, dsh, aider,
         ]))
 
+        // One group per agent, each headed by its mark; agents without one come last, by name.
         XCTAssertEqual(counts.dotGroups, [
             StatusDotGroup(family: .claude, dots: [.permission, .working]),
             StatusDotGroup(family: .codex, dots: [.working, .unreadDone]),
-            StatusDotGroup(family: .other, dots: [.attention]),
+            StatusDotGroup(family: .init(.dsh), dots: [.working]),
+            StatusDotGroup(family: .init(.opencode), dots: [.attention]),
+            StatusDotGroup(family: .init(.pi), dots: [.working]),
+            StatusDotGroup(family: .init(.other("aider")), dots: [.working]),
         ])
+    }
+
+    func testClaudeDesktopSharesClaudesGroup() {
+        let desktop = StatusDotGroup.Family(.claudeDesktop)
+        XCTAssertEqual(desktop, .claude)
+        XCTAssertEqual(desktop.badge, .cc)
     }
 }
 
 final class StatusDotLayoutTests: XCTestCase {
-    func testLayoutPlacesDotsAndSeparatorsWithMenubarSpacing() {
+    func testLayoutHeadsEachGroupWithItsMarkAtMenubarSpacing() {
         let layout = StatusDotLayout(
             groups: [
                 StatusDotGroup(family: .claude, dots: [.working, .permission]),
@@ -132,11 +145,25 @@ final class StatusDotLayoutTests: XCTestCase {
             ],
             metrics: .menubar
         )
-        // 6pt dots, 3pt gaps, 4pt margins around a 1pt separator.
+        // 10pt marks, 3pt from their dots; 6pt dots 3pt apart; 6pt between groups.
         XCTAssertEqual(layout.items, [
-            .dot(.permission, xPos: 0), .dot(.working, xPos: 9), .separator(xPos: 19), .dot(.unreadDone, xPos: 24),
+            .mark(.cc, xPos: 0, width: 10), .dot(.permission, xPos: 13), .dot(.working, xPos: 22),
+            .mark(.codex, xPos: 34, width: 10), .dot(.unreadDone, xPos: 47),
         ])
-        XCTAssertEqual(layout.width, 30)
+        XCTAssertEqual(layout.width, 53)
+    }
+
+    func testAnAgentWithoutAMarkIsHeadedByItsName() throws {
+        let layout = StatusDotLayout(
+            groups: [StatusDotGroup(family: .init(.other("aider")), dots: [.working])],
+            metrics: .menubar
+        )
+        guard case .mark(let badge, let xPos, let width) = try XCTUnwrap(layout.items.first) else {
+            return XCTFail("expected a mark first")
+        }
+        XCTAssertEqual(badge, .other("aider"))
+        XCTAssertEqual(xPos, 0)
+        XCTAssertGreaterThan(width, StatusDotMetrics.menubar.markHeight)
     }
 
     func testLayoutCapsEachGroupAndCountsTheRest() throws {
@@ -150,7 +177,7 @@ final class StatusDotLayoutTests: XCTestCase {
             return XCTFail("expected an overflow label")
         }
         XCTAssertEqual(text, "+2")
-        XCTAssertEqual(xPos, 53)
+        XCTAssertEqual(xPos, 66) // 13pt mark lead, six 6pt dots 3pt apart, 2pt gap
         XCTAssertEqual(layout.width, xPos + width)
     }
 

@@ -1,16 +1,12 @@
 import SwiftUI
 
-/// Renders a session's source/host badge as quiet metadata.
-/// Harness labels stay neutral so project names and session state remain primary.
+/// Renders a session's source/host as its small agent mark, kept quiet so project names and
+/// session state remain primary. Agents without a mark show their name.
 struct SourceBadgeView: View {
     let badge: AgentBadge
 
     var body: some View {
-        Text(badge.label)
-            .font(.system(size: 9.5, weight: .medium))
-            .tracking(0.4)
-            .foregroundStyle(Color.textMuted.opacity(0.82))
-            .accessibilityLabel(badge.label)
+        AgentMarkView(badge: badge, height: 11)
     }
 }
 
@@ -28,6 +24,9 @@ struct SourceBadgeView: View {
 }
 #Preview("Pi") {
     SourceBadgeView(badge: .pi).padding()
+}
+#Preview("DSH") {
+    SourceBadgeView(badge: .dsh).padding()
 }
 #Preview("All variants") {
     VStack(alignment: .leading, spacing: 12) {

@@ -71,6 +71,7 @@ struct RecentProject: Identifiable, Equatable {
         case SessionData.ccSource?: return "Claude Code"
         case SessionData.opencodeSource?: return "opencode"
         case SessionData.piSource?: return "pi"
+        case SessionData.dshSource?: return "DSH"
         case .some(let source) where !source.isEmpty: return source
         default: return nil
         }

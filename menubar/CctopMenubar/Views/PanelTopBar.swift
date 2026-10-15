@@ -118,10 +118,9 @@ struct PanelStatusLights: View {
                         light(dot)
                             .frame(width: metrics.dotDiameter, height: metrics.dotDiameter)
                             .offset(x: xPos)
-                    case .separator(let xPos):
-                        Rectangle()
-                            .fill(Color.textMuted.opacity(0.6))
-                            .frame(width: metrics.separatorWidth, height: 10)
+                    case .mark(let badge, let xPos, let width):
+                        AgentMarkView(badge: badge, height: metrics.markHeight)
+                            .frame(width: width, height: metrics.markHeight)
                             .offset(x: xPos)
                     case .overflow(let text, let xPos, let width):
                         Text(verbatim: text)

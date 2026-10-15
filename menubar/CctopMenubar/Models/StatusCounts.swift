@@ -47,7 +47,7 @@ struct StatusCounts: Equatable {
                 dotsByFamily[family, default: []].append(dot)
             }
         }
-        self.dotGroups = StatusDotGroup.Family.allCases.compactMap { family in
+        self.dotGroups = dotsByFamily.keys.sorted().compactMap { family in
             guard let dots = dotsByFamily[family], !dots.isEmpty else { return nil }
             return StatusDotGroup(family: family, dots: dots)
         }
@@ -155,18 +155,33 @@ struct StatusCounts: Equatable {
 /// The sessions of one agent family as dots: what needs the user first, then running work,
 /// then unread results. Read results and idle sessions get no dot.
 struct StatusDotGroup: Equatable {
-    enum Family: Int, CaseIterable, Comparable {
-        case claude, codex, other
+    /// One agent's group: known agents in a fixed order, then any other agent by name.
+    /// Claude Code and Claude Desktop share Claude's group and mark.
+    struct Family: Hashable, Comparable {
+        /// The badge whose mark heads the group.
+        let badge: AgentBadge
 
         init(_ badge: AgentBadge) {
+            self.badge = badge == .claudeDesktop ? .cc : badge
+        }
+
+        static let claude = Family(.cc)
+        static let codex = Family(.codex)
+
+        private var rank: Int {
             switch badge {
-            case .cc, .claudeDesktop: self = .claude
-            case .codex: self = .codex
-            case .opencode, .pi: self = .other
+            case .cc, .claudeDesktop: return 0
+            case .codex: return 1
+            case .dsh: return 2
+            case .opencode: return 3
+            case .pi: return 4
+            case .other: return 5
             }
         }
 
-        static func < (lhs: Family, rhs: Family) -> Bool { lhs.rawValue < rhs.rawValue }
+        static func < (lhs: Family, rhs: Family) -> Bool {
+            (lhs.rank, lhs.badge.label) < (rhs.rank, rhs.badge.label)
+        }
     }
 
     enum Dot: Int, Equatable, Comparable {
@@ -202,26 +217,30 @@ struct StatusDotGroup: Equatable {
 struct StatusDotMetrics {
     let dotDiameter: CGFloat
     let dotGap: CGFloat
-    let separatorMargin: CGFloat
-    let separatorWidth: CGFloat
+    /// Height of the agent mark heading each group.
+    let markHeight: CGFloat
+    /// Between a group's mark and its first dot.
+    let markGap: CGFloat
+    /// Between one group's last dot and the next group's mark.
+    let groupGap: CGFloat
     let overflowGap: CGFloat
     let overflowFont: NSFont
 
     static let menubar = StatusDotMetrics(
-        dotDiameter: 6, dotGap: 3, separatorMargin: 4, separatorWidth: 1, overflowGap: 2,
+        dotDiameter: 6, dotGap: 3, markHeight: 10, markGap: 3, groupGap: 6, overflowGap: 2,
         overflowFont: .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
     )
     static let notch = StatusDotMetrics(
-        dotDiameter: 5, dotGap: 3, separatorMargin: 4, separatorWidth: 1, overflowGap: 2,
+        dotDiameter: 5, dotGap: 3, markHeight: 8, markGap: 3, groupGap: 5, overflowGap: 2,
         overflowFont: .monospacedDigitSystemFont(ofSize: 8, weight: .medium)
     )
 }
 
-/// Horizontal positions of every dot, separator, and "+N" label, plus the total width.
+/// Horizontal positions of every agent mark, dot, and "+N" label, plus the total width.
 struct StatusDotLayout: Equatable {
     enum Item: Equatable {
+        case mark(AgentBadge, xPos: CGFloat, width: CGFloat)
         case dot(StatusDotGroup.Dot, xPos: CGFloat)
-        case separator(xPos: CGFloat)
         case overflow(String, xPos: CGFloat, width: CGFloat)
     }
 
@@ -248,11 +267,10 @@ struct StatusDotLayout: Equatable {
         var items: [Item] = []
         var xPos: CGFloat = 0
         for (index, group) in groups.enumerated() {
-            if index > 0 {
-                xPos += metrics.separatorMargin
-                items.append(.separator(xPos: xPos))
-                xPos += metrics.separatorWidth + metrics.separatorMargin
-            }
+            if index > 0 { xPos += metrics.groupGap }
+            let markWidth = AgentMark.width(for: group.family.badge, height: metrics.markHeight)
+            items.append(.mark(group.family.badge, xPos: xPos, width: markWidth))
+            xPos += markWidth + metrics.markGap
             let visible = group.dots.prefix(maxVisibleDots)
             for (dotIndex, dot) in visible.enumerated() {
                 if dotIndex > 0 { xPos += metrics.dotGap }

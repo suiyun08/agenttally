@@ -56,11 +56,12 @@ private struct NotchStatusDots: View {
                     dotView(dot)
                         .frame(width: metrics.dotDiameter, height: metrics.dotDiameter)
                         .offset(x: xPos)
-                case .separator(let xPos):
-                    Rectangle()
-                        .fill(Color.white.opacity(0.35))
-                        .frame(width: metrics.separatorWidth, height: 8)
-                        .offset(x: xPos)
+                case .mark(let badge, let xPos, let width):
+                    Image(nsImage: AgentMark.image(
+                        for: badge, height: metrics.markHeight, ink: NSColor.white.withAlphaComponent(0.6)
+                    ))
+                    .frame(width: width, height: metrics.markHeight)
+                    .offset(x: xPos)
                 case .overflow(let text, let xPos, let width):
                     Text(verbatim: text)
                         .font(Font(metrics.overflowFont as CTFont))

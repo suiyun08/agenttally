@@ -2033,9 +2033,18 @@ final class SessionTests: XCTestCase {
         XCTAssertEqual(session.agentBadge.label, "Pi")
     }
 
-    func testAgentBadgeLabelUnknownValue() {
+    func testAgentBadgeLabelDSH() {
+        let session = SessionData.mock(source: "dsh")
+        XCTAssertEqual(session.agentBadge, .dsh)
+        XCTAssertEqual(session.agentBadge.label, "DSH")
+    }
+
+    /// An agent cctop has no mark for keeps its own name instead of passing as Claude Code.
+    func testAgentBadgeUnknownAgentKeepsItsName() {
         let session = SessionData.mock(source: "aider")
-        XCTAssertEqual(session.agentBadge.label, "CC")
+        XCTAssertEqual(session.agentBadge, .other("aider"))
+        XCTAssertEqual(session.agentBadge.label, "aider")
+        XCTAssertEqual(SessionData.mock(source: "").agentBadge, .cc)
     }
 
     // MARK: - Case-insensitive tool display

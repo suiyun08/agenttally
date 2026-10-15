@@ -58,6 +58,7 @@ extension SessionData {
         switch source {
         case Self.opencodeSource: return "opencode"
         case Self.piSource: return "pi"
+        case Self.dshSource: return "DSH"
         default: return "Claude"
         }
     }

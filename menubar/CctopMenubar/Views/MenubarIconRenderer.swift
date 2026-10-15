@@ -6,7 +6,6 @@ import AppKit
 enum MenubarIconRenderer {
     private static let height: CGFloat = 18
     private static let emptyLine = NSSize(width: 14, height: 3)
-    private static let separatorHeight: CGFloat = 10
     private static let ringWidth: CGFloat = 1.2
 
     static func render(counts: StatusCounts) -> NSImage {
@@ -46,12 +45,12 @@ enum MenubarIconRenderer {
                     width: metrics.dotDiameter, height: metrics.dotDiameter
                 )
                 drawDot(dot, in: rect, appearance: appearance)
-            case .separator(let xPos):
-                NSColor.labelColor.withAlphaComponent(0.35).setFill()
-                NSRect(
-                    x: xPos, y: midY - separatorHeight / 2,
-                    width: metrics.separatorWidth, height: separatorHeight
-                ).fill()
+            case .mark(let badge, let xPos, let width):
+                let rect = NSRect(
+                    x: xPos, y: midY - metrics.markHeight / 2,
+                    width: width, height: metrics.markHeight
+                )
+                AgentMark.draw(badge, in: rect, ink: NSColor.labelColor.withAlphaComponent(0.55))
             case .overflow(let text, let xPos, _):
                 let attributed = NSAttributedString(string: text, attributes: [
                     .font: metrics.overflowFont,

@@ -155,6 +155,7 @@ struct SessionData: Codable, Identifiable, Equatable {
     static let ccSource = "cc"
     static let opencodeSource = "opencode"
     static let piSource = "pi"
+    static let dshSource = "dsh"
 
     var isCodex: Bool { source == Self.codexSource }
 

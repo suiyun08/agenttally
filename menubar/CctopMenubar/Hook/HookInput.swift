@@ -134,7 +134,7 @@ struct HookInput: Codable {
     /// MIGRATION(harness_name): Remove the `source` fallback only after installer/status
     /// logic enforces plugins that send `harness_name`, or older-plugin compatibility is
     /// explicitly dropped. Installed opencode/pi plugins are not automatically overwritten.
-    private static let knownHarnesses: Set<String> = ["cc", "codex", "opencode", "pi"]
+    private static let knownHarnesses: Set<String> = ["cc", "codex", "opencode", "pi", "dsh"]
 
     var resolvedHarnessName: String? {
         if let harnessName { return harnessName }
