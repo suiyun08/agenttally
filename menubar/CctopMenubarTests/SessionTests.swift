@@ -2965,6 +2965,19 @@ final class PanelWidthDragTests: XCTestCase {
         }
     }
 
+    func testGripShowsOnTheDraggedEdgeElseTheHoveredOne() {
+        let state = PanelResizeState()
+        XCTAssertNil(state.gripEdge)
+        state.hoveredEdge = .leading
+        XCTAssertEqual(state.gripEdge, .leading)
+        state.draggingEdge = .trailing
+        XCTAssertEqual(state.gripEdge, .trailing)
+        state.draggingEdge = nil
+        XCTAssertEqual(state.gripEdge, .leading)
+        state.hoveredEdge = nil
+        XCTAssertNil(state.gripEdge)
+    }
+
     func testSettledFrameKeepsTheEdgeOppositeTheDraggedOne() {
         let dragged = NSRect(x: 900, y: 100, width: 420, height: 300)
         let leading = PanelWidthDrag.settled(from: dragged, edge: .leading)

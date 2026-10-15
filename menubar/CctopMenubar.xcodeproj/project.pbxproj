@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BGC000010000000000000001 /* BackgroundCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BGC000020000000000000001 /* BackgroundCursor.swift */; };
 		SND050010000000000000001 /* cctop-simple.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND050020000000000000001 /* cctop-simple.caf */; };
 		SND040010000000000000001 /* cctop-notification.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND040020000000000000001 /* cctop-notification.caf */; };
 		SND030010000000000000001 /* cctop-new-notification.caf in Resources */ = {isa = PBXBuildFile; fileRef = SND030020000000000000001 /* cctop-new-notification.caf */; };
@@ -212,6 +213,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BGC000020000000000000001 /* BackgroundCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundCursor.swift; sourceTree = "<group>"; };
 		SND050020000000000000001 /* cctop-simple.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-simple.caf; path = Sounds/cctop-simple.caf; sourceTree = "<group>"; };
 		SND040020000000000000001 /* cctop-notification.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-notification.caf; path = Sounds/cctop-notification.caf; sourceTree = "<group>"; };
 		SND030020000000000000001 /* cctop-new-notification.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = cctop-new-notification.caf; path = Sounds/cctop-new-notification.caf; sourceTree = "<group>"; };
@@ -464,6 +466,7 @@
 				WRS000020000000000000001 /* WorktreeRemovalService.swift */,
 				D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */,
 				CRS000020000000000000001 /* ClientReadState.swift */,
+				BGC000020000000000000001 /* BackgroundCursor.swift */,
 				2A7407E2CADC40E1AE6CC64A /* SessionClassification.swift */,
 				B97A36AE9A264E049F3BA0E3 /* SessionManager+Classification.swift */,
 			);
@@ -886,6 +889,7 @@
 				WTV000010000000000000001 /* WorktreeCleanupTabView.swift in Sources */,
 				455650383669416F98D65C67 /* SessionDataSources.swift in Sources */,
 				CRS000010000000000000001 /* ClientReadState.swift in Sources */,
+				BGC000010000000000000001 /* BackgroundCursor.swift in Sources */,
 				307918FD1C8B47C79A1E8356 /* SessionClassification.swift in Sources */,
 				9AFFA6CFCA0D44C2B5B7942E /* SessionManager+Classification.swift in Sources */,
 				BE83AF0D2F044A299CD73467 /* TerminalInfo.swift in Sources */,

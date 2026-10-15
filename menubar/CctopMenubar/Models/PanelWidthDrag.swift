@@ -37,7 +37,14 @@ enum PanelWidthDrag {
     }
 }
 
-/// The width the panel content follows while a side edge is being dragged; nil otherwise.
-final class PanelLiveWidth: ObservableObject {
+/// Side-edge resize state the panel content draws from: the width it follows during a drag,
+/// and which edge shows its grip.
+final class PanelResizeState: ObservableObject {
+    /// The width during a drag; nil otherwise.
     @Published var width: CGFloat?
+    @Published var hoveredEdge: PanelResizeEdge?
+    @Published var draggingEdge: PanelResizeEdge?
+
+    /// The edge whose grip shows: the one being dragged, else the one under the pointer.
+    var gripEdge: PanelResizeEdge? { draggingEdge ?? hoveredEdge }
 }

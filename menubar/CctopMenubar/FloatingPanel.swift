@@ -3,13 +3,16 @@ import AppKit
 @MainActor protocol FloatingPanelDelegate: AnyObject {
     func panelDidDrag(originX: CGFloat, topY: CGFloat)
     func panelDidRequestReset()
-    func panelWidthDragDidBegin()
+    func panelHoveredEdgeDidChange(_ edge: PanelResizeEdge?)
+    func panelWidthDragDidBegin(edge: PanelResizeEdge)
     func panelWidthDragDidMove(to frame: NSRect)
     func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge)
 }
 
 class FloatingPanel: NSPanel {
     weak var panelDelegate: FloatingPanelDelegate?
+    private var edgeTrackingArea: NSTrackingArea?
+    private var hoveredEdge: PanelResizeEdge?
     /// Height of the header drag zone (shared with HeaderView).
     private let headerDragHeight = AppChrome.headerHeight
     static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
@@ -61,6 +64,10 @@ class FloatingPanel: NSPanel {
         isMovableByWindowBackground = false
         animationBehavior = .utilityWindow
         collectionBehavior = Self.defaultCollectionBehavior
+    }
+
+    override var contentView: NSView? {
+        didSet { installEdgeTracking() }
     }
 
     override var canBecomeKey: Bool { true }
@@ -137,7 +144,8 @@ class FloatingPanel: NSPanel {
         let startLocation = NSEvent.mouseLocation
         let startFrame = frame
         var current = startFrame
-        panelDelegate?.panelWidthDragDidBegin()
+        NSCursor.resizeLeftRight.set()
+        panelDelegate?.panelWidthDragDidBegin(edge: edge)
 
         while true {
             guard let event = nextEvent(
@@ -157,6 +165,51 @@ class FloatingPanel: NSPanel {
         }
 
         panelDelegate?.panelWidthDragDidEnd(at: current, edge: edge)
+        updateHoveredEdge(at: mouseLocationOutsideOfEventStream)
+    }
+
+    // MARK: - Side-edge hover
+
+    /// Tracks the pointer even while cctop is in the background, which the panel always is:
+    /// it never activates the app, so it never takes focus from the user's terminal.
+    private func installEdgeTracking() {
+        if let edgeTrackingArea { edgeTrackingArea.view?.removeTrackingArea(edgeTrackingArea) }
+        guard let contentView else { edgeTrackingArea = nil; return }
+        let area = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        contentView.addTrackingArea(area)
+        edgeTrackingArea = area
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateHoveredEdge(at: event.locationInWindow)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        guard event.trackingArea === edgeTrackingArea else { return }
+        updateHoveredEdge(at: nil)
+    }
+
+    private func updateHoveredEdge(at location: NSPoint?) {
+        let edge = location.flatMap { point -> PanelResizeEdge? in
+            guard point.y >= 0, point.y <= frame.height else { return nil }
+            return PanelWidthDrag.edge(atX: point.x, panelWidth: frame.width)
+        }
+        if edge != nil {
+            // Re-assert on every move; content views may reset the pointer underneath.
+            NSCursor.resizeLeftRight.set()
+        } else if hoveredEdge != nil {
+            NSCursor.arrow.set()
+        }
+        guard edge != hoveredEdge else { return }
+        hoveredEdge = edge
+        panelDelegate?.panelHoveredEdgeDidChange(edge)
     }
 
     private func isInHeaderArea(_ event: NSEvent) -> Bool {

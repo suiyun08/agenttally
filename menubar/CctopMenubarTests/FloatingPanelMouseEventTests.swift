@@ -28,4 +28,35 @@ final class FloatingPanelMouseEventTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testHoveringASideEdgeReportsThatEdgeAndMovingInwardClearsIt() throws {
+        final class Recorder: FloatingPanelDelegate {
+            var hovered: [PanelResizeEdge?] = []
+            func panelDidDrag(originX: CGFloat, topY: CGFloat) {}
+            func panelDidRequestReset() {}
+            func panelHoveredEdgeDidChange(_ edge: PanelResizeEdge?) { hovered.append(edge) }
+            func panelWidthDragDidBegin(edge: PanelResizeEdge) {}
+            func panelWidthDragDidMove(to frame: NSRect) {}
+            func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge) {}
+        }
+        let panel = FloatingPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [], backing: .buffered, defer: true
+        )
+        panel.contentView = NSView()
+        let recorder = Recorder()
+        panel.panelDelegate = recorder
+
+        for xPos: CGFloat in [2, 3, 160, 318, 160] {
+            let event = try XCTUnwrap(NSEvent.mouseEvent(
+                with: .mouseMoved, location: NSPoint(x: xPos, y: 100), modifierFlags: [],
+                timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+                eventNumber: 0, clickCount: 0, pressure: 0
+            ))
+            panel.mouseMoved(with: event)
+        }
+
+        XCTAssertEqual(recorder.hovered, [.leading, nil, .trailing, nil])
+    }
 }

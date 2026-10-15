@@ -37,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
-    let panelLiveWidth = PanelLiveWidth()
+    let panelResizeState = PanelResizeState()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -52,6 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !Self.isXcodeTestHost else { return }
+        BackgroundCursor.enable()
         UserDefaults.standard.register(defaults: ["notificationsEnabled": true])
         notificationPermissionReconciler.refresh()
         installHookBinaryIfNeeded()
@@ -116,7 +117,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             pluginManager: pluginManager,
             navigate: navigateController,
             heightLimit: panelHeightLimit,
-            liveWidth: panelLiveWidth,
+            resizeState: panelResizeState,
             onOpenUpdater: { [weak self] in
                 Task { @MainActor in self?.openUpdaterFromPanel() }
             },

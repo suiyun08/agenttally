@@ -319,7 +319,7 @@ struct PanelContentView: View {
     @ObservedObject var pluginManager: PluginManager
     @ObservedObject var navigate: NavigateController
     @ObservedObject var heightLimit = PanelHeightLimit()
-    @ObservedObject var liveWidth = PanelLiveWidth()
+    @ObservedObject var resizeState = PanelResizeState()
     var onOpenUpdater: (() -> Void)?
     var onSelectCleanupRemovalAction: ((WorktreeCleanupCandidate) async -> WorktreeRemovalService.RemovalAction)?
     var onExecuteCleanupRemovalAction: ((WorktreeRemovalService.RemovalAction) async -> WorktreeRemovalService.RemovalResult)?
@@ -352,7 +352,7 @@ struct PanelContentView: View {
             onLayoutChanged: onLayoutChanged,
             maxListHeight: heightLimit.maxHeight
         )
-        .frame(width: liveWidth.width ?? CGFloat(panelWidth))
+        .frame(width: resizeState.width ?? CGFloat(panelWidth))
         .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()
@@ -361,23 +361,30 @@ struct PanelContentView: View {
             PanelAccentHairline(cornerRadius: AppChrome.panelCornerRadius)
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
-        .overlay(alignment: .leading) { PanelResizeEdgeCursor() }
-        .overlay(alignment: .trailing) { PanelResizeEdgeCursor() }
+        .overlay(alignment: .leading) { PanelResizeGrip(edge: .leading, state: resizeState) }
+        .overlay(alignment: .trailing) { PanelResizeGrip(edge: .trailing, state: resizeState) }
         .id(themeManager.themeId)
         .onChange(of: panelWidth) { _ in onLayoutChanged() }
     }
 }
 
-/// Shows the resize cursor over a side edge; `FloatingPanel` handles the drag itself.
-private struct PanelResizeEdgeCursor: View {
+/// A short accent bar inside a side edge, shown while the pointer is on that edge or dragging it,
+/// so the edge reads as something to drag. It never takes clicks or scrolls.
+struct PanelResizeGrip: View {
+    let edge: PanelResizeEdge
+    @ObservedObject var state: PanelResizeState
+
     var body: some View {
-        Color.clear
-            .frame(width: PanelWidthDrag.edgeZone)
-            .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .onHover { inside in
-                (inside ? NSCursor.resizeLeftRight : NSCursor.arrow).set()
-            }
+        let isDragging = state.draggingEdge == edge
+        Capsule()
+            .fill(Color.amber.opacity(isDragging ? 0.95 : 0.7))
+            .frame(width: 3, height: isDragging ? 44 : 32)
+            .padding(.horizontal, 1.5)
+            .opacity(state.gripEdge == edge ? 1 : 0)
+            .animation(.easeOut(duration: 0.15), value: state.gripEdge)
+            .animation(.easeOut(duration: 0.15), value: isDragging)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 
