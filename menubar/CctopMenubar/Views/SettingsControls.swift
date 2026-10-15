@@ -225,3 +225,27 @@ struct AmberActionButton: View {
         .buttonStyle(.plain)
     }
 }
+
+/// Whether resting the pointer on the menu bar dots opens the panel as a peek.
+struct HoverToOpenSettingsRow: View {
+    @AppStorage(PanelHoverController.enabledKey) private var enabled = true
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Open on Hover")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Toggle("", isOn: $enabled)
+                .toggleStyle(.switch).controlSize(.mini)
+                .tint(Color.amber)
+                .labelsHidden()
+                .accessibilityLabel("Open on Hover")
+        }
+        .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
+        .padding(.vertical, 4)
+        .frame(minHeight: 25)
+        .help("Rest the pointer on the menu bar dots to open the panel; move away to close it.")
+    }
+}

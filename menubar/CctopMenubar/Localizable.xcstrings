@@ -3137,6 +3137,26 @@
           }
         }
       }
+    },
+    "Open on Hover": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬停展开"
+          }
+        }
+      }
+    },
+    "Rest the pointer on the menu bar dots to open the panel; move away to close it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标停在菜单栏指示灯上展开面板，移开后自动收起。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

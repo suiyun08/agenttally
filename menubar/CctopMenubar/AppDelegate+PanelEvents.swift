@@ -34,17 +34,10 @@ extension AppDelegate {
         for action in actions {
             switch action {
             case .showPanel:
-                notchVisibilityWork?.cancel()
-                // Plugin/hook state can change outside the app (e.g. trusting
-                // Codex hooks in Codex itself) — re-read it on every open.
-                pluginManager.refresh()
-                panel.makeKeyAndOrderFront(nil)
-                updateCleanupPanelVisibility()
-                // Re-position after SwiftUI layout settles
-                DispatchQueue.main.async { [weak self] in
-                    self?.positionPanel()
-                    self?.focusLocation = nil
-                }
+                presentPanel(takingFocus: true)
+            case .peekPanel:
+                presentPanel(takingFocus: false)
+                panelHover.watchLeave()
             case .dismissPanel:
                 dismissPanel()
             case .positionPanel:
@@ -76,6 +69,25 @@ extension AppDelegate {
             case .endNavigateMode:
                 navigateController.deactivate()
             }
+        }
+    }
+
+    /// A peek leaves keyboard focus with the app the user is typing in; a full open takes it.
+    @MainActor private func presentPanel(takingFocus: Bool) {
+        notchVisibilityWork?.cancel()
+        // Plugin/hook state can change outside the app (e.g. trusting
+        // Codex hooks in Codex itself) — re-read it on every open.
+        pluginManager.refresh()
+        if takingFocus {
+            panel.makeKeyAndOrderFront(nil)
+        } else {
+            panel.orderFrontRegardless()
+        }
+        updateCleanupPanelVisibility()
+        // Re-position after SwiftUI layout settles
+        DispatchQueue.main.async { [weak self] in
+            self?.positionPanel()
+            self?.focusLocation = nil
         }
     }
 
@@ -154,5 +166,36 @@ extension AppDelegate {
 
     private func postNavAction(_ action: PanelNavAction) {
         navigateController.navActionSubject.send(action)
+    }
+}
+
+// MARK: - Hover to peek
+
+extension AppDelegate {
+    @MainActor func setupPanelHover() {
+        panelHover.anchors = { [weak self] in self?.hoverAnchors ?? [] }
+        panelHover.keepOpenZones = { [weak self] in
+            guard let self else { return [] }
+            return self.hoverAnchors + [self.panel.frame]
+        }
+        panelHover.isPeeking = { [weak self] in self?.panelMode == .peek }
+        panelHover.onRest = { [weak self] in
+            guard let self else { return }
+            self.focusLocation = NSEvent.mouseLocation
+            self.handleEvent(.pointerRested(panelVisibleInActiveSpace: self.panelVisibleInActiveSpace))
+        }
+        panelHover.onLeave = { [weak self] in self?.handleEvent(.pointerLeft) }
+        if let button = statusItem.button { panelHover.track(button) }
+        notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
+    }
+
+    /// Where the dots are on screen: the status item, and the notch pill when it stands in.
+    @MainActor private var hoverAnchors: [NSRect] {
+        [statusItem.button?.window?.frame, notchController.pillFrame].compactMap { $0 }
+    }
+
+    /// Clicking or dragging a peek pins it.
+    @MainActor func panelReceivedMouseDown() {
+        handleEvent(.panelClicked)
     }
 }

@@ -1,24 +1,47 @@
 import AppKit
 
-/// Renders the menubar item as per-agent groups of session dots (see `StatusDotLayout`).
-/// With nothing worth a look it becomes a short monochrome template line.
+/// Renders the menubar item as per-agent groups of session dots (see `StatusDotLayout`) on a
+/// small translucent pill, so the dots stay readable over any wallpaper showing through the
+/// menu bar. With nothing worth a look it becomes a short monochrome template line.
 @MainActor
 enum MenubarIconRenderer {
     private static let height: CGFloat = 18
     private static let emptyLine = NSSize(width: 14, height: 3)
     private static let ringWidth: CGFloat = 1.2
+    /// Space between the pill's edge and the first mark or last dot.
+    static let pillPadding: CGFloat = 6
 
     static func render(counts: StatusCounts) -> NSImage {
         guard !counts.dotGroups.isEmpty else { return emptyImage() }
         let layout = StatusDotLayout(groups: counts.dotGroups, metrics: .menubar)
-        let image = NSImage(size: NSSize(width: max(layout.width, 1), height: height), flipped: false) { _ in
+        let size = NSSize(width: layout.width + pillPadding * 2, height: height)
+        let image = NSImage(size: size, flipped: false) { rect in
             // AppKit makes the status item's effective appearance current here,
             // so one live image follows menu-bar light/dark changes immediately.
-            draw(layout, metrics: .menubar, appearance: NSAppearance.current)
+            let appearance: NSAppearance = NSAppearance.current
+            drawPill(in: rect, appearance: appearance)
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
+            NSGraphicsContext.current?.cgContext.translateBy(x: pillPadding, y: 0)
+            draw(layout, metrics: .menubar, appearance: appearance)
             return true
         }
         image.isTemplate = false
         return image
+    }
+
+    /// A translucent capsule with a hairline rim, like the panel's own buttons: frosted white on a
+    /// light menu bar and smoked on a dark one, so each status palette sits on the kind of
+    /// background it was picked for, whatever the wallpaper behind the menu bar.
+    private static func drawPill(in rect: NSRect, appearance: NSAppearance) {
+        let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let pill = rect.insetBy(dx: 0.5, dy: 1.5)
+        let path = NSBezierPath(roundedRect: pill, xRadius: pill.height / 2, yRadius: pill.height / 2)
+        (isDark ? NSColor.black.withAlphaComponent(0.32) : NSColor.white.withAlphaComponent(0.6)).setFill()
+        path.fill()
+        (isDark ? NSColor.white.withAlphaComponent(0.16) : NSColor.black.withAlphaComponent(0.1)).setStroke()
+        path.lineWidth = 0.75
+        path.stroke()
     }
 
     private static func emptyImage() -> NSImage {
