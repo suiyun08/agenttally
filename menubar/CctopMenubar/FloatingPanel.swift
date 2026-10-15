@@ -12,6 +12,7 @@ import AppKit
 class FloatingPanel: NSPanel {
     weak var panelDelegate: FloatingPanelDelegate?
     private var edgeTrackingArea: NSTrackingArea?
+    private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
     /// Height of the header drag zone (shared with HeaderView).
     private let headerDragHeight = AppChrome.headerHeight
@@ -173,8 +174,9 @@ class FloatingPanel: NSPanel {
     /// Tracks the pointer even while cctop is in the background, which the panel always is:
     /// it never activates the app, so it never takes focus from the user's terminal.
     private func installEdgeTracking() {
-        if let edgeTrackingArea { edgeTrackingArea.view?.removeTrackingArea(edgeTrackingArea) }
-        guard let contentView else { edgeTrackingArea = nil; return }
+        if let edgeTrackingArea { edgeTrackingView?.removeTrackingArea(edgeTrackingArea) }
+        edgeTrackingArea = nil
+        guard let contentView else { return }
         let area = NSTrackingArea(
             rect: .zero,
             options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
@@ -183,6 +185,7 @@ class FloatingPanel: NSPanel {
         )
         contentView.addTrackingArea(area)
         edgeTrackingArea = area
+        edgeTrackingView = contentView
     }
 
     override func mouseMoved(with event: NSEvent) {
