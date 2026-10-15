@@ -48,19 +48,19 @@ jobs:
 
   swift-test:
     name: Swift Build & Test
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app
       - name: Cache DerivedData
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: menubar/build/
-          key: deriveddata-${{ runner.os }}-xcode16.3-${{ hashFiles('menubar/CctopMenubar.xcodeproj/**') }}
+          key: deriveddata-${{ runner.os }}-xcode26.6-${{ hashFiles('menubar/CctopMenubar.xcodeproj/**') }}
           restore-keys: |
-            deriveddata-${{ runner.os }}-xcode16.3-
+            deriveddata-${{ runner.os }}-xcode26.6-
       - name: Build menubar app
         run: xcodebuild build -project menubar/CctopMenubar.xcodeproj -scheme CctopMenubar -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
       - name: Test Stream Deck version bump
