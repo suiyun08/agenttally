@@ -164,11 +164,7 @@ extension AppDelegate {
     private func setPanelFrame(_ frame: NSRect, animate: Bool) {
         guard !panel.frame.isNearlyEqual(to: frame) else { return }
         if animate {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.2
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                panel.animator().setFrame(frame, display: true)
-            }
+            panel.animateFrame(to: frame, duration: 0.2)
         } else {
             panel.setFrame(frame, display: true)
         }

@@ -16,6 +16,8 @@ class FloatingPanel: NSPanel {
     private var hoveredEdge: PanelResizeEdge?
     /// The panel's glass, kept in a never-key window right below it (see `PanelGlassWindow`).
     private lazy var glassWindow = PanelGlassWindow()
+    /// While both windows animate, the glass runs its own animation; frame syncs would jump it.
+    private var isAnimatingFrame = false
     /// Height of the header drag zone (shared with PanelTopBar).
     private let headerDragHeight = AppChrome.headerHeight
     /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
@@ -102,10 +104,32 @@ class FloatingPanel: NSPanel {
 
     // MARK: - Glass
 
+    /// Animates the panel and its glass together, so the glass never trails a resize.
+    func animateFrame(to target: NSRect, duration: TimeInterval) {
+        isAnimatingFrame = true
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            animator().setFrame(target, display: true)
+            if glassWindow.parent != nil {
+                glassWindow.animator().setFrame(target, display: true)
+            }
+        } completionHandler: { [weak self] in
+            self?.isAnimatingFrame = false
+            self?.syncGlassFrame()
+        }
+    }
+
+    /// Fades the glass in alongside the panel's own appearance animation.
     private func attachGlass() {
         guard glassWindow.parent == nil else { return syncGlassFrame() }
         glassWindow.setFrame(frame, display: false)
+        glassWindow.alphaValue = 0
         addChildWindow(glassWindow, ordered: .below)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            glassWindow.animator().alphaValue = 1
+        }
     }
 
     private func detachGlass() {
@@ -116,7 +140,7 @@ class FloatingPanel: NSPanel {
 
     /// Child windows follow the panel's moves on their own, but not its size.
     @objc private func syncGlassFrame() {
-        guard glassWindow.parent != nil, glassWindow.frame != frame else { return }
+        guard !isAnimatingFrame, glassWindow.parent != nil, glassWindow.frame != frame else { return }
         glassWindow.setFrame(frame, display: true)
     }
 

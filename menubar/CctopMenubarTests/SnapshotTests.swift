@@ -33,10 +33,16 @@ func renderPanelScreenshot(
     )
 
     let appearance: NSAppearance.Name = colorScheme == .dark ? .darkAqua : .aqua
+    // The glass lives in its own window, so a still image gets the solid theme color; previews
+    // over the wallpaper keep the see-through tint to show it.
     let styled = view
         .frame(width: width)
         .background {
-            PanelSurfaceBackground()
+            if overWallpaper {
+                PanelSurfaceBackground()
+            } else {
+                Color.panelBackground
+            }
         }
         .overlay {
             PanelAccentHairline(cornerRadius: AppChrome.panelCornerRadius)

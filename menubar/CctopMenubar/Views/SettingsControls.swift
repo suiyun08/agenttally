@@ -196,6 +196,8 @@ struct TransparencySettingsRow: View {
             Slider(value: $transparency, in: 0...1)
                 .controlSize(.mini)
                 .tint(Color.amber)
+                .accessibilityLabel("Transparency")
+                .accessibilityValue(Text(verbatim: "\(Int((transparency * 100).rounded()))%"))
             Text(verbatim: "\(Int((transparency * 100).rounded()))%")
                 .font(.system(size: 10).monospacedDigit())
                 .foregroundStyle(Color.textSecondary)
