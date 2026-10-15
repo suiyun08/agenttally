@@ -68,6 +68,9 @@ class FloatingPanel: NSPanel {
         hasShadow = true
         hidesOnDeactivate = false
         isMovableByWindowBackground = false
+        // Set explicitly: left unset, clicks on see-through pixels would fall through to the app
+        // behind, and the transparency slider can make the whole background see-through.
+        ignoresMouseEvents = false
         animationBehavior = .utilityWindow
         collectionBehavior = Self.defaultCollectionBehavior
         NotificationCenter.default.addObserver(
