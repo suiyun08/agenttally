@@ -21,13 +21,35 @@ enum PanelSurfaceStyle: Equatable {
     }
 }
 
-/// The theme color laid evenly over the glass. One even layer keeps the panel a single surface;
-/// the glass draws its own rim. Kept light: on the clear glass this layer is what keeps text legible.
+/// The theme color laid evenly over the glass, as strong as the user's transparency setting
+/// leaves it. One even layer keeps the panel a single surface; the glass draws its own rim.
 enum PanelGlassTint {
-    static let opacity: CGFloat = 0.25
+    /// How see-through the panel is, 0 (solid theme color) to 1 (bare glass).
+    static let transparencyKey = "panelTransparency"
+    static let defaultTransparency = 0.75
+
+    static func opacity(transparency: Double) -> Double {
+        1 - min(max(transparency, 0), 1)
+    }
 }
 
+/// The panel's own backdrop: just the theme tint. The glass lives in `PanelGlassWindow` below the
+/// panel, so it keeps one look whether or not the panel holds keyboard focus.
 struct PanelSurfaceBackground: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
+
+    var body: some View {
+        if reduceTransparency {
+            Color.panelBackground
+        } else {
+            Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))
+        }
+    }
+}
+
+/// The glass itself, filling `PanelGlassWindow`.
+struct PanelGlassBackdrop: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
@@ -36,17 +58,12 @@ struct PanelSurfaceBackground: View {
             liquidGlassAvailable: PanelSurfaceStyle.liquidGlassAvailable
         ) {
         case .solid:
-            Color.panelBackground
+            Color.clear
         case .liquidGlass:
-            ZStack {
-                liquidGlass
-                tint
-            }
+            liquidGlass
         case .blur:
-            ZStack {
-                BehindWindowBlur()
-                tint
-            }
+            BehindWindowBlur()
+                .clipShape(shape)
         }
     }
 
@@ -59,10 +76,6 @@ struct PanelSurfaceBackground: View {
             // Clear glass: far less frosting than .regular, so what is behind the panel shows.
             Color.clear.glassEffect(.clear, in: shape)
         }
-    }
-
-    private var tint: some View {
-        Color.panelBackground.opacity(PanelGlassTint.opacity)
     }
 }
 
@@ -77,4 +90,28 @@ private struct BehindWindowBlur: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}
+
+/// Holds the panel's glass in a window of its own, attached right below the panel. macOS draws
+/// glass in a key window with a brighter active look and in any other window with a quieter
+/// inactive look; this window never becomes key, so the glass never switches as the panel
+/// gains and loses focus. It takes no clicks, and the panel keeps it on its frame.
+final class PanelGlassWindow: NSWindow {
+    init() {
+        super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
+        isOpaque = false
+        backgroundColor = .clear
+        hasShadow = false
+        ignoresMouseEvents = true
+        isReleasedWhenClosed = false
+        animationBehavior = .none
+        level = .floating
+        collectionBehavior = FloatingPanel.defaultCollectionBehavior
+        let host = NSHostingView(rootView: PanelGlassBackdrop())
+        host.sizingOptions = []
+        contentView = host
+    }
+
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
 }

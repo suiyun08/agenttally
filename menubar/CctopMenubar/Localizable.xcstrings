@@ -3117,6 +3117,16 @@
           }
         }
       }
+    },
+    "Transparency": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透明度"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

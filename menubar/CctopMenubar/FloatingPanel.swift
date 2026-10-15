@@ -14,6 +14,8 @@ class FloatingPanel: NSPanel {
     private var edgeTrackingArea: NSTrackingArea?
     private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
+    /// The panel's glass, kept in a never-key window right below it (see `PanelGlassWindow`).
+    private lazy var glassWindow = PanelGlassWindow()
     /// Height of the header drag zone (shared with PanelTopBar).
     private let headerDragHeight = AppChrome.headerHeight
     /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
@@ -68,6 +70,9 @@ class FloatingPanel: NSPanel {
         isMovableByWindowBackground = false
         animationBehavior = .utilityWindow
         collectionBehavior = Self.defaultCollectionBehavior
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(syncGlassFrame), name: NSWindow.didResizeNotification, object: self
+        )
     }
 
     override var contentView: NSView? {
@@ -77,8 +82,44 @@ class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 
+    override func makeKeyAndOrderFront(_ sender: Any?) {
+        super.makeKeyAndOrderFront(sender)
+        attachGlass()
+    }
+
+    override func orderOut(_ sender: Any?) {
+        detachGlass()
+        super.orderOut(sender)
+    }
+
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(frameRect, display: flag)
+        syncGlassFrame()
+    }
+
+    // MARK: - Glass
+
+    private func attachGlass() {
+        guard glassWindow.parent == nil else { return syncGlassFrame() }
+        glassWindow.setFrame(frame, display: false)
+        addChildWindow(glassWindow, ordered: .below)
+    }
+
+    private func detachGlass() {
+        guard glassWindow.parent != nil else { return }
+        removeChildWindow(glassWindow)
+        glassWindow.orderOut(nil)
+    }
+
+    /// Child windows follow the panel's moves on their own, but not its size.
+    @objc private func syncGlassFrame() {
+        guard glassWindow.parent != nil, glassWindow.frame != frame else { return }
+        glassWindow.setFrame(frame, display: true)
+    }
+
     override func orderFront(_ sender: Any?) {
         super.orderFront(sender)
+        attachGlass()
         enableCursorRects()
         if let contentView { invalidateCursorRects(for: contentView) }
     }

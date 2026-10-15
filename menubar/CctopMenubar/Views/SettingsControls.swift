@@ -182,6 +182,31 @@ struct LanguageSettingsRow: View {
     }
 }
 
+/// How see-through the panel is, from the solid theme color to bare glass. Applies live.
+struct TransparencySettingsRow: View {
+    @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Transparency")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            Slider(value: $transparency, in: 0...1)
+                .controlSize(.mini)
+                .tint(Color.amber)
+            Text(verbatim: "\(Int((transparency * 100).rounded()))%")
+                .font(.system(size: 10).monospacedDigit())
+                .foregroundStyle(Color.textSecondary)
+                .frame(width: 32, alignment: .trailing)
+        }
+        .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
+        .padding(.vertical, 4)
+        .frame(minHeight: 25)
+    }
+}
+
 struct AmberActionButton: View {
     let label: LocalizedStringKey
     let action: () -> Void

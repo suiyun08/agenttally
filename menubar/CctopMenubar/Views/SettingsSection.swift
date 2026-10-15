@@ -68,6 +68,8 @@ struct SettingsSection: View {
                 .onChange(of: appearanceMode) { _ in UserDefaults.standard.synchronize() }
                 groupedDivider
                 LanguageSettingsRow()
+                groupedDivider
+                TransparencySettingsRow()
             }
 
             sectionHeader("Shortcuts")
