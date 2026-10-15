@@ -55,7 +55,12 @@ struct PopupView: View {
     /// The top bar and, on the session page, the tabs: they float over the page.
     private var topChrome: some View {
         VStack(spacing: 0) {
-            PanelTopBar(counts: StatusCounts(userSessions: userSessions), page: currentPage, onSelect: selectPage)
+            PanelTopBar(
+                counts: StatusCounts(userSessions: userSessions),
+                page: currentPage,
+                hasUpdate: updater.pendingUpdateVersion != nil,
+                onSelect: selectPage
+            )
             if showTabs {
                 tabPicker
             }

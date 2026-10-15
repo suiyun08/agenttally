@@ -235,6 +235,18 @@ final class SnapshotTests: XCTestCase {
         }
     }
 
+    func testGenerateUpdateDotScreenshot() throws {
+        let updater = DisabledUpdater()
+        updater.pendingUpdateVersion = "9.9.9"
+        let view = PopupView(
+            userSessions: userSessions(fromDataFixtures: SessionData.qaShowcase),
+            updater: updater,
+            pluginManager: inertPluginManager()
+        )
+        try renderScreenshot(view: view, colorScheme: .light, filename: "panel-update-dot-light.png")
+        try renderScreenshot(view: view, colorScheme: .dark, filename: "panel-update-dot-dark.png")
+    }
+
     func testGenerateNotificationSoundSettingsScreenshot() throws {
         let view = NotificationSettingsGroup(
             notificationPermission: NotificationPermissionController(initialState: .enabled)

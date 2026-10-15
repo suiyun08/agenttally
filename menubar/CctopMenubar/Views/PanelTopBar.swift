@@ -12,6 +12,8 @@ enum PanelPage: Equatable {
 struct PanelTopBar: View {
     let counts: StatusCounts
     let page: PanelPage
+    /// A newer version is waiting; the gear wears a small red dot until the user acts on it.
+    var hasUpdate = false
     let onSelect: (PanelPage) -> Void
 
     var body: some View {
@@ -31,6 +33,15 @@ struct PanelTopBar: View {
                 Image(systemName: "gearshape")
                     .font(.system(size: 13, weight: .medium))
                     .frame(width: 28)
+                    .overlay(alignment: .topTrailing) {
+                        if hasUpdate {
+                            Circle()
+                                .fill(Color(nsColor: .systemRed))
+                                .frame(width: 6, height: 6)
+                                .offset(x: -5, y: 5)
+                                .accessibilityHidden(true)
+                        }
+                    }
             }
             .accessibilityLabel("Settings")
         }
