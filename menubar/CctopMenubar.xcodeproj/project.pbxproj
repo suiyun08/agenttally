@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSH000020000000000000001 /* DSHPluginInstaller.swift */; };
 		AGM000010000000000000001 /* AgentMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = AGM000020000000000000001 /* AgentMark.swift */; };
 		PTB000010000000000000001 /* PanelTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = PTB000020000000000000001 /* PanelTopBar.swift */; };
 		PSN000010000000000000001 /* PanelSnap.swift in Sources */ = {isa = PBXBuildFile; fileRef = PSN000020000000000000001 /* PanelSnap.swift */; };
@@ -214,6 +215,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DSH000020000000000000001 /* DSHPluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSHPluginInstaller.swift; sourceTree = "<group>"; };
 		AGM000020000000000000001 /* AgentMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentMark.swift; sourceTree = "<group>"; };
 		PTB000020000000000000001 /* PanelTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTopBar.swift; sourceTree = "<group>"; };
 		PSN000020000000000000001 /* PanelSnap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSnap.swift; sourceTree = "<group>"; };
@@ -469,6 +471,7 @@
 				D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */,
 				CRS000020000000000000001 /* ClientReadState.swift */,
 				BGC000020000000000000001 /* BackgroundCursor.swift */,
+				DSH000020000000000000001 /* DSHPluginInstaller.swift */,
 				2A7407E2CADC40E1AE6CC64A /* SessionClassification.swift */,
 				B97A36AE9A264E049F3BA0E3 /* SessionManager+Classification.swift */,
 			);
@@ -894,6 +897,7 @@
 				455650383669416F98D65C67 /* SessionDataSources.swift in Sources */,
 				CRS000010000000000000001 /* ClientReadState.swift in Sources */,
 				BGC000010000000000000001 /* BackgroundCursor.swift in Sources */,
+				DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */,
 				307918FD1C8B47C79A1E8356 /* SessionClassification.swift in Sources */,
 				9AFFA6CFCA0D44C2B5B7942E /* SessionManager+Classification.swift in Sources */,
 				BE83AF0D2F044A299CD73467 /* TerminalInfo.swift in Sources */,

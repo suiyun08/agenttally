@@ -3207,3 +3207,43 @@ final class PanelSnapTests: XCTestCase {
         XCTAssertEqual(roomy.width, 480)
     }
 }
+
+final class DSHPluginInstallerTests: XCTestCase {
+    private let plugin = "/Users/u/.cctop/dsh/cctop-dsh.mjs"
+    private let userPatch = """
+    - id: agent-instructions
+      disabled: false
+      config:
+        maxBytes: 65536
+    """
+
+    func testInstallKeepsTheUsersRowsAndAddsOneMarkedRow() {
+        let patched = DSHPluginInstaller.patchAdding(pluginPath: plugin, to: userPatch)
+        XCTAssertTrue(patched.hasPrefix(userPatch + "\n"))
+        XCTAssertTrue(patched.contains("    - id: cctop\n      name: \(plugin)"))
+        XCTAssertTrue(DSHPluginInstaller.isInstalled(patch: patched))
+        // Installing again replaces the row instead of adding a second one.
+        let again = DSHPluginInstaller.patchAdding(pluginPath: plugin, to: patched)
+        XCTAssertEqual(again, patched)
+        XCTAssertEqual(again.components(separatedBy: DSHPluginInstaller.beginMarker).count, 2)
+    }
+
+    func testInstallIntoAMissingOrEmptyPatchWritesOnlyTheRow() {
+        let row = DSHPluginInstaller.block(pluginPath: plugin)
+        XCTAssertEqual(DSHPluginInstaller.patchAdding(pluginPath: plugin, to: nil), row)
+        XCTAssertEqual(DSHPluginInstaller.patchAdding(pluginPath: plugin, to: "[]\n"), row)
+        XCTAssertEqual(DSHPluginInstaller.patchAdding(pluginPath: plugin, to: "# my notes\n"), row)
+    }
+
+    func testRemoveRestoresTheUsersPatch() {
+        let patched = DSHPluginInstaller.patchAdding(pluginPath: plugin, to: userPatch)
+        XCTAssertEqual(DSHPluginInstaller.patchRemoving(from: patched), userPatch + "\n")
+        XCTAssertFalse(DSHPluginInstaller.isInstalled(patch: DSHPluginInstaller.patchRemoving(from: patched)))
+    }
+
+    /// DSH refuses to start on an empty or comments-only patch.
+    func testRemovingTheOnlyRowLeavesAnEmptyListNotAnEmptyFile() {
+        let patched = DSHPluginInstaller.patchAdding(pluginPath: plugin, to: nil)
+        XCTAssertEqual(DSHPluginInstaller.patchRemoving(from: patched), "[]\n")
+    }
+}

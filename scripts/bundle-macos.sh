@@ -63,6 +63,7 @@ cp "$REPO_ROOT/menubar/build/Build/Products/Release/cctop-hook" "$APP/Contents/M
 mkdir -p "$APP/Contents/Resources"
 cp "$REPO_ROOT/plugins/opencode/plugin.js" "$APP/Contents/Resources/opencode-plugin.js"
 cp "$REPO_ROOT/plugins/pi/cctop.ts" "$APP/Contents/Resources/pi-plugin.ts"
+cp "$REPO_ROOT/plugins/dsh/cctop-dsh.mjs" "$APP/Contents/Resources/dsh-plugin.mjs"
 cp "$REPO_ROOT/plugins/codex/cctop-shim.sh" "$APP/Contents/Resources/codex-shim.sh"
 cp "$REPO_ROOT/plugins/codex/hooks.json" "$APP/Contents/Resources/codex-hooks.json"
 cp -R "$REPO_ROOT/plugins/streamdeck/com.st0012.cctop.sdPlugin" "$APP/Contents/Resources/"

@@ -48,8 +48,8 @@ final class MenubarIconRendererTests: XCTestCase {
         let darkAppearance = NSAppearance(named: .darkAqua)!
         let lightAppearance = NSAppearance(named: .aqua)!
 
-        let darkPixel = centerPixel(in: image, appearance: darkAppearance)
-        let lightPixel = centerPixel(in: image, appearance: lightAppearance)
+        let darkPixel = dotCenterPixel(in: image, appearance: darkAppearance)
+        let lightPixel = dotCenterPixel(in: image, appearance: lightAppearance)
 
         assertColor(darkPixel, equals: StatusColors.color(for: .working, appearance: darkAppearance))
         assertColor(lightPixel, equals: StatusColors.color(for: .working, appearance: lightAppearance))
@@ -58,13 +58,14 @@ final class MenubarIconRendererTests: XCTestCase {
 
     func testUnreadDoneIsAHollowRing() {
         let image = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .codex, dots: [.unreadDone])]))
-        let center = centerPixel(in: image, appearance: NSAppearance(named: .aqua)!)
+        let center = dotCenterPixel(in: image, appearance: NSAppearance(named: .aqua)!)
         XCTAssertEqual(sRGBComponents(center)[3], 0, accuracy: 0.05, "The ring's center stays transparent")
     }
 
     // MARK: - Helpers
 
-    private func centerPixel(in image: NSImage, appearance: NSAppearance) -> NSColor {
+    /// The pixel at the middle of the image's only dot; the agent mark sits to its left.
+    private func dotCenterPixel(in image: NSImage, appearance: NSAppearance) -> NSColor {
         let width = Int(image.size.width)
         let height = Int(image.size.height)
         let bitmap = NSBitmapImageRep(
@@ -93,7 +94,9 @@ final class MenubarIconRendererTests: XCTestCase {
         }
         NSGraphicsContext.restoreGraphicsState()
 
-        return bitmap.colorAt(x: width / 2, y: height / 2)!
+        let metrics = StatusDotMetrics.menubar
+        let dotX = AgentMark.width(for: .cc, height: metrics.markHeight) + metrics.markGap + metrics.dotDiameter / 2
+        return bitmap.colorAt(x: Int(dotX), y: height / 2)!
     }
 
     private func assertColor(

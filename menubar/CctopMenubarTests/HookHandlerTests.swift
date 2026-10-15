@@ -1198,6 +1198,13 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(session.sessionName, "Refactor auth module")
     }
 
+    func testHarnessNamePassthroughDSH() throws {
+        try handleFixture("SessionStart-dsh")
+        let session = try loadSession()
+        XCTAssertEqual(session.source, SessionData.dshSource)
+        XCTAssertEqual(session.agentBadge, .dsh)
+    }
+
     // MARK: - Session name preservation across events
 
     /// Regression: previously, UserPromptSubmit re-looked up the session name from

@@ -12,6 +12,8 @@ class PluginManager: ObservableObject {
     @Published var ocConfigExists: Bool = false
     @Published var piInstalled: Bool = false
     @Published var piConfigExists: Bool = false
+    @Published var dshInstalled: Bool = false
+    @Published var dshConfigExists: Bool = false
     @Published var codexInstalled: Bool = false
     @Published var codexNeedsUpdate: Bool = false
     @Published var codexConfigExists: Bool = false
@@ -27,6 +29,8 @@ class PluginManager: ObservableObject {
     private let homeDirectory: URL
     private let ocPluginPath: URL
     private let piPluginPath: URL
+    private let dshPatchPath: URL
+    private let dshPluginPath: URL
     private let ccPluginCacheDir: URL
     private let sdAppSupportDir: URL
     private var streamDeckRestartTask: Task<Void, Never>?
@@ -53,6 +57,8 @@ class PluginManager: ObservableObject {
         self.piPluginPath = homeDirectory.appendingPathComponent(
             ".pi/agent/extensions/cctop.ts"
         )
+        self.dshPatchPath = homeDirectory.appendingPathComponent(".dsh/cordis.patch.yml")
+        self.dshPluginPath = homeDirectory.appendingPathComponent(".cctop/dsh/cctop-dsh.mjs")
         self.ccPluginCacheDir = homeDirectory.appendingPathComponent(
             ".claude/plugins/cache/cctop/cctop"
         )
@@ -81,6 +87,10 @@ class PluginManager: ObservableObject {
         let piConfigDir = homeDirectory.appendingPathComponent(".pi")
         piConfigExists = fm.fileExists(atPath: piConfigDir.path)
         piInstalled = fm.fileExists(atPath: piPluginPath.path)
+
+        dshConfigExists = fm.fileExists(atPath: homeDirectory.appendingPathComponent(".dsh").path)
+        dshInstalled = fm.fileExists(atPath: dshPluginPath.path)
+            && DSHPluginInstaller.isInstalled(patch: try? String(contentsOf: dshPatchPath, encoding: .utf8))
 
         sdConfigExists = fm.fileExists(atPath: sdAppSupportDir.path)
         let installedManifest = sdPluginDestination.appendingPathComponent("manifest.json")
@@ -201,6 +211,44 @@ class PluginManager: ObservableObject {
 
     func removePiPlugin() -> Bool {
         removeBundledPlugin(path: piPluginPath, name: "pi")
+    }
+
+    /// Writes the plugin into cctop's folder, then appends its row to DSH's home patch. The
+    /// first change keeps a copy of the user's patch beside it.
+    func installDSHPlugin() -> Bool {
+        guard installBundledPlugin(resource: "dsh-plugin", ext: "mjs", destination: dshPluginPath, name: "dsh") else {
+            return false
+        }
+        defer { refresh() }
+        let existing = try? String(contentsOf: dshPatchPath, encoding: .utf8)
+        do {
+            let backup = dshPatchPath.appendingPathExtension("before-cctop")
+            if let existing, !FileManager.default.fileExists(atPath: backup.path) {
+                try existing.write(to: backup, atomically: true, encoding: .utf8)
+            }
+            let patched = DSHPluginInstaller.patchAdding(pluginPath: dshPluginPath.path, to: existing)
+            try patched.write(to: dshPatchPath, atomically: true, encoding: .utf8)
+            logger.info("Added the cctop row to \(self.dshPatchPath.path, privacy: .public)")
+            return true
+        } catch {
+            logger.error("Failed to update the DSH patch: \(error, privacy: .public)")
+            return false
+        }
+    }
+
+    func removeDSHPlugin() -> Bool {
+        defer { refresh() }
+        if let existing = try? String(contentsOf: dshPatchPath, encoding: .utf8),
+           DSHPluginInstaller.isInstalled(patch: existing) {
+            do {
+                try DSHPluginInstaller.patchRemoving(from: existing)
+                    .write(to: dshPatchPath, atomically: true, encoding: .utf8)
+            } catch {
+                logger.error("Failed to update the DSH patch: \(error, privacy: .public)")
+                return false
+            }
+        }
+        return removeBundledPlugin(path: dshPluginPath, name: "dsh")
     }
 }
 

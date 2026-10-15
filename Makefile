@@ -12,6 +12,7 @@ build:
 	mkdir -p $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources
 	cp plugins/opencode/plugin.js $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/opencode-plugin.js
 	cp plugins/pi/cctop.ts $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/pi-plugin.ts
+	cp plugins/dsh/cctop-dsh.mjs $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/dsh-plugin.mjs
 	cp plugins/codex/cctop-shim.sh $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/codex-shim.sh
 	cp plugins/codex/hooks.json $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/codex-hooks.json
 	rm -rf $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/com.st0012.cctop.sdPlugin
@@ -21,6 +22,7 @@ test:
 	npm --prefix plugins/opencode test
 	npm --prefix plugins/streamdeck test
 	scripts/test-bump-streamdeck-version.sh
+	node --test plugins/dsh/test/*.test.mjs
 	if node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 23 || (major === 23 && minor >= 6) ? 0 : 1)'; then \
 		node --test plugins/pi/test/*.test.mjs; \
 	else \

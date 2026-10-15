@@ -30,6 +30,8 @@ jobs:
         run: npm --prefix plugins/streamdeck test
       - name: Test pi plugin
         run: node --test plugins/pi/test/*.test.mjs
+      - name: Test DSH plugin
+        run: node --test plugins/dsh/test/*.test.mjs
 
   hook-contract:
     name: Hook Contract

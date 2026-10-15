@@ -27,6 +27,7 @@ CC_SHIM = ROOT / "plugins/cctop/hooks/run-hook.sh"
 CODEX_SHIM = ROOT / "plugins/codex/cctop-shim.sh"
 OPENCODE_PLUGIN = ROOT / "plugins/opencode/plugin.js"
 PI_PLUGIN = ROOT / "plugins/pi/cctop.ts"
+DSH_PLUGIN = ROOT / "plugins" / "dsh" / "cctop-dsh.mjs"
 
 
 def load_json(path: Path) -> object:
@@ -231,6 +232,10 @@ def call_hook_events(path: Path) -> set[str]:
     return set(re.findall(r"callHook\([^,\n]+,\s*\"([A-Za-z]+)\"", read_text(path)))
 
 
+def send_events(path: Path) -> set[str]:
+    return set(re.findall(r"send\(\"([A-Za-z]+)\"", read_text(path)))
+
+
 def cli_harness_args(path: Path) -> set[str]:
     return set(re.findall(r"--harness\s+([A-Za-z0-9_-]+)", read_text(path)))
 
@@ -245,6 +250,7 @@ def plugin_contract(harnesses: set[str], harness_events: dict[str, set[str]], er
     plugin_ids |= cli_harness_args(CODEX_SHIM)
     plugin_ids |= payload_harness_names(OPENCODE_PLUGIN)
     plugin_ids |= payload_harness_names(PI_PLUGIN)
+    plugin_ids |= payload_harness_names(DSH_PLUGIN)
     compare_sets("plugin harness IDs", harnesses, plugin_ids, errors)
 
     actual_events = {
@@ -252,6 +258,7 @@ def plugin_contract(harnesses: set[str], harness_events: dict[str, set[str]], er
         "codex": hooks_json_events(CODEX_HOOKS_JSON, errors),
         "opencode": call_hook_events(OPENCODE_PLUGIN),
         "pi": call_hook_events(PI_PLUGIN),
+        "dsh": send_events(DSH_PLUGIN),
     }
     for harness, events in sorted(actual_events.items()):
         compare_sets(f"{harness} hook events", harness_events.get(harness, set()), events, errors)
@@ -276,13 +283,13 @@ def binary_location_contract(binary_locations: list[str], errors: list[str]) -> 
     ~/Applications check. Absolute locations must appear verbatim and not as the tail of
     a $HOME-prefixed path, so the ~/Applications entry cannot satisfy the bare one either.
     """
-    clients = [CC_SHIM, CODEX_SHIM, OPENCODE_PLUGIN, PI_PLUGIN]
+    clients = [CC_SHIM, CODEX_SHIM, OPENCODE_PLUGIN, PI_PLUGIN, DSH_PLUGIN]
     for client in clients:
         text = read_text(client)
         for location in binary_locations:
             if location.startswith("~/"):
                 suffix = re.escape(location[2:])
-                pattern = r'(\$HOME/|homedir\(\), ?")' + suffix
+                pattern = r'(\$HOME/|homedir\(\), ?"|join\(home, ?")' + suffix
             else:
                 pattern = r"(?<!\$HOME)" + re.escape(location)
             expect(

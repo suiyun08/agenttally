@@ -340,6 +340,12 @@ private struct MonitoredToolsView: View {
                     install: { pluginManager.installPiPlugin() },
                     remove: { pluginManager.removePiPlugin() })
             }
+            if pluginManager.dshConfigExists {
+                toolDivider
+                PluginRowView(name: "DSH", installed: pluginManager.dshInstalled,
+                    install: { pluginManager.installDSHPlugin() },
+                    remove: { pluginManager.removeDSHPlugin() })
+            }
             if pluginManager.codexConfigExists {
                 toolDivider
                 CodexPluginRowView(pluginManager: pluginManager)
