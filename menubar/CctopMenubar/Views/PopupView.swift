@@ -58,7 +58,8 @@ struct PopupView: View {
             PanelTopBar(
                 counts: StatusCounts(userSessions: userSessions),
                 page: currentPage,
-                hasUpdate: updater.pendingUpdateVersion != nil,
+                // Lit exactly when Settings shows an update to install, not while one downloads.
+                hasUpdate: updater.downloadingUpdateVersion == nil && updater.pendingUpdateVersion != nil,
                 onSelect: selectPage
             )
             if showTabs {

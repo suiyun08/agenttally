@@ -12,7 +12,7 @@ enum PanelPage: Equatable {
 struct PanelTopBar: View {
     let counts: StatusCounts
     let page: PanelPage
-    /// A newer version is waiting; the gear wears a small red dot until the user acts on it.
+    /// An update is ready to install; the gear wears a small red dot until the user acts on it.
     var hasUpdate = false
     let onSelect: (PanelPage) -> Void
 
