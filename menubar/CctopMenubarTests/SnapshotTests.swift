@@ -186,6 +186,15 @@ final class SnapshotTests: XCTestCase {
         try renderScreenshot(view: view, colorScheme: .dark, filename: "onboarding-settings-dark.png", width: 360)
     }
 
+    func testGenerateNotificationSoundSettingsScreenshot() throws {
+        let view = NotificationSettingsGroup(
+            notificationPermission: NotificationPermissionController(initialState: .enabled)
+        )
+        .padding(8)
+        try renderScreenshot(view: view, colorScheme: .light, filename: "notification-sounds-light.png")
+        try renderScreenshot(view: view, colorScheme: .dark, filename: "notification-sounds-dark.png")
+    }
+
     func testGenerateRecentProjectsScreenshot() throws {
         let view = PopupView(
             userSessions: userSessions(fromDataFixtures: SessionData.qaShowcase),
