@@ -1,12 +1,12 @@
 name: Release
 
+# Pushing a vX.Y.Z tag builds AgentTally for Apple Silicon and Intel and publishes a GitHub
+# Release with a zip and a DMG for each. The builds are ad-hoc signed unless the Apple signing
+# secrets are configured, so they are not notarized and Sparkle updates stay off in them; there
+# is no appcast or Homebrew tap to update yet.
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Existing stable release tag to update in the appcast (vX.Y.Z)'
-        required: true
-        type: string
+  push:
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -114,201 +114,45 @@ jobs:
       - name: Build release body
         run: |
           TAG="${{ github.ref_name }}"
-          cat > "$RUNNER_TEMP/release-body.md" << BODY
+          BODY="$RUNNER_TEMP/release-body.md"
+          NOTES="docs/releases/${TAG}.md"
+          if [ -f "$NOTES" ]; then
+            cat "$NOTES" > "$BODY"
+            echo "" >> "$BODY"
+          else
+            : > "$BODY"
+          fi
+          cat >> "$BODY" << BODY
           <details>
-          <summary>Installation</summary>
+          <summary>Installation / 安装</summary>
 
-          ### Homebrew
-          \`\`\`bash
-          brew tap st0012/cctop
-          brew install --cask cctop
-          \`\`\`
+          1. Download \`AgentTally-macOS-arm64.dmg\` (Apple Silicon) or \`AgentTally-macOS-x86_64.dmg\` (Intel) below and drag **AgentTally** into **Applications**.
+          2. This build is not notarized by Apple. The first time you open it, macOS blocks it: open **System Settings › Privacy & Security** and click **Open Anyway**, or run:
+             \`\`\`bash
+             xattr -dr com.apple.quarantine /Applications/AgentTally.app
+             \`\`\`
+          3. Open AgentTally, then connect your coding tools in **Settings › Tools**.
 
-          ### macOS (Apple Silicon)
-          \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/AgentTally-macOS-arm64.zip -o cctop.zip
-          unzip cctop.zip
-          mv AgentTally.app /Applications/
-          open /Applications/AgentTally.app
-          \`\`\`
+          Updates are not automatic yet: watch this repository's releases and replace the app to update.
 
-          ### macOS (Intel)
-          \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/AgentTally-macOS-x86_64.zip -o cctop.zip
-          unzip cctop.zip
-          mv AgentTally.app /Applications/
-          open /Applications/AgentTally.app
-          \`\`\`
+          1. 在下方下载 \`AgentTally-macOS-arm64.dmg\`（Apple 芯片）或 \`AgentTally-macOS-x86_64.dmg\`（Intel），把 **AgentTally** 拖进「应用程序」。
+          2. 这个版本没有经过 Apple 公证，第一次打开会被系统拦下：到「系统设置 › 隐私与安全性」点「仍要打开」，或者在终端运行上面的 \`xattr\` 命令。
+          3. 打开 AgentTally（代理指示），在「设置 › 工具」里连接你的编程工具。
 
-          ### From source
-          Requires Xcode 16+.
-          \`\`\`bash
-          git clone https://github.com/st0012/cctop && cd cctop
-          ./scripts/bundle-macos.sh
-          cp -R dist/AgentTally.app /Applications/
-          \`\`\`
-
-          > This release is signed and notarized with Apple Developer ID.
+          暂不支持自动更新：关注本仓库的 Release，下载新版替换即可。
 
           </details>
           BODY
+          if [ -f "$NOTES" ]; then echo "generate=false" >> "$GITHUB_ENV"; else echo "generate=true" >> "$GITHUB_ENV"; fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v2
         with:
           draft: false
-          generate_release_notes: true
+          generate_release_notes: ${{ env.generate == 'true' }}
           files: |
             artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip
             artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip
             artifacts/AgentTally-macOS-arm64-dmg/AgentTally-macOS-arm64.dmg
             artifacts/AgentTally-macOS-x86_64-dmg/AgentTally-macOS-x86_64.dmg
           body_path: ${{ runner.temp }}/release-body.md
-
-  update-appcast:
-    name: Update Sparkle Appcast
-    needs: release
-    if: ${{ always() && ((github.event_name == 'push' && needs.release.result == 'success') || github.event_name == 'workflow_dispatch') }}
-    runs-on: macos-15
-    steps:
-      - name: Check for signing key
-        env:
-          KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
-        run: |
-          if [ -z "$KEY" ]; then
-            echo "::notice::SPARKLE_ED25519_PRIVATE_KEY not configured, skipping appcast update"
-            exit 1
-          fi
-
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: Select release version
-        id: version
-        env:
-          REQUESTED_TAG: ${{ inputs.tag }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          RELEASE_TAG="${REQUESTED_TAG:-$GITHUB_REF_NAME}"
-          ./scripts/validate-release-version.sh "$RELEASE_TAG"
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            STABLE_TAG=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
-              --json tagName,isDraft,isPrerelease \
-              --jq 'select(.isDraft == false and .isPrerelease == false) | .tagName')
-            if [[ "$STABLE_TAG" != "$RELEASE_TAG" ]]; then
-              echo "Appcast recovery requires an existing stable release." >&2
-              exit 1
-            fi
-          fi
-          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Download release artifacts
-        if: github.event_name == 'push'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          path: artifacts
-
-      - name: Download published release ZIPs
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          for arch in arm64 x86_64; do
-            gh release download "v$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
-              --pattern "AgentTally-macOS-$arch.zip" --dir "artifacts/AgentTally-macOS-$arch"
-          done
-
-      - name: Install pinned Sparkle tools
-        run: |
-          # Match Sparkle 2.9.1 and its artifact checksum in the pinned Swift package.
-          ARCHIVE="$RUNNER_TEMP/sparkle-tools.zip"
-          TOOLS="$RUNNER_TEMP/sparkle-tools"
-          curl --fail --location \
-            https://github.com/sparkle-project/Sparkle/releases/download/2.9.1/Sparkle-for-Swift-Package-Manager.zip \
-            --output "$ARCHIVE"
-          printf '%s  %s\n' \
-            9fec2b888e6e2940b1bfbd5d3d010b9f67076b52170923549095cbb74132403b \
-            "$ARCHIVE" | shasum -a 256 --check
-          unzip -q "$ARCHIVE" -d "$TOOLS"
-          test -x "$TOOLS/bin/generate_appcast"
-          test -x "$TOOLS/bin/sign_update"
-          echo "$TOOLS/bin" >> "$GITHUB_PATH"
-
-      - name: Generate appcast
-        env:
-          SPARKLE_ED25519_PRIVATE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
-        run: |
-          ./scripts/generate-appcast.sh \
-            --version ${{ steps.version.outputs.version }} \
-            artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip \
-            artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip
-
-      - name: Validate appcast
-        run: ./scripts/validate-appcast.sh
-
-      - name: Commit and push appcast
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add appcast.xml
-          git diff --cached --quiet && echo "No changes to appcast.xml" && exit 0
-          git commit -m "Update appcast.xml for v${{ steps.version.outputs.version }}"
-          git push origin master
-
-  update-homebrew:
-    name: Update Homebrew Tap
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check for tap token
-        env:
-          TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::notice::TAP_GITHUB_TOKEN not configured, skipping Homebrew update"
-            exit 1
-          fi
-
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          path: artifacts
-
-      - name: Compute SHA256 hashes
-        id: sha
-        run: |
-          ARM64_SHA=$(sha256sum artifacts/AgentTally-macOS-arm64/AgentTally-macOS-arm64.zip | awk '{print $1}')
-          X86_64_SHA=$(sha256sum artifacts/AgentTally-macOS-x86_64/AgentTally-macOS-x86_64.zip | awk '{print $1}')
-          echo "arm64=$ARM64_SHA" >> "$GITHUB_OUTPUT"
-          echo "x86_64=$X86_64_SHA" >> "$GITHUB_OUTPUT"
-
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Stamp cask template
-        run: |
-          sed -i 's/version ".*"/version "${{ steps.version.outputs.version }}"/' packaging/homebrew-cask.rb
-          sed -i 's/REPLACE_WITH_ARM64_SHA256/${{ steps.sha.outputs.arm64 }}/' packaging/homebrew-cask.rb
-          sed -i 's/REPLACE_WITH_X86_64_SHA256/${{ steps.sha.outputs.x86_64 }}/' packaging/homebrew-cask.rb
-
-      - name: Clone tap repo and update cask
-        env:
-          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-        run: |
-          git clone https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/st0012/homebrew-cctop.git tap
-          mkdir -p tap/Casks
-          cp packaging/homebrew-cask.rb tap/Casks/cctop.rb
-          cd tap
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Casks/cctop.rb
-          git commit -m "Update cctop to ${{ steps.version.outputs.version }}"
-          git push

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fetch and display download stats for cctop releases
 
-REPO="st0012/cctop"
+REPO="suiyun08/agenttally"
 
 data=$(gh api "repos/$REPO/releases" --jq '.[] | "\(.tag_name)\t\([.assets[].download_count] | add)"')
 

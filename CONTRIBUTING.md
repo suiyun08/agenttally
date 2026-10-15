@@ -102,7 +102,7 @@ This updates `packaging/homebrew-cask.rb`, both plugin manifests (Claude Code an
 
 ## Reporting Issues
 
-Open an issue on [GitHub](https://github.com/st0012/cctop/issues). Include:
+Open an issue on [GitHub](https://github.com/suiyun08/agenttally/issues). Include:
 
 - What you expected vs. what happened
 - Steps to reproduce

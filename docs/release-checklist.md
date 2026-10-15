@@ -1,116 +1,39 @@
-# Release Checklist for cctop v0.3.0
+# Release Checklist
 
-## One-Time Setup (before first release)
+AgentTally releases are published from `suiyun08/agenttally` by pushing a version tag.
 
-### 1. Create the Homebrew tap repo
+## Steps
 
-Go to https://github.com/new and create `homebrew-cctop` (public repo).
+1. Write the release notes in `docs/releases/v<version>.md`. The Release workflow puts them
+   above the installation notes; without the file, GitHub generates notes from merged PRs.
+2. Bump every version field with the script, never by hand:
 
-```bash
-# Initialize with the Casks directory
-git clone git@github.com:st0012/homebrew-cctop.git /tmp/homebrew-cctop
-cd /tmp/homebrew-cctop
-mkdir Casks
-echo "# homebrew-cctop" > README.md
-echo "Homebrew tap for [cctop](https://github.com/st0012/cctop)." >> README.md
-echo "" >> README.md
-echo '```bash' >> README.md
-echo "brew tap st0012/cctop" >> README.md
-echo "brew install --cask cctop" >> README.md
-echo '```' >> README.md
-git add . && git commit -m "Initial tap setup" && git push
-```
+   ```bash
+   ./scripts/bump-version.sh <version>
+   ```
 
-### 2. Create a GitHub Personal Access Token
+3. Land the bump on `master` through a PR merged at the reviewed HEAD, and wait for CI.
+4. Tag the merged commit and push the tag:
 
-1. Go to https://github.com/settings/tokens?type=beta (fine-grained tokens)
-2. Create a new token:
-   - Name: `cctop-tap-updater`
-   - Repository access: Only select repositories > `st0012/homebrew-cctop`
-   - Permissions: Contents (Read and write)
-3. Copy the token
+   ```bash
+   git tag v<version> && git push origin v<version>
+   ```
 
-### 3. Add the token as a repo secret
+   `.github/workflows/release.yml` checks the tag against the committed versions, builds
+   Apple Silicon and Intel apps (a zip and a DMG each), and publishes the GitHub Release.
 
-1. Go to https://github.com/st0012/cctop/settings/secrets/actions
-2. Click "New repository secret"
-3. Name: `TAP_GITHUB_TOKEN`
-4. Value: paste the token from step 2
-5. Click "Add secret"
-
-## Release Steps
-
-### 1. Merge the branch
+## Verify
 
 ```bash
-git checkout master
-git merge <branch-name>
-git push origin master
+gh release view v<version> -R suiyun08/agenttally
 ```
 
-### 2. Tag and push
+- The release lists `AgentTally-macOS-{arm64,x86_64}.{zip,dmg}`.
+- A downloaded zip passes `codesign --verify --deep --strict`, shows the new version in
+  `Contents/Info.plist`, and its executable has the right architecture (`lipo -archs`).
 
-```bash
-git tag v0.3.0
-git push origin v0.3.0
-```
+## Not set up yet
 
-### 3. Wait for CI
-
-The tag push triggers `.github/workflows/release.yml` which will:
-- Build arm64 and x86_64 zips
-- Create a GitHub Release with both zips
-- Auto-update the Homebrew tap with correct SHA256 hashes
-
-Monitor at: https://github.com/st0012/cctop/actions
-
-### 4. Verify the release
-
-```bash
-# Check the GitHub Release page
-gh release view v0.3.0
-
-# Test Homebrew install (after CI completes)
-brew tap st0012/cctop
-brew install --cask cctop
-
-# Verify the app launches
-open /Applications/cctop.app
-
-# Verify the hook binary is in the app bundle
-ls -la /Applications/cctop.app/Contents/MacOS/cctop-hook
-
-# Verify opencode plugin version matches the release
-grep '"version"' plugins/opencode/package.json
-```
-
-### 5. Test the opencode plugin auto-install
-
-```bash
-# Verify the bundled plugin is in the app's Resources
-ls -la /Applications/cctop.app/Contents/Resources/opencode-plugin.js
-
-# If opencode is configured (~/.config/opencode/ exists), launch the app
-# and verify it auto-installs the plugin
-open /Applications/cctop.app
-ls -la ~/.config/opencode/plugins/cctop.js
-
-# Start an opencode session and verify a session file appears
-ls ~/.cctop/sessions/
-
-# Verify the session includes source: "opencode"
-cat ~/.cctop/sessions/*.json | jq '.source'
-```
-
-### 6. If anything goes wrong
-
-```bash
-# Delete the tag and release to re-do
-gh release delete v0.3.0 --yes
-git tag -d v0.3.0
-git push origin :refs/tags/v0.3.0
-
-# Fix the issue, then re-tag
-git tag v0.3.0
-git push origin v0.3.0
-```
+- Developer ID signing and notarization: builds are ad-hoc signed, so macOS asks users to
+  allow the first launch, and Sparkle updates stay off.
+- Sparkle appcast and a Homebrew tap: users update by downloading the new release.
