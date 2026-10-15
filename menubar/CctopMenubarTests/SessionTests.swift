@@ -819,7 +819,7 @@ final class SessionTests: XCTestCase {
         XCTAssertEqual(
             confirmation.message,
             "It will disappear from the panel, notifications, Navigate mode, and Stream Deck. "
-                + "This does not stop or delete the underlying session; cctop will keep it available for lifecycle and Cleanup. "
+                + "This does not stop or delete the underlying session; AgentTally will keep it available for lifecycle and Cleanup. "
                 + "You cannot show it again while its local session record exists."
         )
         XCTAssertEqual(confirmation.identity, identity)
