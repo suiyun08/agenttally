@@ -655,11 +655,10 @@ final class SnapshotTests: XCTestCase {
             ForEach(Array([typical, crowded, .zero].enumerated()), id: \.offset) { _, counts in
                 HStack(spacing: 14) {
                     ForEach([ColorScheme.light, .dark], id: \.self) { scheme in
-                        Image(nsImage: MenubarIconRenderer.render(counts: counts))
+                        Image(nsImage: self.frozen(MenubarIconRenderer.render(counts: counts), dark: scheme == .dark))
                             .padding(.horizontal, 8)
                             .frame(height: 24)
                             .background(scheme == .dark ? Color.black : Color(white: 0.93))
-                            .environment(\.colorScheme, scheme)
                     }
                     NotchStatusView(counts: counts)
                         .frame(width: NotchStatusController.pillWidth(for: counts), height: 20)
@@ -667,7 +666,28 @@ final class SnapshotTests: XCTestCase {
             }
         }
         .padding(12)
-        try renderScreenshot(view: view, colorScheme: .light, filename: "status-dots.png")
+        try renderScreenshot(view: view, colorScheme: .light, filename: "status-dots.png", width: 440)
+    }
+
+    /// The live menubar image drawn once in a light or dark menu bar's appearance. The hosting
+    /// view would otherwise draw every copy in the window's own appearance.
+    private func frozen(_ image: NSImage, dark: Bool) -> NSImage {
+        let appearance = NSAppearance(named: dark ? .darkAqua : .aqua)!
+        let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(image.size.width * 2), pixelsHigh: Int(image.size.height * 2),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        )!
+        bitmap.size = image.size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+        appearance.performAsCurrentDrawingAppearance {
+            image.draw(in: NSRect(origin: .zero, size: image.size))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        let frozen = NSImage(size: image.size)
+        frozen.addRepresentation(bitmap)
+        return frozen
     }
 
     private func renderScreenshot(
