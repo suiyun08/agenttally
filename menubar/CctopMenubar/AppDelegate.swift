@@ -38,7 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
     let panelResizeState = PanelResizeState()
-    lazy var panelWidthAnimator = PanelWidthAnimator { [weak self] frame in
+    @MainActor lazy var panelWidthAnimator = PanelWidthAnimator { [weak self] frame in
         self?.applyDraggedWidth(frame)
     }
 
