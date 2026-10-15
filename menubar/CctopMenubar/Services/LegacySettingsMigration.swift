@@ -9,9 +9,10 @@ enum LegacySettingsMigration {
     static let doneKey = "migratedFromCctopSettings"
     private static let appleLanguagesKey = "AppleLanguages"
 
-    /// The legacy settings worth copying: everything the new domain lacks.
+    /// The legacy settings worth copying: everything the new domain lacks, except Sparkle's own
+    /// update bookkeeping (`SU…`), which belonged to the old app's update feed.
     static func settingsToCopy(legacy: [String: Any], current: [String: Any]) -> [String: Any] {
-        legacy.filter { key, _ in current[key] == nil && key != doneKey }
+        legacy.filter { key, _ in current[key] == nil && key != doneKey && !key.hasPrefix("SU") }
     }
 
     /// Copies the legacy settings once. Returns true when it copied a language order, which macOS

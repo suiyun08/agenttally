@@ -3250,7 +3250,9 @@ final class DSHPluginInstallerTests: XCTestCase {
 
 final class LegacySettingsMigrationTests: XCTestCase {
     func testCopiesOnlySettingsTheNewAppLacks() {
-        let legacy: [String: Any] = ["appLanguage": "zh-Hans", "panelWidth": 400, "appearanceMode": "dark"]
+        let legacy: [String: Any] = [
+            "appLanguage": "zh-Hans", "panelWidth": 400, "appearanceMode": "dark", "SULastCheckTime": Date(),
+        ]
         let current: [String: Any] = ["panelWidth": 480]
         let copied = LegacySettingsMigration.settingsToCopy(legacy: legacy, current: current)
         XCTAssertEqual(Set(copied.keys), ["appLanguage", "appearanceMode"])
