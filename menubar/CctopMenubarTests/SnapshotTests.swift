@@ -65,10 +65,19 @@ func renderPanelScreenshot(
     hostingView.frame = NSRect(origin: .zero, size: fittingSize)
     hostingView.layoutSubtreeIfNeeded()
 
+    // Always 2x, like a Retina display, so CI runners without one produce the same images.
+    let scale: CGFloat = 2
     let bitmapRep = try XCTUnwrap(
-        hostingView.bitmapImageRepForCachingDisplay(in: hostingView.bounds),
+        NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(hostingView.bounds.width * scale),
+            pixelsHigh: Int(hostingView.bounds.height * scale),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ),
         "Failed to create bitmap for \(filename)"
     )
+    bitmapRep.size = hostingView.bounds.size
     hostingView.cacheDisplay(in: hostingView.bounds, to: bitmapRep)
 
     let pngData = try XCTUnwrap(
@@ -153,10 +162,12 @@ final class SnapshotTests: XCTestCase {
     }
 
     func testGenerateNavigateScreenshot() throws {
+        let sessions = userSessions(fromDataFixtures: Array(SessionData.qaShowcase.prefix(4)))
         let rc = NavigateController()
-        rc.isActive = true
+        // Navigate mode numbers the sessions captured when it activates.
+        rc.activate(userSessions: sessions)
         let view = PopupView(
-            userSessions: userSessions(fromDataFixtures: Array(SessionData.qaShowcase.prefix(4))),
+            userSessions: sessions,
             updater: DisabledUpdater(),
             pluginManager: inertPluginManager(), navigate: rc
         )
