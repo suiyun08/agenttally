@@ -53,7 +53,7 @@ rm -f "$DMG_PATH"
 echo "==> Creating DMG from $APP_PATH..."
 
 create-dmg \
-    --volname "cctop" \
+    --volname "AgentTally" \
     --window-pos 200 120 \
     --window-size 600 400 \
     --icon-size 100 \

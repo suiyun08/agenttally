@@ -77,8 +77,8 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
-DOWNLOAD_URL_PREFIX="https://github.com/st0012/cctop/releases/download/v${VERSION}/"
-FEED_URL="https://raw.githubusercontent.com/st0012/cctop/master/appcast.xml"
+DOWNLOAD_URL_PREFIX="https://github.com/suiyun08/agenttally/releases/download/v${VERSION}/"
+FEED_URL="https://raw.githubusercontent.com/suiyun08/agenttally/master/appcast.xml"
 
 WORK_DIR=$(mktemp -d /tmp/cctop-appcast.XXXXXX)
 

@@ -1,160 +1,135 @@
-# cctop
+# AgentTally
 
 <p>
-  <a href="https://github.com/st0012/cctop/releases/latest">Latest release</a>
+  <a href="README.zh-CN.md">简体中文</a>
+  &nbsp;|&nbsp;
+  <a href="https://github.com/suiyun08/agenttally/releases/latest">Latest release</a>
   &nbsp;|&nbsp;
   <a href="LICENSE">MIT license</a>
 </p>
 
-**Keep an eye on your AI coding sessions.**
+**See which AI coding session needs you, right from the menu bar.**
 
-See which session is waiting on you. Jump back to the right tab, pane, thread, or
-project with a keystroke.
+AgentTally (代理指示) shows every Claude Code, Codex, opencode, pi, and DeepSeek Harness
+session as a dot in your menu bar, grouped by agent. Rest the pointer on the dots to peek at
+the panel, then click a session to jump back to its terminal tab, editor window, or desktop
+thread.
 
 <p>
-  <a href="https://github.com/st0012/cctop/releases/latest/download/cctop-macOS-arm64.dmg"><strong>Download for Apple Silicon</strong></a>
+  <a href="https://github.com/suiyun08/agenttally/releases/latest/download/AgentTally-macOS-arm64.dmg"><strong>Download for Apple Silicon</strong></a>
   &nbsp;|&nbsp;
-  <a href="https://github.com/st0012/cctop/releases/latest/download/cctop-macOS-x86_64.dmg">Intel</a>
-  &nbsp;|&nbsp;
-  <a href="https://cctop.app">Website</a>
+  <a href="https://github.com/suiyun08/agenttally/releases/latest/download/AgentTally-macOS-x86_64.dmg">Intel</a>
 </p>
 
 <p align="center">
-  <img src="https://github.com/st0012/cctop/releases/download/media-assets/cctop-launch-preview.avif" alt="Animated preview of cctop tracking and jumping between AI coding sessions" width="780">
-  <br>
-  <em>One compact menubar view for sessions across tools.</em>
-  <br>
-  <a href="https://github.com/st0012/cctop/releases/download/media-assets/cctop-launch.mp4">Full launch video (MP4)</a>
+  <img src="docs/status-dots.png" alt="Menu bar dots grouped by agent, on light and dark menu bars and beside the camera notch" width="640">
 </p>
 
-## Why cctop
+<p align="center">
+  <img src="docs/menubar-light.png" alt="The AgentTally panel listing active sessions" width="320">
+  &nbsp;
+  <img src="docs/menubar-dark.png" alt="The AgentTally panel in dark mode" width="320">
+</p>
 
-- See at a glance which coding sessions are working, idle, or waiting on you.
-- Right-click to hide a session from cctop without stopping it or deleting its data.
-  cctop asks first because you cannot show it again while its local session record exists.
-- Jump directly to the right editor window, terminal pane, desktop thread, or project.
-- Keep recent projects close without leaving a menubar app open all day.
-- Find leftover ended-session worktrees, check Git safety, and remove the ones
-  you are done with.
-- Store session state locally as plain JSON. No analytics, telemetry, or session upload.
+AgentTally started as a fork of [cctop](https://github.com/st0012/cctop) by Stan Lo and is now
+developed on its own.
 
-## Works With Your Coding Tools
+## What it does
 
-Each integration reports session events locally; cctop turns them into one menubar
-view and a reliable jump target.
+- **Dots, grouped by agent.** One dot per session behind each agent's icon, colored by state:
+  waiting for permission, waiting for your answer, or working. A finished result you have not
+  read yet is a hollow ring. The dots sit on a small translucent pill so they stay readable
+  over any wallpaper, and move beside the camera notch when the menu bar has no room.
+- **Hover to peek.** Rest the pointer on the dots and the panel opens without taking keyboard
+  focus from the app you are typing in. Move away and it closes; click it and it stays. Turn it
+  off in **Settings › General › Open on Hover**.
+- **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
+  unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
+- **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
+  to the exact terminal pane, editor window, or desktop conversation.
+- **Alerts you choose.** A notification when a session finishes, and two separate sounds, one for
+  "done" and one for "needs you". Each sound has its own setting, separate from notifications.
+- **Read sync.** Reading a finished turn in Claude Desktop or Codex Desktop clears its unread dot
+  here too.
+- **A panel that fits your screen.** Liquid Glass on macOS 26 with a transparency slider. Drag a
+  side edge to resize; it settles on three widths. Drag the top bar to move it; it snaps to screen
+  edges. Double-click the top bar to put it back under the menu bar.
+- **English and 简体中文**, four color themes, and light and dark modes.
+- **Local only.** Session state is plain JSON on your Mac. No analytics, telemetry, or upload.
+
+## Works with your coding tools
 
 <table>
   <tr>
-    <td align="center" width="25%">
-      <a href="https://code.claude.com/docs">
-        <img src="assets/icons/claude-code.svg" alt="Claude Code" height="36"><br>
-        <strong>Claude Code / Desktop</strong>
-      </a>
-      <br><sub>Claude plugin + event hooks</sub>
+    <td align="center" width="20%">
+      <img src="assets/icons/claude-code.svg" alt="Claude Code" height="32"><br>
+      <strong>Claude Code / Desktop</strong><br><sub>Claude plugin + hooks</sub>
     </td>
-    <td align="center" width="25%">
-      <a href="https://developers.openai.com/codex">
-        <img src="assets/icons/openai.svg" alt="OpenAI" height="36"><br>
-        <strong>Codex CLI / Desktop</strong>
-      </a>
-      <br><sub>Codex event hooks + trust step</sub>
+    <td align="center" width="20%">
+      <img src="assets/icons/openai.svg" alt="OpenAI" height="32"><br>
+      <strong>Codex CLI / Desktop</strong><br><sub>Codex hooks + trust step</sub>
     </td>
-    <td align="center" width="25%">
-      <a href="https://opencode.ai">
-        <img src="assets/icons/opencode.svg" alt="opencode" height="28"><br>
-        <strong>opencode</strong>
-      </a>
-      <br><sub>opencode plugin events</sub>
+    <td align="center" width="20%">
+      <img src="assets/icons/deepseek.svg" alt="DeepSeek" height="32"><br>
+      <strong>DeepSeek Harness</strong><br><sub>DSH plugin</sub>
     </td>
-    <td align="center" width="25%">
-      <a href="https://pi.dev/">
-        <img src="assets/icons/pi.svg" alt="pi" height="36"><br>
-        <strong>pi</strong>
-      </a>
-      <br><sub>pi extension events</sub>
+    <td align="center" width="20%">
+      <img src="assets/icons/opencode.svg" alt="opencode" height="26"><br>
+      <strong>opencode</strong><br><sub>opencode plugin</sub>
+    </td>
+    <td align="center" width="20%">
+      <img src="assets/icons/pi.svg" alt="pi" height="32"><br>
+      <strong>pi</strong><br><sub>pi extension</sub>
     </td>
   </tr>
 </table>
 
-## Jump Support
+A Stream Deck plugin is also available under **Settings › Integrations**.
 
-When you click a session card, or use Navigate mode, cctop tries to take you to
-the most specific place it can.
+### Jump support
 
-- **Targets the exact session:** [iTerm2](https://iterm2.com/), [Warp](https://www.warp.dev/terminal), [cmux](https://cmux.com/), [Kitty](https://sw.kovidgoyal.net/kitty/), [Ghostty](https://ghostty.org/), [Terminal](https://support.apple.com/guide/terminal/welcome/mac), [Codex Desktop](https://developers.openai.com/codex/app), [Herdr](https://github.com/ogulcancelik/herdr), [Zellij](https://zellij.dev/), [tmux](https://tmux.us/). cctop jumps to the right window, tab, pane, surface, or desktop thread.
-- **Opens the project:** [VS Code](https://code.visualstudio.com/), [Cursor](https://cursor.com/), [Windsurf](https://windsurf.com/download), [Zed](https://zed.dev/). cctop focuses the editor window, using the workspace file if present.
-- **Opens the exact conversation:** [Claude Desktop](https://claude.com/download). cctop matches the session to Claude's local conversation and opens it with Claude's own continue link; if no match is found, it brings Claude to the front.
-- **Activates the app:** other detected macOS apps. cctop brings the app to the front so you can find the tab manually.
+- **Exact session:** iTerm2, Warp, cmux, Kitty, Ghostty, Terminal, Codex Desktop, Herdr, Zellij,
+  and tmux. AgentTally jumps to the right window, tab, pane, surface, or desktop thread.
+- **Exact conversation:** Claude Desktop, through Claude's own continue link.
+- **Project window:** VS Code, Cursor, Windsurf, and Zed, using the workspace file if present.
+- **Anything else:** AgentTally brings the app to the front, or opens the project in Finder.
 
 <details>
 <summary>Focus details and requirements</summary>
 
 - iTerm2, Ghostty, and Apple Terminal require macOS Automation permission.
-- Kitty targets the exact window when `allow_remote_control socket-only` and
-  `listen_on` are enabled in `kitty.conf`; otherwise it falls back to app
-  activation.
-- Warp targets the exact pane via its session deep link
-  ([`WARP_FOCUS_URL`](https://github.com/warpdotdev/warp/pull/11130)), available
-  since Warp v0.2026.05.27. Sessions started on older Warp versions fall back to
-  app activation.
-- cmux targets the exact workspace surface from stored metadata, and can recover
-  live cmux metadata for already-running sessions.
-- Ghostty requires version 1.3.0+ for AppleScript support. If the session TTY is
-  unavailable, cctop falls back to working-directory matching.
-- Apple Terminal targets the tab by tty. Inside a multiplexer such as tmux or
-  screen, it falls back to raising Terminal because the captured tty belongs to
-  the multiplexer pane.
-- If cctop cannot find an exact target or app, it opens the project folder in Finder.
+- Kitty targets the exact window when `allow_remote_control socket-only` and `listen_on` are
+  enabled in `kitty.conf`; otherwise it falls back to activating the app.
+- Warp targets the exact pane through its session deep link, available since Warp v0.2026.05.27.
+- Ghostty requires version 1.3.0 or later for AppleScript support.
+- Apple Terminal targets the tab by tty. Inside tmux or screen it raises Terminal instead, because
+  the captured tty belongs to the multiplexer pane.
 
 </details>
 
-## Designed For Scanning, Then Jumping
+## Navigate, recent projects, and cleanup
 
 <table>
   <tr>
     <td width="42%">
       <h3>Navigate mode</h3>
-      <p>Hit a global hotkey to overlay numbered badges on every session card, then press <kbd>1</kbd> to <kbd>9</kbd> to jump instantly.</p>
+      <p>Press a global hotkey to put numbers on every session card, then press <kbd>1</kbd> to <kbd>9</kbd> to jump.</p>
     </td>
-    <td align="center">
-      <img src="docs/menubar-navigate.png" alt="cctop navigate mode with numbered badges" width="300">
-    </td>
-  </tr>
-  <tr>
-    <td width="42%">
-      <h3>Draggable panel</h3>
-      <p>Drag the header anywhere on screen. cctop remembers the position, and double-clicking snaps it back to the menubar anchor.</p>
-    </td>
-    <td align="center">
-      <img src="docs/draggable-panel-demo.gif" alt="Dragging the cctop panel to a new position" width="430">
-    </td>
-  </tr>
-  <tr>
-    <td width="42%">
-      <h3>Smart status icon</h3>
-      <p>The menubar icon summarizes session health: healthy, needs attention, and a slim pill for laptops with a camera notch.</p>
-    </td>
-    <td align="center">
-      <img src="docs/status-icon.png" alt="Status icon states: all healthy, needs attention, and notch pill" width="430">
-    </td>
-  </tr>
-  <tr>
-    <td width="42%">
-      <h3>Worktree cleanup</h3>
-      <p>Cleanup finds ended agent worktrees that still exist on disk, especially CLI or manual worktree runs. cctop checks Git state before offering the right remove action.</p>
-    </td>
-    <td align="center">
-      <img src="docs/menubar-cleanup.png" alt="cctop cleanup tab listing ended worktrees with Git safety state" width="300">
-    </td>
+    <td align="center"><img src="docs/menubar-navigate.png" alt="Navigate mode with numbered badges" width="300"></td>
   </tr>
   <tr>
     <td width="42%">
       <h3>Recent projects</h3>
-      <p>A second tab keeps session history so you can reopen past projects without hunting through old terminals.</p>
+      <p>Sessions from the last seven days, so you can reopen a project without hunting through old terminals.</p>
     </td>
-    <td align="center">
-      <img src="docs/menubar-recent.png" alt="cctop recent projects tab" width="300">
+    <td align="center"><img src="docs/menubar-recent.png" alt="The Recent tab" width="300"></td>
+  </tr>
+  <tr>
+    <td width="42%">
+      <h3>Worktree cleanup</h3>
+      <p>Finds worktrees that ended sessions left on disk, checks their Git state, and offers the right way to remove each one.</p>
     </td>
+    <td align="center"><img src="docs/menubar-cleanup.png" alt="The Cleanup tab" width="300"></td>
   </tr>
 </table>
 
@@ -162,57 +137,68 @@ the most specific place it can.
 
 ### 1. Install the app
 
-Download the latest signed and notarized build:
+Download the DMG for your Mac and drag **AgentTally** into **Applications**:
 
-- [Apple Silicon](https://github.com/st0012/cctop/releases/latest/download/cctop-macOS-arm64.dmg)
-- [Intel](https://github.com/st0012/cctop/releases/latest/download/cctop-macOS-x86_64.dmg)
+- [Apple Silicon](https://github.com/suiyun08/agenttally/releases/latest/download/AgentTally-macOS-arm64.dmg)
+- [Intel](https://github.com/suiyun08/agenttally/releases/latest/download/AgentTally-macOS-x86_64.dmg)
 
-Or use Homebrew:
+AgentTally runs on macOS 13 or later.
+
+The app is not notarized by Apple yet, so macOS blocks it the first time you open it. Open
+**System Settings › Privacy & Security** and click **Open Anyway**, or run:
 
 ```bash
-brew install --cask st0012/cctop/cctop
+xattr -dr com.apple.quarantine /Applications/AgentTally.app
 ```
-
-cctop runs on macOS 13+. Signed release builds can check for updates through
-Sparkle.
 
 ### 2. Connect your tools
 
-Open **Settings**. cctop shows setup actions for detected coding clients under
-**Tools**, and companion apps under **Integrations**:
+Open **Settings**. Under **Tools**, AgentTally shows a setup action for each coding tool it
+finds:
 
-- Claude Code / Claude Desktop: click **Copy Install Command**, then run the
-  two commands below in a terminal.
-- opencode and pi: click **Install Plugin**.
-- Stream Deck: under **Integrations**, click **Install Plugin**. Stream Deck
-  offers cctop's optional default profile for compatible 15-key Stream Decks; it
-  adds the first five sessions across the top row and **Toggle Panel** at row 2,
-  column 1 without switching away from your current profile. If you skip that
-  prompt, use **Import default profile** later or place the Session and Toggle
-  Panel actions manually on any supported model. To show more sessions, add
-  Session actions and set their slots to 6, 7, and so on.
-- Codex CLI / Codex Desktop: click **Install Hooks**, then start a new Codex CLI
-  session and choose **Trust all and continue** when Codex reviews the hooks.
-  Codex Desktop shares that trust state.
+- **Claude Code / Claude Desktop:** click **Copy Install Command** and run it in a terminal. It
+  runs these two commands:
 
-Claude setup:
+  ```bash
+  claude plugin marketplace add suiyun08/agenttally
+  ```
+
+  ```bash
+  claude plugin install cctop
+  ```
+
+- **Codex CLI / Codex Desktop:** click **Install Hooks**, then start a Codex CLI session and choose
+  **Trust all and continue** when Codex reviews the hooks. Codex Desktop shares that trust.
+- **DeepSeek Harness (DSH), opencode, and pi:** click **Install Plugin**. For DSH, AgentTally adds
+  one marked row to `~/.dsh/cordis.patch.yml` and keeps a backup of the file next to it.
+  **Remove** takes out only that row.
+- **Stream Deck:** under **Integrations**, click **Install Plugin**.
+
+Restart running sessions so they pick up the new hooks or plugins.
+
+### Updating
+
+Updates are not automatic yet. Watch this repository's releases, then download the new DMG and
+replace the app in **Applications**.
+
+### Coming from cctop
+
+On first launch AgentTally copies your cctop settings: theme, language, panel width and position,
+sounds, and shortcuts. macOS treats AgentTally as a new app, so turn **Launch at Login** on again,
+and grant notification and Automation permission again when asked. Quit and delete `cctop.app`
+so that only one app watches your sessions.
+
+If your Claude Code plugin came from cctop's marketplace, switch it to this repository:
 
 ```bash
-claude plugin marketplace add st0012/cctop
+claude plugin marketplace remove cctop
 ```
 
-Then install the plugin:
-
-```bash
-claude plugin install cctop
-```
-
-Restart any running sessions to pick up newly installed hooks or plugins.
+Then run the two Claude commands above.
 
 ## Themes
 
-Four palettes inspired by developer tools, each with light and dark variants.
-Switch themes in **Settings > Appearance > Color**.
+Four palettes, each with light and dark variants. Switch in **Settings › Appearance › Color**.
 
 <table>
   <tr>
@@ -222,145 +208,84 @@ Switch themes in **Settings > Appearance > Color**.
     <th align="center">Nord</th>
   </tr>
   <tr>
-    <td align="center">
-      <img src="docs/theme-claude-dark.png" alt="Claude dark theme screenshot" width="180">
-    </td>
-    <td align="center">
-      <img src="docs/theme-tokyoNight-dark.png" alt="Tokyo Night dark theme screenshot" width="180">
-    </td>
-    <td align="center">
-      <img src="docs/theme-gruvbox-dark.png" alt="Gruvbox dark theme screenshot" width="180">
-    </td>
-    <td align="center">
-      <img src="docs/theme-nord-dark.png" alt="Nord dark theme screenshot" width="180">
-    </td>
+    <td align="center"><img src="docs/theme-claude-dark.png" alt="Claude theme" width="180"></td>
+    <td align="center"><img src="docs/theme-tokyoNight-dark.png" alt="Tokyo Night theme" width="180"></td>
+    <td align="center"><img src="docs/theme-gruvbox-dark.png" alt="Gruvbox theme" width="180"></td>
+    <td align="center"><img src="docs/theme-nord-dark.png" alt="Nord theme" width="180"></td>
   </tr>
 </table>
 
 ## Privacy
 
-**No analytics, no telemetry, and no session upload.** Session data stays on your
-machine in `~/.cctop/sessions/` as plain JSON.
+**No analytics, no telemetry, and no session upload.** Session data stays on your Mac in
+`~/.cctop/sessions/` as plain JSON. The release builds make no network requests of their own.
 
-cctop also publishes `~/.cctop/display-state.json` for display integrations.
-Each session entry contains only the ordered display identity, name, status,
-and resolved color needed for the keys. The file also includes its schema
-version, generation time, and cctop process-liveness metadata. The Stream Deck
-plugin does not inspect session files or any Claude, Codex, opencode, or pi data.
-
-Signed release builds use network access only for Sparkle update checks and
-downloads.
+AgentTally also writes `~/.cctop/display-state.json` for display integrations such as Stream
+Deck. Each entry holds only the session's display name, status, and color.
 
 <details>
-<summary>What cctop stores locally</summary>
+<summary>What AgentTally stores</summary>
 
-- Session status, such as idle, working, or waiting.
-- Project directory name.
-- Last activity timestamp.
-- Current tool or prompt context.
+- Session status, such as working, waiting, or done.
+- The project directory name.
+- The last activity time.
+- The current tool or prompt context.
 
-Inspect the files anytime:
+Inspect the files any time:
 
 ```bash
 ls ~/.cctop/sessions/
-cat ~/.cctop/sessions/*.json | python3 -m json.tool
 ```
 
-The session-file fields are documented in
-[`docs/session-files.md`](docs/session-files.md).
+The fields are documented in [`docs/session-files.md`](docs/session-files.md).
 
 </details>
 
 ## FAQ
 
 <details>
-<summary>Does cctop slow down my coding tool?</summary>
-
-No. Each integration calls the lightweight native helper (`cctop-hook`) on
-session events, writes a small JSON file, and returns immediately.
-
-</details>
-
-<details>
-<summary>Do I need to configure anything per project?</summary>
-
-No. Once your tools are connected, new sessions are automatically tracked.
-
-</details>
-
-<details>
-<summary>How does cctop name sessions?</summary>
-
-By default, cctop uses the project directory name. In Claude Code, you can rename
-a session with `/rename` and cctop picks that up.
-
-</details>
-
-<details>
 <summary>No sessions are showing up. What do I check?</summary>
 
-First, restart sessions after installing the plugin or hooks. Then check whether
-session files exist:
+Restart sessions after installing a plugin or hooks. Then check whether session files exist:
 
 ```bash
 ls ~/.cctop/sessions/
 ```
 
-If the directory is empty, the integration is not writing data yet. If files
-exist but the menubar shows nothing, check whether those JSON files have
-`"hidden": true`, then try restarting cctop.
+If the folder is empty, the integration is not writing yet. If files exist but nothing shows,
+check whether those files have `"hidden": true`, then restart AgentTally.
 
 </details>
 
 <details>
-<summary>Why do some archived desktop sessions not appear in Cleanup?</summary>
+<summary>Does AgentTally slow down my coding tool?</summary>
 
-Some desktop clients remove their managed worktree when you archive a session.
-In that case, there is nothing left for cctop to remove, so Cleanup stays quiet.
-Cleanup is most useful for CLI and manual-worktree sessions where the linked Git
-worktree remains on disk after the session ends.
+No. Each integration calls a small native helper, `cctop-hook`, which writes one small JSON file
+and returns.
 
 </details>
 
 <details>
-<summary>Why does Codex Desktop need an extra trust step?</summary>
+<summary>Why does Codex need an extra trust step?</summary>
 
-Codex only runs hooks you have explicitly reviewed and trusted. cctop can
-install the hooks, but Codex Desktop does not currently surface the hook-review
-prompt. Start one Codex CLI session in a terminal and trust the hooks there;
-Codex Desktop shares that trust state.
+Codex runs only hooks you have reviewed and trusted. Codex Desktop does not show that review
+prompt, so trust the hooks once in a Codex CLI session; Codex Desktop shares that trust.
 
 </details>
 
 <details>
-<summary>What happens if a coding tool crashes?</summary>
+<summary>Why does the app need to live in Applications?</summary>
 
-cctop detects dead sessions automatically by checking whether each session's
-process is still running, then removes stale entries.
-
-</details>
-
-<details>
-<summary>Why does the app need to live in /Applications?</summary>
-
-Plugins look for `cctop-hook` inside `/Applications/cctop.app`,
-`~/Applications/cctop.app`, or `~/.cctop/bin/`. Installing elsewhere breaks the
-hook path.
+Plugins look for `cctop-hook` inside `/Applications/AgentTally.app`,
+`~/Applications/AgentTally.app`, or `~/.cctop/bin/`. Installing elsewhere breaks that path.
 
 </details>
 
 <details>
-<summary>I am on an Intel Mac and the updater installed the wrong architecture.</summary>
+<summary>Why are the files and plugins still called cctop?</summary>
 
-cctop releases up to and including v0.15.2 shipped an appcast that confused
-Sparkle's update picker, so Intel Macs could receive the Apple Silicon build.
-The fix is in place going forward, but installed copies of cctop v0.15.2 and
-older may need one manual replacement:
-
-1. Quit cctop.
-2. Download [`cctop-macOS-x86_64.dmg`](https://github.com/st0012/cctop/releases/latest/download/cctop-macOS-x86_64.dmg).
-3. Drag the new `cctop.app` into `/Applications/`, replacing the existing one.
-4. Relaunch cctop. Future updates will pick the correct architecture.
+AgentTally keeps cctop's internal names (`~/.cctop`, `cctop-hook`, the `cctop` Claude plugin,
+`cctop://` links) so existing setups keep working.
 
 </details>
 
@@ -369,52 +294,30 @@ older may need one manual replacement:
 <details>
 <summary>How it works</summary>
 
-All integrations call `cctop-hook`, a single native helper that owns session
-state.
-
 ```mermaid
 flowchart LR
-  tools["Claude / Codex / opencode / pi"] --> hook["cctop-hook"]
+  tools["Claude / Codex / DSH / opencode / pi"] --> hook["cctop-hook"]
   hook --> files["~/.cctop/sessions/*.json"]
-  files --> app["cctop menubar app"]
+  files --> app["AgentTally"]
 ```
 
-1. A tool plugin or hook translates client events into `cctop-hook` calls.
+1. A plugin or hook in each tool turns its events into `cctop-hook` calls.
 2. `cctop-hook` writes one small JSON file per session.
-3. The menubar app watches `~/.cctop/sessions/` and renders live status.
-4. pi skips non-interactive background sessions automatically.
+3. AgentTally watches `~/.cctop/sessions/` and shows live status.
 
 </details>
 
 <details>
 <summary>Uninstall</summary>
 
-```bash
-# Remove the menubar app
-rm -rf /Applications/cctop.app
+Remove plugins from **Settings › Tools** first, so AgentTally can take out its DSH row and Codex
+hooks cleanly. Then:
 
-# Remove the Claude Code / Claude Desktop plugin
-claude plugin remove cctop
+```bash
+rm -rf /Applications/AgentTally.app
+claude plugin uninstall cctop
 claude plugin marketplace remove cctop
-
-# Remove the opencode plugin
-rm ~/.config/opencode/plugins/cctop.js
-
-# Remove the pi extension
-rm ~/.pi/agent/extensions/cctop.ts
-
-# Remove the Codex CLI / Codex Desktop hooks
-rm ~/.codex/cctop-shim.sh
-# Then remove cctop entries from ~/.codex/hooks.json
-
-# Remove session data and config
 rm -rf ~/.cctop
-```
-
-If installed via Homebrew:
-
-```bash
-brew uninstall --cask cctop
 ```
 
 </details>
@@ -422,18 +325,24 @@ brew uninstall --cask cctop
 <details>
 <summary>Build from source</summary>
 
-Requires Xcode 16+ and macOS 13+.
+Requires Xcode 26 or later.
 
 ```bash
-git clone https://github.com/st0012/cctop.git
-cd cctop
+git clone https://github.com/suiyun08/agenttally.git
+cd agenttally
 ./scripts/bundle-macos.sh
-cp -R dist/cctop.app /Applications/
-open /Applications/cctop.app
+cp -R dist/AgentTally.app /Applications/
+open /Applications/AgentTally.app
 ```
 
 </details>
 
+## Trademarks
+
+Claude, Codex, DeepSeek, opencode, pi, Stream Deck, and the other product names and logos here
+belong to their owners and are used only to identify the tools AgentTally works with. AgentTally
+is not affiliated with or endorsed by Anthropic, OpenAI, DeepSeek, or any other tool vendor.
+
 ## License
 
-MIT
+[MIT](LICENSE). cctop is © Stan Lo; AgentTally's changes are © suiyun08.
