@@ -193,9 +193,4 @@ extension AppDelegate {
     @MainActor private var hoverAnchors: [NSRect] {
         [statusItem.button?.window?.frame, notchController.pillFrame].compactMap { $0 }
     }
-
-    /// Clicking or dragging a peek pins it.
-    @MainActor func panelReceivedMouseDown() {
-        handleEvent(.panelClicked)
-    }
 }

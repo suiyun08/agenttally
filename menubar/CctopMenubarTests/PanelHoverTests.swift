@@ -11,7 +11,7 @@ final class PanelHoverTests: XCTestCase {
     func testRestingOnTheDotsPeeksWithoutTakingFocus() {
         let result = handle(.pointerRested(), mode: .hidden)
         XCTAssertEqual(result.state.mode, .peek)
-        XCTAssertEqual(result.actions, [.peekPanel, .postNavAction(.reset)])
+        XCTAssertEqual(result.actions, [.peekPanel, .startNavKeyMonitor, .postNavAction(.reset)])
         XCTAssertFalse(result.actions.contains(.activateApp), "The app the user is typing in keeps focus")
     }
 
@@ -38,10 +38,21 @@ final class PanelHoverTests: XCTestCase {
         XCTAssertFalse(result.actions.contains(.dismissPanel))
     }
 
-    func testClickingInsideAPeekPinsIt() {
-        let result = handle(.panelClicked, mode: .peek)
-        XCTAssertEqual(result.state.mode, .normal)
-        XCTAssertEqual(result.actions, [.startNavKeyMonitor])
+    func testKeysInsideAPeekNavigateWithoutPinningIt() {
+        let arrow = handle(.navKey(.down), mode: .peek)
+        XCTAssertEqual(arrow.state.mode, .peek)
+        XCTAssertEqual(arrow.actions, [.postNavAction(.down)])
+        let escape = handle(.escape, mode: .peek)
+        XCTAssertEqual(escape.state.mode, .peek)
+        XCTAssertEqual(escape.actions, [.postNavAction(.escape)])
+    }
+
+    func testAPeekStillClosesAfterTheUserJumpsToASession() {
+        // Clicking a card jumps to another app; the panel stays a peek and closes on leave.
+        var mode = handle(.pointerRested(), mode: .hidden).state.mode
+        mode = handle(.appLostFocus, mode: mode).state.mode
+        XCTAssertEqual(mode, .peek)
+        XCTAssertEqual(handle(.pointerLeft, mode: mode).state.mode, .hidden)
     }
 
     func testLeavingAPeekClosesIt() {

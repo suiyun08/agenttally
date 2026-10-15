@@ -39,7 +39,6 @@ final class FloatingPanelMouseEventTests: XCTestCase {
             func panelWidthDragDidBegin(edge: PanelResizeEdge) {}
             func panelWidthDragDidMove(to frame: NSRect) {}
             func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge) {}
-            func panelReceivedMouseDown() {}
         }
         let panel = FloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
@@ -59,37 +58,5 @@ final class FloatingPanelMouseEventTests: XCTestCase {
         }
 
         XCTAssertEqual(recorder.hovered, [.leading, nil, .trailing, nil])
-    }
-
-    /// A click anywhere in a peek pins it, so the panel reports every mouse down.
-    @MainActor
-    func testMouseDownInThePanelIsReported() throws {
-        final class Recorder: FloatingPanelDelegate {
-            var mouseDowns = 0
-            func panelDidDrag(originX: CGFloat, topY: CGFloat) {}
-            func panelDidRequestReset() {}
-            func panelHoveredEdgeDidChange(_ edge: PanelResizeEdge?) {}
-            func panelWidthDragDidBegin(edge: PanelResizeEdge) {}
-            func panelWidthDragDidMove(to frame: NSRect) {}
-            func panelWidthDragDidEnd(at frame: NSRect, edge: PanelResizeEdge) {}
-            func panelReceivedMouseDown() { mouseDowns += 1 }
-        }
-        let panel = FloatingPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
-            styleMask: [], backing: .buffered, defer: true
-        )
-        panel.contentView = NSView()
-        let recorder = Recorder()
-        panel.panelDelegate = recorder
-
-        for type in [NSEvent.EventType.leftMouseDown, .rightMouseDown] {
-            panel.sendEvent(try XCTUnwrap(NSEvent.mouseEvent(
-                with: type, location: NSPoint(x: 160, y: 60), modifierFlags: [],
-                timestamp: 0, windowNumber: panel.windowNumber, context: nil,
-                eventNumber: 0, clickCount: 1, pressure: 1
-            )))
-        }
-
-        XCTAssertEqual(recorder.mouseDowns, 2)
     }
 }
