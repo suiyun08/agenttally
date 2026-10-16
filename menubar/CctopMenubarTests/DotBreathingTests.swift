@@ -25,13 +25,16 @@ final class DotBreathingTests: XCTestCase {
 
     // MARK: - The breath
 
-    func testABreathEasesFromHollowToSolidAndBackOverThreeSeconds() {
-        XCTAssertEqual(DotBreathing.period, 3)
+    func testABreathEasesFromHollowToSolidAndBackOverTwoSeconds() {
+        let period = DotBreathing.period
+        XCTAssertEqual(period, 2)
         XCTAssertEqual(DotBreathing.fill(at: 0, phase: 0), 0, accuracy: 1e-9)
-        XCTAssertEqual(DotBreathing.fill(at: 0.75, phase: 0), 0.5, accuracy: 1e-9)
-        XCTAssertEqual(DotBreathing.fill(at: 1.5, phase: 0), 1, accuracy: 1e-9)
-        XCTAssertEqual(DotBreathing.fill(at: 3, phase: 0), 0, accuracy: 1e-9)
-        XCTAssertEqual(DotBreathing.fill(at: 10, phase: 0.25), DotBreathing.fill(at: 10.75, phase: 0), accuracy: 1e-9)
+        XCTAssertEqual(DotBreathing.fill(at: period / 4, phase: 0), 0.5, accuracy: 1e-9)
+        XCTAssertEqual(DotBreathing.fill(at: period / 2, phase: 0), 1, accuracy: 1e-9)
+        XCTAssertEqual(DotBreathing.fill(at: period, phase: 0), 0, accuracy: 1e-9)
+        XCTAssertEqual(
+            DotBreathing.fill(at: 10, phase: 0.25), DotBreathing.fill(at: 10 + period / 4, phase: 0), accuracy: 1e-9
+        )
     }
 
     func testNeighbouringDotsBreatheOutOfStepAndKeepTheirStepAcrossRefreshes() {

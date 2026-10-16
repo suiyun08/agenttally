@@ -6,7 +6,7 @@ import QuartzCore
 /// together, and the rhythm is slow enough to read as a reminder rather than an alarm.
 enum DotBreathing {
     /// One full breath, hollow to solid and back.
-    static let period: TimeInterval = 3
+    static let period: TimeInterval = 2
 
     /// How filled a breathing dot is at `time`: 0 hollow, 1 solid. A cosine eases in and out at
     /// both ends. `time` is absolute, so a dot redrawn mid-breath carries on where it was.
@@ -23,7 +23,7 @@ enum DotBreathing {
 
     /// Fades a fill layer's opacity along `fill`, in Core Animation so nothing is redrawn per
     /// frame. The offset ties it to absolute time, so a fill rebuilt after a refresh continues
-    /// the breath its dot was in. A slow fade looks smooth at about 20 frames a second.
+    /// the breath its dot was in. A fade this gentle looks smooth at about 20 frames a second.
     static func animation(phase: Double, now: CFTimeInterval) -> CAKeyframeAnimation {
         let steps = 24
         let animation = CAKeyframeAnimation(keyPath: "opacity")
