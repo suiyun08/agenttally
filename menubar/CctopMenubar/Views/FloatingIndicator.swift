@@ -50,8 +50,7 @@ final class FloatingIndicatorModel: ObservableObject {
     @Published var counts = StatusCounts.zero
 }
 
-/// The floating indicator: the menu bar's dots on a small glass capsule. The glass and the dots
-/// share the window, so both turn light or dark with what is behind them.
+/// The floating indicator: the menu bar's dots on a small glass capsule.
 struct FloatingIndicatorView: View {
     @ObservedObject var model: FloatingIndicatorModel
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -89,8 +88,10 @@ struct FloatingIndicatorView: View {
     }
 }
 
-/// Liquid Glass on macOS 26, the behind-window blur before it, and the theme's solid color when
-/// the user reduces transparency.
+/// Clear, interactive Liquid Glass on macOS 26 — Apple's glass for small controls over content,
+/// which lets far more of what is behind show than regular glass; the dots are bold enough to
+/// read on it. The behind-window blur before macOS 26, and the theme's solid color when the user
+/// reduces transparency.
 private struct CapsuleGlass: ViewModifier {
     let reduceTransparency: Bool
 
@@ -98,7 +99,7 @@ private struct CapsuleGlass: ViewModifier {
         if reduceTransparency {
             content.background(Color.panelBackground, in: Capsule())
         } else if #available(macOS 26.0, *) {
-            content.glassEffect(.regular, in: Capsule())
+            content.glassEffect(.clear.interactive(), in: Capsule())
         } else {
             content.background(BehindWindowBlur().clipShape(Capsule()))
         }
@@ -117,7 +118,8 @@ final class FloatingIndicatorWindow: NSPanel {
         )
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        // The glass draws its own depth; a window shadow would make the capsule look solid.
+        hasShadow = false
         level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         hidesOnDeactivate = false
