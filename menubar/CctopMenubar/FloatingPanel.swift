@@ -14,7 +14,7 @@ class FloatingPanel: NSPanel {
     private var edgeTrackingArea: NSTrackingArea?
     private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
-    /// The pre-macOS 26 blur, kept in a never-key window right below it (see `PanelGlassWindow`).
+    /// The panel's glass, kept in a never-key window right below it (see `PanelGlassWindow`).
     /// It is a window of its own, so it takes the panel's light or dark choice explicitly.
     private(set) lazy var glassWindow: PanelGlassWindow = {
         let window = PanelGlassWindow()
@@ -131,10 +131,10 @@ class FloatingPanel: NSPanel {
         }
     }
 
-    /// Fades the blur in alongside the panel's own appearance animation. Liquid Glass is drawn in
-    /// the panel itself, so on macOS 26 the window stays detached.
+    /// Fades the glass in alongside the panel's own appearance animation. Without `SystemGlass`,
+    /// macOS 26 draws the public glass in the panel itself and this window stays detached.
     private func attachGlass() {
-        guard !PanelSurfaceStyle.liquidGlassAvailable else { return }
+        guard !PanelSurfaceStyle.liquidGlassAvailable || SystemGlass.isAvailable else { return }
         guard glassWindow.parent == nil else { return syncGlassFrame() }
         glassWindow.setFrame(frame, display: false)
         glassWindow.alphaValue = 0

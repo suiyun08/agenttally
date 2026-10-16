@@ -33,21 +33,21 @@ enum PanelGlassTint {
         1 - min(max(transparency, 0), 1)
     }
 
-    /// The least tint light glass keeps. `SystemGlass` turns dark over dark content whatever the
-    /// app's mode, and does not turn the text light with it; this keeps it light under dark text.
-    static let lightModeFloor = 0.5
+    /// The least tint on the panel's glass. The panel draws white text whatever is behind it, and
+    /// this glass turns light over bright content, so — as Apple's guidance for translucent glass
+    /// under light text asks — a dark layer of about 35% stays underneath. Over dark content it
+    /// barely shows.
+    static let dimmingFloor = 0.35
 
     /// The theme tint on the panel's `SystemGlass` in `appearance`: as strong as the transparency
-    /// setting asks, but never below the light-mode floor in light mode.
+    /// setting asks, and never below the dimming floor.
     @MainActor static func glassTint(for appearance: NSAppearance) -> NSColor? {
         let stored = UserDefaults.standard.object(forKey: transparencyKey) as? Double
         return glassTint(for: appearance, transparency: stored ?? defaultTransparency)
     }
 
     @MainActor static func glassTint(for appearance: NSAppearance, transparency: Double) -> NSColor? {
-        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let alpha = max(isDark ? 0 : lightModeFloor, opacity(transparency: transparency))
-        guard alpha > 0 else { return nil }
+        let alpha = max(dimmingFloor, opacity(transparency: transparency))
         return ThemeManager.shared.current.panelBackground.resolve(appearance).withAlphaComponent(alpha)
     }
 }
@@ -73,8 +73,8 @@ struct PanelSurfaceBackground: View {
     }
 }
 
-/// Regular Liquid Glass behind the panel's content, in the panel's own window, when `SystemGlass`
-/// is unavailable. Glass and text
+/// Regular Liquid Glass behind the panel's content, in the panel's own window: the fallback when
+/// `SystemGlass` is unavailable. Glass and text
 /// share a window, so the system adapts both to what is behind the panel and keeps the text
 /// readable. The active state is pinned, so the glass keeps one look whether or not the panel
 /// holds keyboard focus. The transparency setting only thins the theme tint on it: regular glass
@@ -124,10 +124,11 @@ struct BehindWindowBlur: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
-/// Holds the panel's blur in a window of its own, attached right below the panel, before macOS 26.
-/// It never becomes key, so the blur never switches look as the panel gains and loses focus. It
-/// takes no clicks, and the panel keeps it on its frame. On macOS 26 the glass is drawn in the
-/// panel itself (see `PanelLiquidGlass`) and this window stays detached.
+/// Holds the panel's glass in a window of its own, attached right below the panel: Notification
+/// Center's glass from `SystemGlass` on macOS 26, the blur before it. This window never becomes
+/// key, so the glass keeps one look as the panel gains and loses focus. It takes no clicks, and
+/// the panel keeps it on its frame. The panel's text is white, so it needs no adaptation from the
+/// glass.
 final class PanelGlassWindow: NSWindow {
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
@@ -139,9 +140,15 @@ final class PanelGlassWindow: NSWindow {
         animationBehavior = .none
         level = .floating
         collectionBehavior = FloatingPanel.defaultCollectionBehavior
-        let host = NSHostingView(rootView: PanelGlassBackdrop())
-        host.sizingOptions = []
-        contentView = host
+        if #available(macOS 26.0, *), let glass = SystemGlass.make(
+            cornerRadius: AppChrome.panelCornerRadius, tint: PanelGlassTint.glassTint(for:)
+        ) {
+            contentView = glass
+        } else {
+            let host = NSHostingView(rootView: PanelGlassBackdrop())
+            host.sizingOptions = []
+            contentView = host
+        }
     }
 
     override var canBecomeKey: Bool { false }

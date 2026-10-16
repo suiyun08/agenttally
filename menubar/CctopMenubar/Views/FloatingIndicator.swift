@@ -211,9 +211,8 @@ final class FloatingIndicatorController {
         fit()
     }
 
-    /// Shows or hides the indicator with its setting, in the light or dark mode chosen in Settings.
+    /// Shows or hides the indicator with its setting.
     func syncVisibility() {
-        window?.appearance = AppearanceMode.current.appearance
         if Self.isEnabled {
             show()
         } else {
@@ -229,7 +228,6 @@ final class FloatingIndicatorController {
 
     private func makeWindow() -> FloatingIndicatorWindow {
         let window = FloatingIndicatorWindow()
-        window.appearance = AppearanceMode.current.appearance
         let host = NSHostingView(rootView: FloatingIndicatorView(model: model, drawsGlass: !SystemGlass.isAvailable))
         host.sizingOptions = []
         window.contentView = SystemGlass.wrapping(host, cornerRadius: FloatingIndicatorView.height / 2)

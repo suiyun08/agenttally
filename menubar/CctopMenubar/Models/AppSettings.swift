@@ -2,34 +2,6 @@ import AppKit
 import KeyboardShortcuts
 import Foundation
 
-enum AppearanceMode: String, CaseIterable {
-    case system, light, dark
-
-    static let defaultsKey = "appearanceMode"
-
-    /// The mode chosen in Settings › Appearance › Mode.
-    static var current: AppearanceMode {
-        AppearanceMode(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? .system
-    }
-
-    /// The appearance a window takes for this mode; nil follows the system.
-    var appearance: NSAppearance? {
-        switch self {
-        case .system: return nil
-        case .light: return NSAppearance(named: .aqua)
-        case .dark: return NSAppearance(named: .darkAqua)
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .system: String(localized: "System")
-        case .light: String(localized: "Light")
-        case .dark: String(localized: "Dark")
-        }
-    }
-}
-
 extension KeyboardShortcuts.Name {
     static let togglePanel = Self("togglePanel")
     // Storage key is "refocus" (the old name) for backward compatibility with existing user shortcuts.

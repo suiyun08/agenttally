@@ -67,27 +67,6 @@ final class FloatingIndicatorTests: XCTestCase {
         }
     }
 
-    @MainActor
-    func testLightGlassKeepsAThemeTintSoDarkTextStaysReadable() throws {
-        let light = try XCTUnwrap(NSAppearance(named: .aqua))
-        let dark = try XCTUnwrap(NSAppearance(named: .darkAqua))
-        XCTAssertEqual(
-            PanelGlassTint.glassTint(for: light, transparency: 1)?.alphaComponent ?? 0,
-            PanelGlassTint.lightModeFloor, accuracy: 0.001
-        )
-        XCTAssertNil(PanelGlassTint.glassTint(for: dark, transparency: 1), "Light text on dark glass needs no tint")
-        XCTAssertEqual(PanelGlassTint.glassTint(for: dark, transparency: 0.25)?.alphaComponent ?? 0, 0.75, accuracy: 0.001)
-        XCTAssertEqual(PanelGlassTint.glassTint(for: light, transparency: 0.25)?.alphaComponent ?? 0, 0.75, accuracy: 0.001)
-    }
-
-    // MARK: - Light or dark
-
-    func testEachModeGivesTheIndicatorItsAppearance() {
-        XCTAssertNil(AppearanceMode.system.appearance, "Following the system leaves the window on the system's choice")
-        XCTAssertEqual(AppearanceMode.light.appearance?.name, .aqua)
-        XCTAssertEqual(AppearanceMode.dark.appearance?.name, .darkAqua)
-    }
-
     // MARK: - Size
 
     @MainActor

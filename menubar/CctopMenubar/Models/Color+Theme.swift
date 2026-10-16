@@ -209,33 +209,20 @@ extension Color {
         })
     }
 
-    /// Secondary text — branch, meta, working status.
-    static var textSecondary: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.textSecondary.resolve(appearance)
-        })
-    }
+    // Text on glass follows Apple's monochrome label levels, so it turns dark or light with the
+    // glass; theme color is kept for status and actions.
 
-    /// Muted text — timestamps, idle status, footer.
-    static var textMuted: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.textMuted.resolve(appearance)
-        })
-    }
+    /// Secondary text — project, branch, last message, setting descriptions.
+    static var textSecondary: Color { Color(nsColor: .secondaryLabelColor) }
+
+    /// Muted text — timestamps, section headers, unselected tabs, footer.
+    static var textMuted: Color { Color(nsColor: .tertiaryTextColor) }
 
     /// Dimmed primary — idle project names.
-    static var textDimmed: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.textDimmed.resolve(appearance)
-        })
-    }
+    static var textDimmed: Color { Color(nsColor: .secondaryLabelColor) }
 
     /// Primary text.
-    static var textPrimary: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.textPrimary.resolve(appearance)
-        })
-    }
+    static var textPrimary: Color { Color(nsColor: .labelColor) }
 
     /// Agent badge color.
     static var agentBadge: Color {
@@ -272,4 +259,12 @@ extension Color {
         })
     }
 
+}
+
+private extension NSColor {
+    /// Between Apple's secondary (50%) and tertiary (26%) labels: faint, yet readable on glass.
+    static let tertiaryTextColor = NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(white: 1, alpha: 0.4) : NSColor(white: 0, alpha: 0.4)
+    }
 }

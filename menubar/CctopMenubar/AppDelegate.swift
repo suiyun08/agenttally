@@ -36,7 +36,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private let displayStateWriter = DisplayStateWriter()
     var pendingURL: URL?
     var isFullyLaunched = false
-    @AppStorage("appearanceMode") var appearanceMode: String = "system"
 
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
@@ -93,14 +92,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             backing: .buffered,
             defer: false
         )
-        panel.contentView = SystemGlass.wrapping(
-            hostingView, cornerRadius: AppChrome.panelCornerRadius, tint: PanelGlassTint.glassTint(for:)
-        )
+        panel.contentView = hostingView
         panelHost = hostingView
         panel.panelDelegate = self
+        // White text on glass: the panel is drawn dark whatever the system's appearance.
+        panel.appearance = NSAppearance(named: .darkAqua)
         setupPanelHover()
 
-        applyAppearance()
         registerShortcuts()
         observeSessionUpdates()
         observeThemeChanges()
@@ -173,9 +171,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @MainActor private func registerObservers() {
         let nc = NotificationCenter.default
-        nc.addObserver(
-            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.applyAppearance() }
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didDeactivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] notification in
@@ -395,10 +390,6 @@ extension AppDelegate {
         let work = DispatchWorkItem(block: show)
         notchVisibilityWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
-    }
-
-    private func applyAppearance() {
-        panel?.appearance = (AppearanceMode(rawValue: appearanceMode) ?? .system).appearance
     }
 }
 
