@@ -45,6 +45,9 @@ developed on its own.
   focus from the app you are typing in. Move away and it closes, even after you click a session
   in it. Click the dots or press the toggle shortcut to keep the panel open. Turn hovering off in
   **Settings › General › Open on Hover**.
+- **Floating indicator.** Turn on **Settings › General › Floating Indicator** for the same dots on
+  a small glass capsule you can drag anywhere. It shows on every desktop and over full-screen apps;
+  rest the pointer on it and the panel opens at once, click it and the panel stays.
 - **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
   unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
 - **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
@@ -53,10 +56,11 @@ developed on its own.
   "done" and one for "needs you". Each sound has its own setting, separate from notifications.
 - **Read sync.** Reading a finished turn in Claude Desktop or Codex Desktop clears its unread dot
   here too.
-- **A panel that fits your screen.** Liquid Glass on macOS 26 with a transparency slider. Drag a
-  side edge to resize; it settles on three widths. Drag the top bar to move it; it snaps to screen
-  edges. Double-click the top bar to put it back under the menu bar.
-- **English and 简体中文**, four color themes, and light and dark modes.
+- **A panel that fits your screen.** Liquid Glass on macOS 26 with white text that stays readable
+  over any window, and a slider for how much theme color tints the glass. It shows on every
+  desktop. Drag a side edge to resize; it settles on three widths. Drag the top bar to move it; it
+  snaps to screen edges. Double-click the top bar to put it back under the menu bar.
+- **English and 简体中文**, and four color themes for the status and accent colors.
 - **Local only.** Session state is plain JSON on your Mac. No analytics, telemetry, or upload.
 
 ## Works with your coding tools
@@ -200,7 +204,7 @@ Then run the two Claude commands above.
 
 ## Themes
 
-Four palettes, each with light and dark variants. Switch in **Settings › Appearance › Color**.
+Four palettes for the status and accent colors. Switch in **Settings › Appearance › Color**.
 
 <table>
   <tr>

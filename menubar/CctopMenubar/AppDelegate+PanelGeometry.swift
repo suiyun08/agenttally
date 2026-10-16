@@ -71,8 +71,22 @@ extension AppDelegate {
     }
 
     /// The screen-space rect of the anchor (notch pill or menubar icon).
+    /// A peek's entrance: a short fade while the panel eases a few points out of the dots it opens
+    /// from, down when it hangs below them and up when it sits above.
+    @MainActor func revealPeek() {
+        let target = panel.frame
+        let opensAbove = anchorRect().map { target.minY >= $0.maxY } ?? false
+        panel.reveal(to: target, from: target.offsetBy(dx: 0, dy: opensAbove ? -8 : 8))
+    }
+
+    /// What the panel opens against: the floating indicator when the click or hover came from
+    /// it, else the notch pill when it stands in for the menu bar icon, else the icon.
     @MainActor private func anchorRect() -> NSRect? {
-        notchController.pillFrame ?? menubarIconRect()
+        if let floating = floatingIndicator.visibleFrame, let point = focusLocation,
+           floating.insetBy(dx: -2, dy: -2).contains(point) {
+            return floating
+        }
+        return notchController.pillFrame ?? menubarIconRect()
     }
 
     /// The screen-space rect of the menubar icon, even when the notch pill
@@ -156,8 +170,8 @@ extension AppDelegate {
     }
 
     private func panelFittingSize() -> NSSize? {
-        panel.contentView?.layout()
-        guard let size = panel.contentView?.fittingSize else { return nil }
+        panelHost?.layout()
+        guard let size = panelHost?.fittingSize else { return nil }
         return NSSize(width: max(size.width, CGFloat(PanelWidth.current.rawValue)), height: size.height)
     }
 
@@ -240,7 +254,7 @@ extension AppDelegate: FloatingPanelDelegate {
     /// The content takes the new width first, so the window never shows it at the old one.
     @MainActor func applyDraggedWidth(_ frame: NSRect) {
         panelResizeState.width = frame.width
-        panel.contentView?.layout()
+        panelHost?.layout()
         panel.setFrame(frame, display: true)
     }
 }

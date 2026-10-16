@@ -51,8 +51,6 @@ enum AppTheme: String, CaseIterable, Identifiable, Hashable {
             light: NSColor.white
         )
     }
-    var segmentText: ColorPair { textSecondary }
-    var segmentActiveText: ColorPair { textPrimary }
     var accentButtonText: ColorPair { Self.accentButtonTexts[self]! }
     var statusPermission: ColorPair { Self.permissions[self]! }
     var statusAttention: ColorPair { Self.attentions[self]! }

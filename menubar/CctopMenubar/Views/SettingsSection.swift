@@ -9,7 +9,6 @@ struct SettingsSection: View {
     var maxHeight: CGFloat = AppChrome.settingsScrollViewportHeight
     @ObservedObject private var themeManager = ThemeManager.shared
     @StateObject private var notificationPermission: NotificationPermissionController
-    @AppStorage("appearanceMode") private var appearanceMode = "system"
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showFileAccessHelp = false
 
@@ -62,11 +61,6 @@ struct SettingsSection: View {
                     AmberSegmentedPicker(options: AppTheme.allCases.map { ($0, $0.displayName) }, selection: binding)
                 }
                 groupedDivider
-                settingsRow("Mode") {
-                    AmberSegmentedPicker(options: AppearanceMode.allCases.map { ($0.rawValue, $0.label) }, selection: $appearanceMode)
-                }
-                .onChange(of: appearanceMode) { _ in UserDefaults.standard.synchronize() }
-                groupedDivider
                 LanguageSettingsRow()
                 groupedDivider
                 TransparencySettingsRow()
@@ -98,6 +92,8 @@ struct SettingsSection: View {
                 }
                 groupedDivider
                 HoverToOpenSettingsRow()
+                groupedDivider
+                FloatingIndicatorSettingsRow()
                 groupedDivider
                 NotificationSettingsGroup(notificationPermission: notificationPermission)
                 groupedDivider

@@ -32,10 +32,29 @@ enum PanelGlassTint {
     static func opacity(transparency: Double) -> Double {
         1 - min(max(transparency, 0), 1)
     }
+
+    /// The least tint on the panel's glass. The panel draws white text whatever is behind it, and
+    /// this glass turns light over bright content, so a dark layer stays underneath, as Apple's
+    /// guidance for translucent glass under light text asks. Apple suggests 35%; 25% keeps the
+    /// glass from reading as black, and the text is drawn a little stronger instead. Over dark
+    /// content it barely shows.
+    static let dimmingFloor = 0.25
+
+    /// The theme tint on the panel's `SystemGlass` in `appearance`: as strong as the transparency
+    /// setting asks, and never below the dimming floor.
+    @MainActor static func glassTint(for appearance: NSAppearance) -> NSColor? {
+        let stored = UserDefaults.standard.object(forKey: transparencyKey) as? Double
+        return glassTint(for: appearance, transparency: stored ?? defaultTransparency)
+    }
+
+    @MainActor static func glassTint(for appearance: NSAppearance, transparency: Double) -> NSColor? {
+        let alpha = max(dimmingFloor, opacity(transparency: transparency))
+        return ThemeManager.shared.current.panelBackground.resolve(appearance).withAlphaComponent(alpha)
+    }
 }
 
-/// The panel's own backdrop. Under Liquid Glass the tint rides on the glass (see `PanelLiquidGlass`);
-/// before macOS 26 it lies over the blur in `PanelGlassWindow`.
+/// The panel's own backdrop. Under Liquid Glass the theme tint rides on the glass itself (see
+/// `PanelGlassTint.glassTint` and `PanelLiquidGlass`); before macOS 26 it lies over the blur.
 struct PanelSurfaceBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
@@ -55,7 +74,8 @@ struct PanelSurfaceBackground: View {
     }
 }
 
-/// Regular Liquid Glass behind the panel's content, in the panel's own window. Glass and text
+/// Regular Liquid Glass behind the panel's content, in the panel's own window: the fallback when
+/// `SystemGlass` is unavailable. Glass and text
 /// share a window, so the system adapts both to what is behind the panel and keeps the text
 /// readable. The active state is pinned, so the glass keeps one look whether or not the panel
 /// holds keyboard focus. The transparency setting only thins the theme tint on it: regular glass
@@ -65,7 +85,7 @@ struct PanelLiquidGlass: ViewModifier {
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
 
     func body(content: Content) -> some View {
-        if #available(macOS 26.0, *), !reduceTransparency {
+        if #available(macOS 26.0, *), !reduceTransparency, !SystemGlass.isAvailable {
             content
                 .glassEffect(
                     .regular.tint(Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))),
@@ -93,7 +113,7 @@ struct PanelGlassBackdrop: View {
 }
 
 /// What sits behind the panel window, blurred; the pre-macOS 26 stand-in for Liquid Glass.
-private struct BehindWindowBlur: NSViewRepresentable {
+struct BehindWindowBlur: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
         view.material = .popover
@@ -105,24 +125,32 @@ private struct BehindWindowBlur: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
-/// Holds the panel's blur in a window of its own, attached right below the panel, before macOS 26.
-/// It never becomes key, so the blur never switches look as the panel gains and loses focus. It
-/// takes no clicks, and the panel keeps it on its frame. On macOS 26 the glass is drawn in the
-/// panel itself (see `PanelLiquidGlass`) and this window stays detached.
+/// Holds the panel's glass in a window of its own, attached right below the panel: Notification
+/// Center's glass from `SystemGlass` on macOS 26, the blur before it. This window never becomes
+/// key, so the glass keeps one look as the panel gains and loses focus. It takes no clicks, and
+/// the panel keeps it on its frame. The panel's text is white, so it needs no adaptation from the
+/// glass.
 final class PanelGlassWindow: NSWindow {
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = false
+        // The panel's shadow: the panel window itself has only its rows' faint fills to cast one.
+        hasShadow = true
         ignoresMouseEvents = true
         isReleasedWhenClosed = false
         animationBehavior = .none
         level = .floating
         collectionBehavior = FloatingPanel.defaultCollectionBehavior
-        let host = NSHostingView(rootView: PanelGlassBackdrop())
-        host.sizingOptions = []
-        contentView = host
+        if #available(macOS 26.0, *), let glass = SystemGlass.make(
+            cornerRadius: AppChrome.panelCornerRadius, tint: PanelGlassTint.glassTint(for:)
+        ) {
+            contentView = glass
+        } else {
+            let host = NSHostingView(rootView: PanelGlassBackdrop())
+            host.sizingOptions = []
+            contentView = host
+        }
     }
 
     override var canBecomeKey: Bool { false }

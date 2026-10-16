@@ -12,8 +12,8 @@ final class MenubarIconRendererTests: XCTestCase {
     func testNoDots_returnsShortTemplateLine() {
         let image = MenubarIconRenderer.render(counts: .zero)
         XCTAssertTrue(image.isTemplate, "With no dots the icon is a template line")
-        XCTAssertEqual(image.size.width, 14)
-        XCTAssertEqual(image.size.height, 18)
+        XCTAssertEqual(image.size.width, 16)
+        XCTAssertEqual(image.size.height, MenubarIconRenderer.height)
     }
 
     func testCountsWithoutDots_stillRenderTheTemplateLine() {
@@ -32,7 +32,7 @@ final class MenubarIconRendererTests: XCTestCase {
             image.size.width,
             StatusDotLayout(groups: groups, metrics: .menubar).width + MenubarIconRenderer.pillPadding * 2
         )
-        XCTAssertEqual(image.size.height, 18)
+        XCTAssertEqual(image.size.height, MenubarIconRenderer.height)
     }
 
     func testWidthGrowsWithSessionsAndAgents() {

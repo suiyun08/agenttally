@@ -14,7 +14,7 @@ class FloatingPanel: NSPanel {
     private var edgeTrackingArea: NSTrackingArea?
     private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
-    /// The pre-macOS 26 blur, kept in a never-key window right below it (see `PanelGlassWindow`).
+    /// The panel's glass, kept in a never-key window right below it (see `PanelGlassWindow`).
     /// It is a window of its own, so it takes the panel's light or dark choice explicitly.
     private(set) lazy var glassWindow: PanelGlassWindow = {
         let window = PanelGlassWindow()
@@ -28,7 +28,9 @@ class FloatingPanel: NSPanel {
     /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
     /// the rest of the bar drags the panel.
     var headerControlRects: [CGRect] = []
-    static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+    /// On every desktop, full-screen ones included, so a pinned panel stays in view as the user
+    /// switches desktops.
+    static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
     enum HeaderClickAction: Equatable {
         case resetPosition
@@ -131,11 +133,28 @@ class FloatingPanel: NSPanel {
         }
     }
 
-    /// Fades the blur in alongside the panel's own appearance animation. Liquid Glass is drawn in
-    /// the panel itself, so on macOS 26 the window stays detached.
+    /// Fades the panel in while it eases from `start` to `target`; the glass window, a child,
+    /// moves along with it.
+    func reveal(to target: NSRect, from start: NSRect, duration: TimeInterval = 0.16) {
+        setFrameOrigin(start.origin)
+        alphaValue = 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().setFrameOrigin(target.origin)
+            animator().alphaValue = 1
+        }
+    }
+
+    /// Fades the glass in alongside the panel's own appearance animation. Without `SystemGlass`,
+    /// macOS 26 draws the public glass in the panel itself and this window stays detached.
     private func attachGlass() {
-        guard !PanelSurfaceStyle.liquidGlassAvailable else { return }
+        guard !PanelSurfaceStyle.liquidGlassAvailable || SystemGlass.isAvailable else { return }
         guard glassWindow.parent == nil else { return syncGlassFrame() }
+        // macOS shapes a window's shadow from what it draws. Over the glass window the panel
+        // draws only its rows' faint fills, which would each get a dark outline; the glass
+        // window, filled edge to edge, casts the panel's shadow instead.
+        hasShadow = false
         glassWindow.setFrame(frame, display: false)
         glassWindow.alphaValue = 0
         addChildWindow(glassWindow, ordered: .below)
@@ -149,6 +168,7 @@ class FloatingPanel: NSPanel {
         guard glassWindow.parent != nil else { return }
         removeChildWindow(glassWindow)
         glassWindow.orderOut(nil)
+        hasShadow = true
     }
 
     /// Child windows follow the panel's moves on their own, but not its size.

@@ -10,6 +10,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     var statusItem: NSStatusItem!
     private var menubarIndicator: MenubarIndicator?
     var panel: FloatingPanel!
+    /// The panel's SwiftUI content, which `panel.contentView` may wrap in `SystemGlass`.
+    var panelHost: NSView!
     var sessionManager: SessionManager!
     var updater: UpdaterBase!
     var pluginManager: PluginManager!
@@ -34,7 +36,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private let displayStateWriter = DisplayStateWriter()
     var pendingURL: URL?
     var isFullyLaunched = false
-    @AppStorage("appearanceMode") var appearanceMode: String = "system"
 
     let panelGeometry = PanelGeometryModel(store: UserDefaultsPanelPositionStore())
     let panelHeightLimit = PanelHeightLimit()
@@ -43,6 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         self?.applyDraggedWidth(frame)
     }
     @MainActor lazy var panelHover = PanelHoverController()
+    @MainActor lazy var floatingIndicator = FloatingIndicatorController()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -83,14 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         seedPanelHeightLimit()
         _ = AppLanguage.launchSelection
-        let contentView = makePanelContentView()
-        let hostingView = NSHostingView(rootView: contentView)
-        hostingView.wantsLayer = true
-        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
-        hostingView.layer?.cornerRadius = AppChrome.panelCornerRadius
-        hostingView.layer?.masksToBounds = true
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
-
+        let hostingView = makePanelHostingView()
         panel = FloatingPanel(
             contentRect: .zero,
             styleMask: [],
@@ -98,10 +93,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             defer: false
         )
         panel.contentView = hostingView
+        panelHost = hostingView
         panel.panelDelegate = self
+        // White text on glass: the panel is drawn dark whatever the system's appearance.
+        panel.appearance = NSAppearance(named: .darkAqua)
         setupPanelHover()
 
-        applyAppearance()
         registerShortcuts()
         observeSessionUpdates()
         observeThemeChanges()
@@ -111,6 +108,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             self.pendingURL = nil
             handleURLCommand(pendingURL)
         }
+    }
+
+    private func makePanelHostingView() -> NSView {
+        let hostingView = NSHostingView(rootView: makePanelContentView())
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingView.layer?.cornerRadius = AppChrome.panelCornerRadius
+        hostingView.layer?.masksToBounds = true
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        return hostingView
     }
 
     private func makePanelContentView() -> PanelContentView {
@@ -164,9 +171,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @MainActor private func registerObservers() {
         let nc = NotificationCenter.default
-        nc.addObserver(
-            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.applyAppearance() }
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didDeactivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] notification in
@@ -304,6 +308,7 @@ extension AppDelegate {
     @MainActor func refreshStatusDisplay(counts: StatusCounts) {
         lastRenderedCounts = counts
         menubarIndicator?.show(counts)
+        floatingIndicator.update(counts)
         notchController.update(counts: counts)
         updateNotchVisibility()
         statusItem.button?.setAccessibilityLabel(counts.accessibilityLabel)
@@ -385,14 +390,6 @@ extension AppDelegate {
         let work = DispatchWorkItem(block: show)
         notchVisibilityWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
-    }
-
-    private func applyAppearance() {
-        switch AppearanceMode(rawValue: appearanceMode) ?? .system {
-        case .system: panel?.appearance = nil
-        case .light: panel?.appearance = NSAppearance(named: .aqua)
-        case .dark: panel?.appearance = NSAppearance(named: .darkAqua)
-        }
     }
 }
 

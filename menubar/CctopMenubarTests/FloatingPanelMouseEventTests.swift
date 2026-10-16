@@ -76,10 +76,11 @@ final class FloatingPanelMouseEventTests: XCTestCase {
         XCTAssertNil(panel.glassWindow.appearance, "Following the system leaves both on the system's choice")
     }
 
-    /// On macOS 26 the glass shares the panel's window, so the system adapts the text with it; a
-    /// separate glass window would leave the text unadapted.
+    /// With Notification Center's glass the glass sits in the never-key window below the panel, so
+    /// it keeps one look whether or not the panel holds focus; without it, macOS 26 draws the
+    /// public glass in the panel itself.
     @MainActor
-    func testLiquidGlassStaysInThePanelsOwnWindow() throws {
+    func testTheGlassWindowCarriesTheSystemGlass() throws {
         try XCTSkipUnless(PanelSurfaceStyle.liquidGlassAvailable, "Liquid Glass needs macOS 26")
         let panel = FloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
@@ -87,7 +88,14 @@ final class FloatingPanelMouseEventTests: XCTestCase {
         )
         panel.orderFront(nil)
         defer { panel.orderOut(nil) }
-        XCTAssertNil(panel.glassWindow.parent)
-        XCTAssertFalse(panel.childWindows?.contains(panel.glassWindow) ?? false)
+        if SystemGlass.isAvailable {
+            XCTAssertTrue(panel.glassWindow.parent === panel)
+            if #available(macOS 26.0, *) {
+                XCTAssertTrue(panel.glassWindow.contentView is NSGlassEffectView)
+            }
+            XCTAssertFalse(panel.glassWindow.canBecomeKey)
+        } else {
+            XCTAssertNil(panel.glassWindow.parent)
+        }
     }
 }

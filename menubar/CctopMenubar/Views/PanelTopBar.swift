@@ -109,7 +109,7 @@ struct PanelStatusLights: View {
                 .fill(Color.textMuted)
                 .frame(width: 14, height: 3)
         } else {
-            let metrics = StatusDotMetrics.menubar
+            let metrics = StatusDotMetrics.panel
             let layout = StatusDotLayout(groups: counts.dotGroups, metrics: metrics, maxWidth: Self.maxWidth)
             ZStack(alignment: .leading) {
                 ForEach(Array(layout.items.enumerated()), id: \.offset) { _, item in

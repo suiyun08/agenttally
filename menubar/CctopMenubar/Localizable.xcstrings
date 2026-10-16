@@ -3157,6 +3157,26 @@
           }
         }
       }
+    },
+    "Floating Indicator": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮指示灯"
+          }
+        }
+      }
+    },
+    "Shows the dots in a small window you can drag anywhere, also over full-screen apps.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在一个可以拖到任意位置的小窗口里显示指示灯，全屏应用中也能看到。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

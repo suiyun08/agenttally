@@ -15,11 +15,12 @@ enum MenubarIconRenderer {
         let phase: Double
     }
 
-    private static let height: CGFloat = 18
-    private static let emptyLine = NSSize(width: 14, height: 3)
-    private static let ringWidth: CGFloat = 1.2
+    /// The status item is 22 points tall; the pill takes 18 of them.
+    static let height: CGFloat = 20
+    private static let emptyLine = NSSize(width: 16, height: 3)
+    private static let ringWidth: CGFloat = 1.4
     /// Space between the pill's edge and the first mark or last dot.
-    static let pillPadding: CGFloat = 6
+    static let pillPadding: CGFloat = 7
 
     static func render(counts: StatusCounts, breathing: Bool = false) -> NSImage {
         guard !counts.dotGroups.isEmpty else { return emptyImage() }
@@ -70,7 +71,7 @@ enum MenubarIconRenderer {
     /// background it was picked for, whatever the wallpaper behind the menu bar.
     private static func drawPill(in rect: NSRect, appearance: NSAppearance) {
         let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        let pill = rect.insetBy(dx: 0.5, dy: 1.5)
+        let pill = rect.insetBy(dx: 0.5, dy: 1)
         let path = NSBezierPath(roundedRect: pill, xRadius: pill.height / 2, yRadius: pill.height / 2)
         (isDark ? NSColor.black.withAlphaComponent(0.32) : NSColor.white.withAlphaComponent(0.6)).setFill()
         path.fill()

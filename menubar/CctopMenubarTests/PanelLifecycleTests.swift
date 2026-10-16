@@ -697,10 +697,10 @@ final class PanelLifecycleTests: XCTestCase {
         )
     }
 
-    func testFloatingPanelMovesToActiveSpaceWhenOrderedFront() {
-        XCTAssertTrue(FloatingPanel.defaultCollectionBehavior.contains(.moveToActiveSpace))
+    func testFloatingPanelShowsOnEveryDesktop() {
+        XCTAssertTrue(FloatingPanel.defaultCollectionBehavior.contains(.canJoinAllSpaces))
         XCTAssertTrue(FloatingPanel.defaultCollectionBehavior.contains(.fullScreenAuxiliary))
-        XCTAssertFalse(FloatingPanel.defaultCollectionBehavior.contains(.canJoinAllSpaces))
+        XCTAssertFalse(FloatingPanel.defaultCollectionBehavior.contains(.moveToActiveSpace))
     }
 
     // MARK: - Navigate shortcut opens on mouse screen (regression for #69)

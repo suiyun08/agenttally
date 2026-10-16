@@ -249,3 +249,28 @@ struct HoverToOpenSettingsRow: View {
         .help("Rest the pointer on the menu bar dots to open the panel; move away to close it.")
     }
 }
+
+/// Whether the dots also show in a small floating window, which stays visible over full-screen
+/// apps.
+struct FloatingIndicatorSettingsRow: View {
+    @AppStorage(FloatingIndicatorController.enabledKey) private var enabled = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Floating Indicator")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Toggle("", isOn: $enabled)
+                .toggleStyle(.switch).controlSize(.mini)
+                .tint(Color.amber)
+                .labelsHidden()
+                .accessibilityLabel("Floating Indicator")
+        }
+        .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
+        .padding(.vertical, 4)
+        .frame(minHeight: 25)
+        .help("Shows the dots in a small window you can drag anywhere, also over full-screen apps.")
+    }
+}

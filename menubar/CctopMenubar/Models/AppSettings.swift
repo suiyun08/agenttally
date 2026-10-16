@@ -2,17 +2,6 @@ import AppKit
 import KeyboardShortcuts
 import Foundation
 
-enum AppearanceMode: String, CaseIterable {
-    case system, light, dark
-    var label: String {
-        switch self {
-        case .system: String(localized: "System")
-        case .light: String(localized: "Light")
-        case .dark: String(localized: "Dark")
-        }
-    }
-}
-
 extension KeyboardShortcuts.Name {
     static let togglePanel = Self("togglePanel")
     // Storage key is "refocus" (the old name) for backward compatibility with existing user shortcuts.
