@@ -32,10 +32,28 @@ enum PanelGlassTint {
     static func opacity(transparency: Double) -> Double {
         1 - min(max(transparency, 0), 1)
     }
+
+    /// The least tint light glass keeps. `SystemGlass` turns dark over dark content whatever the
+    /// app's mode, and does not turn the text light with it; this keeps it light under dark text.
+    static let lightModeFloor = 0.5
+
+    /// The theme tint on the panel's `SystemGlass` in `appearance`: as strong as the transparency
+    /// setting asks, but never below the light-mode floor in light mode.
+    @MainActor static func glassTint(for appearance: NSAppearance) -> NSColor? {
+        let stored = UserDefaults.standard.object(forKey: transparencyKey) as? Double
+        return glassTint(for: appearance, transparency: stored ?? defaultTransparency)
+    }
+
+    @MainActor static func glassTint(for appearance: NSAppearance, transparency: Double) -> NSColor? {
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let alpha = max(isDark ? 0 : lightModeFloor, opacity(transparency: transparency))
+        guard alpha > 0 else { return nil }
+        return ThemeManager.shared.current.panelBackground.resolve(appearance).withAlphaComponent(alpha)
+    }
 }
 
-/// The panel's own backdrop: the theme tint. Over `SystemGlass` and before macOS 26 it lies on top
-/// of the glass or blur; over the public SwiftUI glass it rides on the glass (see `PanelLiquidGlass`).
+/// The panel's own backdrop. Under Liquid Glass the theme tint rides on the glass itself (see
+/// `PanelGlassTint.glassTint` and `PanelLiquidGlass`); before macOS 26 it lies over the blur.
 struct PanelSurfaceBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
@@ -47,9 +65,9 @@ struct PanelSurfaceBackground: View {
         ) {
         case .solid:
             Color.panelBackground
-        case .liquidGlass where !SystemGlass.isAvailable:
+        case .liquidGlass:
             Color.clear
-        case .liquidGlass, .blur:
+        case .blur:
             Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))
         }
     }

@@ -93,7 +93,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             backing: .buffered,
             defer: false
         )
-        panel.contentView = SystemGlass.wrapping(hostingView, cornerRadius: AppChrome.panelCornerRadius)
+        panel.contentView = SystemGlass.wrapping(
+            hostingView, cornerRadius: AppChrome.panelCornerRadius, tint: PanelGlassTint.glassTint(for:)
+        )
         panelHost = hostingView
         panel.panelDelegate = self
         setupPanelHover()
