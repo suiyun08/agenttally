@@ -88,11 +88,11 @@ struct FloatingIndicatorView: View {
     }
 }
 
-/// Clear, interactive Liquid Glass on macOS 26 — Apple's glass for small controls over content,
-/// which lets far more of what is behind show than regular glass; the dots are bold enough to
-/// read on it. Its window never becomes key, and glass in an inactive window is drawn thicker, so
-/// the active state is pinned as in the panel. The behind-window blur before macOS 26, and the
-/// theme's solid color when the user reduces transparency.
+/// Regular, interactive Liquid Glass on macOS 26, as on the system's own small buttons: it turns
+/// dark over dark content and light over light, letting what is behind show through. Its window
+/// never becomes key, and glass in an inactive window is drawn thicker, so the active state is
+/// pinned as in the panel. The behind-window blur before macOS 26, and the theme's solid color
+/// when the user reduces transparency.
 private struct CapsuleGlass: ViewModifier {
     let reduceTransparency: Bool
 
@@ -101,32 +101,11 @@ private struct CapsuleGlass: ViewModifier {
             content.background(Color.panelBackground, in: Capsule())
         } else if #available(macOS 26.0, *) {
             content
-                .glassEffect(.clear.interactive(), in: Capsule())
-                .overlay(SpecularRim())
+                .glassEffect(.regular.interactive(), in: Capsule())
                 .environment(\.controlActiveState, .key)
         } else {
             content.background(BehindWindowBlur().clipShape(Capsule()))
         }
-    }
-}
-
-/// A bright hairline that fades from the top edge down and catches again at the bottom, like the
-/// rim on Control Center's glass. The system draws only a faint rim on a capsule this small.
-private struct SpecularRim: View {
-    var body: some View {
-        Capsule()
-            .strokeBorder(
-                LinearGradient(
-                    stops: [
-                        .init(color: .white.opacity(0.65), location: 0),
-                        .init(color: .white.opacity(0.12), location: 0.5),
-                        .init(color: .white.opacity(0.32), location: 1),
-                    ],
-                    startPoint: .top, endPoint: .bottom
-                ),
-                lineWidth: 1
-            )
-            .allowsHitTesting(false)
     }
 }
 
@@ -227,7 +206,9 @@ final class FloatingIndicatorController {
         fit()
     }
 
+    /// Shows or hides the indicator with its setting, in the light or dark mode chosen in Settings.
     func syncVisibility() {
+        window?.appearance = AppearanceMode.current.appearance
         if Self.isEnabled {
             show()
         } else {
@@ -243,6 +224,7 @@ final class FloatingIndicatorController {
 
     private func makeWindow() -> FloatingIndicatorWindow {
         let window = FloatingIndicatorWindow()
+        window.appearance = AppearanceMode.current.appearance
         let host = NSHostingView(rootView: FloatingIndicatorView(model: model))
         host.sizingOptions = []
         window.contentView = host

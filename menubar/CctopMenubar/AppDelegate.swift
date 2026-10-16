@@ -390,11 +390,7 @@ extension AppDelegate {
     }
 
     private func applyAppearance() {
-        switch AppearanceMode(rawValue: appearanceMode) ?? .system {
-        case .system: panel?.appearance = nil
-        case .light: panel?.appearance = NSAppearance(named: .aqua)
-        case .dark: panel?.appearance = NSAppearance(named: .darkAqua)
-        }
+        panel?.appearance = (AppearanceMode(rawValue: appearanceMode) ?? .system).appearance
     }
 }
 

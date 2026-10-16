@@ -48,6 +48,14 @@ final class FloatingIndicatorTests: XCTestCase {
         XCTAssertTrue(FloatingIndicatorPlacement.isDrag(from: .zero, to: NSPoint(x: 3, y: 0)))
     }
 
+    // MARK: - Light or dark
+
+    func testEachModeGivesTheIndicatorItsAppearance() {
+        XCTAssertNil(AppearanceMode.system.appearance, "Following the system leaves the window on the system's choice")
+        XCTAssertEqual(AppearanceMode.light.appearance?.name, .aqua)
+        XCTAssertEqual(AppearanceMode.dark.appearance?.name, .darkAqua)
+    }
+
     // MARK: - Size
 
     @MainActor
