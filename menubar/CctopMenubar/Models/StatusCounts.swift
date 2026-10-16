@@ -232,10 +232,11 @@ struct StatusDotMetrics {
         dotDiameter: 8, dotGap: 3.5, markHeight: 12, markGap: 4, groupGap: 7, overflowGap: 2,
         overflowFont: .monospacedDigitSystemFont(ofSize: 10, weight: .medium)
     )
-    /// A little larger than the menu bar: it floats over content, further from where you look.
+    /// Larger than the menu bar: it floats over content, further from where you look, and is
+    /// easy to rest the pointer on.
     static let floating = StatusDotMetrics(
-        dotDiameter: 9, dotGap: 4, markHeight: 13, markGap: 4, groupGap: 8, overflowGap: 3,
-        overflowFont: .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        dotDiameter: 11, dotGap: 5, markHeight: 16, markGap: 5, groupGap: 9, overflowGap: 3,
+        overflowFont: .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
     )
     /// The panel's top bar, beside its title.
     static let panel = StatusDotMetrics(

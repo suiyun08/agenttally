@@ -72,11 +72,11 @@ final class FloatingIndicatorTests: XCTestCase {
     @MainActor
     func testItIsSizedToItsDots() {
         let empty = FloatingIndicatorView.size(for: .zero)
-        XCTAssertEqual(empty, NSSize(width: 34, height: FloatingIndicatorView.height))
+        XCTAssertEqual(empty, NSSize(width: 18 + FloatingIndicatorView.padding * 2, height: FloatingIndicatorView.height))
         let groups = [StatusDotGroup(family: .claude, dots: [.working, .attention])]
         let counts = StatusCounts(permission: 0, attention: 1, working: 1, idle: 0, dotGroups: groups)
         let layoutWidth = StatusDotLayout(groups: groups, metrics: .floating).width
-        XCTAssertEqual(FloatingIndicatorView.size(for: counts).width, ceil(layoutWidth + 18))
+        XCTAssertEqual(FloatingIndicatorView.size(for: counts).width, ceil(layoutWidth + FloatingIndicatorView.padding * 2))
     }
 
     // MARK: - Opening the panel from it

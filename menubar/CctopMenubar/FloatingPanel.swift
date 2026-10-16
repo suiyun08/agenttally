@@ -28,7 +28,9 @@ class FloatingPanel: NSPanel {
     /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
     /// the rest of the bar drags the panel.
     var headerControlRects: [CGRect] = []
-    static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+    /// On every desktop, full-screen ones included, so a pinned panel stays in view as the user
+    /// switches desktops.
+    static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
     enum HeaderClickAction: Equatable {
         case resetPosition
@@ -128,6 +130,19 @@ class FloatingPanel: NSPanel {
         } completionHandler: { [weak self] in
             self?.isAnimatingFrame = false
             self?.syncGlassFrame()
+        }
+    }
+
+    /// Fades the panel in while it eases from `start` to `target`; the glass window, a child,
+    /// moves along with it.
+    func reveal(to target: NSRect, from start: NSRect, duration: TimeInterval = 0.16) {
+        setFrameOrigin(start.origin)
+        alphaValue = 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().setFrameOrigin(target.origin)
+            animator().alphaValue = 1
         }
     }
 

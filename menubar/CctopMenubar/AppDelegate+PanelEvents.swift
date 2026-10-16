@@ -79,14 +79,18 @@ extension AppDelegate {
         // Codex hooks in Codex itself) — re-read it on every open.
         pluginManager.refresh()
         if takingFocus {
+            panel.alphaValue = 1
             panel.makeKeyAndOrderFront(nil)
         } else {
+            // A peek fades in once it is in place (see `revealPeek`).
+            panel.alphaValue = 0
             panel.orderFrontRegardless()
         }
         updateCleanupPanelVisibility()
         // Re-position after SwiftUI layout settles
         DispatchQueue.main.async { [weak self] in
             self?.positionPanel()
+            if !takingFocus { self?.revealPeek() }
             self?.focusLocation = nil
         }
     }
@@ -187,7 +191,7 @@ extension AppDelegate {
         panelHover.onLeave = { [weak self] in self?.handleEvent(.pointerLeft) }
         if let button = statusItem.button { panelHover.track(button) }
         notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
-        floatingIndicator.onViewCreated = { [weak self] view in self?.panelHover.track(view) }
+        floatingIndicator.onViewCreated = { [weak self] view in self?.panelHover.track(view, restDelay: 0) }
         floatingIndicator.onClick = { [weak self] in self?.togglePanel() }
         floatingIndicator.syncVisibility()
     }

@@ -57,9 +57,9 @@ struct FloatingIndicatorView: View {
     var drawsGlass = true
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    static let height: CGFloat = 26
-    private static let padding: CGFloat = 9
-    private static let emptyLine = NSSize(width: 16, height: 3)
+    static let height: CGFloat = 32
+    static let padding: CGFloat = 12
+    private static let emptyLine = NSSize(width: 18, height: 3)
 
     static func size(for counts: StatusCounts) -> NSSize {
         let content = counts.dotGroups.isEmpty
