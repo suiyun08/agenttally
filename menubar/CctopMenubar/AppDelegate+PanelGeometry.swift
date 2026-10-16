@@ -71,8 +71,14 @@ extension AppDelegate {
     }
 
     /// The screen-space rect of the anchor (notch pill or menubar icon).
+    /// What the panel opens against: the floating indicator when the click or hover came from
+    /// it, else the notch pill when it stands in for the menu bar icon, else the icon.
     @MainActor private func anchorRect() -> NSRect? {
-        notchController.pillFrame ?? menubarIconRect()
+        if let floating = floatingIndicator.visibleFrame, let point = focusLocation,
+           floating.insetBy(dx: -2, dy: -2).contains(point) {
+            return floating
+        }
+        return notchController.pillFrame ?? menubarIconRect()
     }
 
     /// The screen-space rect of the menubar icon, even when the notch pill

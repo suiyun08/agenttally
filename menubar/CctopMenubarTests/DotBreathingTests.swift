@@ -60,7 +60,7 @@ final class DotBreathingTests: XCTestCase {
         XCTAssertEqual(spots[0].rect.minX, MenubarIconRenderer.pillPadding + layoutSpots[0].xPos)
         XCTAssertEqual(spots[1].rect.minX, MenubarIconRenderer.pillPadding + layoutSpots[2].xPos)
         XCTAssertEqual(spots[1].phase, layoutSpots[2].phase)
-        XCTAssertEqual(spots[0].rect.midY, 9, "Centered in the 18-point image")
+        XCTAssertEqual(spots[0].rect.midY, MenubarIconRenderer.height / 2, "Centered in the image")
     }
 
     func testIndicatorBreathesOnlyWhileADotWaitsAndMotionIsAllowed() {

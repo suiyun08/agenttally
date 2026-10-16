@@ -93,7 +93,7 @@ struct PanelGlassBackdrop: View {
 }
 
 /// What sits behind the panel window, blurred; the pre-macOS 26 stand-in for Liquid Glass.
-private struct BehindWindowBlur: NSViewRepresentable {
+struct BehindWindowBlur: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
         view.material = .popover

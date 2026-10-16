@@ -99,6 +99,8 @@ struct SettingsSection: View {
                 groupedDivider
                 HoverToOpenSettingsRow()
                 groupedDivider
+                FloatingIndicatorSettingsRow()
+                groupedDivider
                 NotificationSettingsGroup(notificationPermission: notificationPermission)
                 groupedDivider
                 fileAccessRow

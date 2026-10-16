@@ -137,13 +137,13 @@ final class StatusCountsUserSessionInitTests: XCTestCase {
 }
 
 final class StatusDotLayoutTests: XCTestCase {
-    func testLayoutHeadsEachGroupWithItsMarkAtMenubarSpacing() {
+    func testLayoutHeadsEachGroupWithItsMarkAtPanelSpacing() {
         let layout = StatusDotLayout(
             groups: [
                 StatusDotGroup(family: .claude, dots: [.working, .permission]),
                 StatusDotGroup(family: .codex, dots: [.unreadDone]),
             ],
-            metrics: .menubar
+            metrics: .panel
         )
         // 10pt marks, 3pt from their dots; 6pt dots 3pt apart; 6pt between groups.
         XCTAssertEqual(layout.items, [
@@ -156,20 +156,20 @@ final class StatusDotLayoutTests: XCTestCase {
     func testAnAgentWithoutAMarkIsHeadedByItsName() throws {
         let layout = StatusDotLayout(
             groups: [StatusDotGroup(family: .init(.other("aider")), dots: [.working])],
-            metrics: .menubar
+            metrics: .panel
         )
         guard case .mark(let badge, let xPos, let width) = try XCTUnwrap(layout.items.first) else {
             return XCTFail("expected a mark first")
         }
         XCTAssertEqual(badge, .other("aider"))
         XCTAssertEqual(xPos, 0)
-        XCTAssertGreaterThan(width, StatusDotMetrics.menubar.markHeight)
+        XCTAssertGreaterThan(width, StatusDotMetrics.panel.markHeight)
     }
 
     func testLayoutCapsEachGroupAndCountsTheRest() throws {
         let layout = StatusDotLayout(
             groups: [StatusDotGroup(family: .claude, dots: Array(repeating: .working, count: 8))],
-            metrics: .menubar
+            metrics: .panel
         )
         let dots = layout.items.filter { if case .dot = $0 { return true }; return false }
         XCTAssertEqual(dots.count, StatusDotGroup.defaultMaxVisibleDots)

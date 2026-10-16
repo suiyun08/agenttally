@@ -302,14 +302,16 @@ enum PanelPositioning {
         }
 
         var panelX = anchor.midX - panelSize.width / 2
+        var panelY = anchor.minY - panelSize.height - margin
         if let vf = (targetScreen ?? screens.first)?.visibleFrame {
             panelX = max(vf.minX + margin, min(panelX, vf.maxX - panelSize.width - margin))
+            // An anchor low on the screen (the floating indicator) opens the panel above it.
+            if panelY < vf.minY, anchor.maxY + margin + panelSize.height <= vf.maxY {
+                panelY = anchor.maxY + margin
+            }
         }
 
-        return NSRect(
-            x: panelX, y: anchor.minY - panelSize.height - margin,
-            width: panelSize.width, height: panelSize.height
-        )
+        return NSRect(x: panelX, y: panelY, width: panelSize.width, height: panelSize.height)
     }
 
     /// Resolve where to position the panel on double-click reset.

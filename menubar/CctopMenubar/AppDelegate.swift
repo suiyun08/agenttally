@@ -43,6 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         self?.applyDraggedWidth(frame)
     }
     @MainActor lazy var panelHover = PanelHoverController()
+    @MainActor lazy var floatingIndicator = FloatingIndicatorController()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment
@@ -304,6 +305,7 @@ extension AppDelegate {
     @MainActor func refreshStatusDisplay(counts: StatusCounts) {
         lastRenderedCounts = counts
         menubarIndicator?.show(counts)
+        floatingIndicator.update(counts)
         notchController.update(counts: counts)
         updateNotchVisibility()
         statusItem.button?.setAccessibilityLabel(counts.accessibilityLabel)

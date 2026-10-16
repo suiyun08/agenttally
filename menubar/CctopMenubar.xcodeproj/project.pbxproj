@@ -158,6 +158,9 @@
 		SCN000010000000000000001 /* StatusCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCN000020000000000000001 /* StatusCounts.swift */; };
 		DBR000010000000000000001 /* DotBreathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBR000020000000000000001 /* DotBreathing.swift */; };
 		MBI000010000000000000001 /* MenubarIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = MBI000020000000000000001 /* MenubarIndicator.swift */; };
+		SDV000010000000000000001 /* StatusDotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDV000020000000000000001 /* StatusDotsView.swift */; };
+		FLI000010000000000000001 /* FloatingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLI000020000000000000001 /* FloatingIndicator.swift */; };
+		FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLT000020000000000000001 /* FloatingIndicatorTests.swift */; };
 		DBT000010000000000000001 /* DotBreathingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBT000020000000000000001 /* DotBreathingTests.swift */; };
 		MRT000010000000000000001 /* MenubarIconRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = MRT000020000000000000001 /* MenubarIconRendererTests.swift */; };
 		SCT000010000000000000001 /* StatusCountsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCT000020000000000000001 /* StatusCountsTests.swift */; };
@@ -373,6 +376,9 @@
 		SCN000020000000000000001 /* StatusCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCounts.swift; sourceTree = "<group>"; };
 		DBR000020000000000000001 /* DotBreathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotBreathing.swift; sourceTree = "<group>"; };
 		MBI000020000000000000001 /* MenubarIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarIndicator.swift; sourceTree = "<group>"; };
+		SDV000020000000000000001 /* StatusDotsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDotsView.swift; sourceTree = "<group>"; };
+		FLI000020000000000000001 /* FloatingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicator.swift; sourceTree = "<group>"; };
+		FLT000020000000000000001 /* FloatingIndicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicatorTests.swift; sourceTree = "<group>"; };
 		DBT000020000000000000001 /* DotBreathingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotBreathingTests.swift; sourceTree = "<group>"; };
 		SCTRL0020000000000000001 /* SettingsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsControls.swift; sourceTree = "<group>"; };
 		NROW00020000000000000001 /* NotificationSettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsRow.swift; sourceTree = "<group>"; };
@@ -605,6 +611,8 @@
 				OB0000020000000000000001 /* OpenCodeBanner.swift */,
 				MIR000020000000000000001 /* MenubarIconRenderer.swift */,
 				MBI000020000000000000001 /* MenubarIndicator.swift */,
+				SDV000020000000000000001 /* StatusDotsView.swift */,
+				FLI000020000000000000001 /* FloatingIndicator.swift */,
 				NSP000020000000000000001 /* NotchStatusPanel.swift */,
 				NSV000020000000000000001 /* NotchStatusView.swift */,
 				WCV000020000000000000001 /* WorktreeCleanupCardView.swift */,
@@ -668,6 +676,7 @@
 				PHV000020000000000000001 /* FloatingPanelMouseEventTests.swift */,
 				MRT000020000000000000001 /* MenubarIconRendererTests.swift */,
 				DBT000020000000000000001 /* DotBreathingTests.swift */,
+				FLT000020000000000000001 /* FloatingIndicatorTests.swift */,
 				SCT000020000000000000001 /* StatusCountsTests.swift */,
 				HVT000020000000000000001 /* StatusCountsUserSessionInitTests.swift */,
 				SDPT00020000000000000001 /* SessionDisplayPolicyTests.swift */,
@@ -885,6 +894,8 @@
 				OB0000010000000000000001 /* OpenCodeBanner.swift in Sources */,
 				MIR000010000000000000001 /* MenubarIconRenderer.swift in Sources */,
 				MBI000010000000000000001 /* MenubarIndicator.swift in Sources */,
+				SDV000010000000000000001 /* StatusDotsView.swift in Sources */,
+				FLI000010000000000000001 /* FloatingIndicator.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,
 				RPM000010000000000000001 /* RecentProject+Mock.swift in Sources */,
 				NSN000010000000000000001 /* NSScreen+Notch.swift in Sources */,
@@ -999,6 +1010,7 @@
 				PHV000010000000000000001 /* FloatingPanelMouseEventTests.swift in Sources */,
 				MRT000010000000000000001 /* MenubarIconRendererTests.swift in Sources */,
 				DBT000010000000000000001 /* DotBreathingTests.swift in Sources */,
+				FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */,
 				SCT000010000000000000001 /* StatusCountsTests.swift in Sources */,
 				HVT000010000000000000001 /* StatusCountsUserSessionInitTests.swift in Sources */,
 				SDPT00010000000000000001 /* SessionDisplayPolicyTests.swift in Sources */,

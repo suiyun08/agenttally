@@ -187,10 +187,14 @@ extension AppDelegate {
         panelHover.onLeave = { [weak self] in self?.handleEvent(.pointerLeft) }
         if let button = statusItem.button { panelHover.track(button) }
         notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
+        floatingIndicator.onViewCreated = { [weak self] view in self?.panelHover.track(view) }
+        floatingIndicator.onClick = { [weak self] in self?.togglePanel() }
+        floatingIndicator.syncVisibility()
     }
 
-    /// Where the dots are on screen: the status item, and the notch pill when it stands in.
+    /// Where the dots are on screen: the status item, the notch pill when it stands in, and the
+    /// floating indicator when it is on.
     @MainActor private var hoverAnchors: [NSRect] {
-        [statusItem.button?.window?.frame, notchController.pillFrame].compactMap { $0 }
+        [statusItem.button?.window?.frame, notchController.pillFrame, floatingIndicator.visibleFrame].compactMap { $0 }
     }
 }

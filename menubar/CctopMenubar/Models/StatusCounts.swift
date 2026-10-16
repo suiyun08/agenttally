@@ -213,7 +213,8 @@ struct StatusDotGroup: Equatable {
     }
 }
 
-/// Sizes shared by the menubar image (AppKit) and the notch pill (SwiftUI).
+/// Sizes of the dot rows: the menu bar image (AppKit), the notch pill, the floating indicator,
+/// and the panel's top bar (SwiftUI).
 struct StatusDotMetrics {
     let dotDiameter: CGFloat
     let dotGap: CGFloat
@@ -226,7 +227,18 @@ struct StatusDotMetrics {
     let overflowGap: CGFloat
     let overflowFont: NSFont
 
+    /// Sized to sit level with the other apps' menu bar icons.
     static let menubar = StatusDotMetrics(
+        dotDiameter: 8, dotGap: 3.5, markHeight: 12, markGap: 4, groupGap: 7, overflowGap: 2,
+        overflowFont: .monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+    )
+    /// A little larger than the menu bar: it floats over content, further from where you look.
+    static let floating = StatusDotMetrics(
+        dotDiameter: 9, dotGap: 4, markHeight: 13, markGap: 4, groupGap: 8, overflowGap: 3,
+        overflowFont: .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+    )
+    /// The panel's top bar, beside its title.
+    static let panel = StatusDotMetrics(
         dotDiameter: 6, dotGap: 3, markHeight: 10, markGap: 3, groupGap: 6, overflowGap: 2,
         overflowFont: .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
     )
