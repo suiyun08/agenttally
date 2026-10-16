@@ -1,5 +1,8 @@
 import AppKit
 
+/// The color to tint glass with in a given appearance; nil for none.
+typealias GlassTint = @MainActor (NSAppearance) -> NSColor?
+
 /// AppKit's Liquid Glass through two private settings of `NSGlassEffectView`: a variant beyond
 /// the public regular and clear, and the subdued state macOS gives glass in an app that is not
 /// frontmost. AgentTally is never frontmost, so with that state on its glass always looks flat
@@ -22,7 +25,7 @@ enum SystemGlass {
     /// Glass of `variant` that keeps its full look while the app is in the background.
     @available(macOS 26.0, *)
     static func make(
-        variant: Int = notificationCenter, cornerRadius: CGFloat, tint: SteadyGlassEffectView.Tint? = nil
+        variant: Int = notificationCenter, cornerRadius: CGFloat, tint: GlassTint? = nil
     ) -> SteadyGlassEffectView? {
         guard isAvailable else { return nil }
         let glass = SteadyGlassEffectView(variant: variant)
@@ -33,7 +36,7 @@ enum SystemGlass {
 
     /// `content` embedded in the glass and pinned to its edges, or `content` alone without it.
     static func wrapping(
-        _ content: NSView, cornerRadius: CGFloat, tint: SteadyGlassEffectView.Tint? = nil
+        _ content: NSView, cornerRadius: CGFloat, tint: GlassTint? = nil
     ) -> NSView {
         guard #available(macOS 26.0, *), let glass = make(cornerRadius: cornerRadius, tint: tint) else { return content }
         glass.contentView = content
@@ -57,9 +60,7 @@ enum SystemGlass {
 /// off right after each of those. `tint` colors the glass for the appearance it is shown in.
 @available(macOS 26.0, *)
 final class SteadyGlassEffectView: NSGlassEffectView {
-    typealias Tint = @MainActor (NSAppearance) -> NSColor?
-
-    var tint: Tint? {
+    var tint: GlassTint? {
         didSet { applyTint() }
     }
 
