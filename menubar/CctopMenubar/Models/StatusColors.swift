@@ -12,7 +12,11 @@ enum StatusColors {
     /// The notch is always drawn on a black pill, so its live colors use the
     /// selected theme's dark palette even when the app itself is in light mode.
     static func notchColor(for kind: StatusCounts.SegmentKind) -> Color {
-        Color(nsColor: colorPair(for: kind).dark)
+        Color(nsColor: notchNSColor(for: kind))
+    }
+
+    static func notchNSColor(for kind: StatusCounts.SegmentKind) -> NSColor {
+        colorPair(for: kind).dark
     }
 
     private static func colorPair(for kind: StatusCounts.SegmentKind) -> AppTheme.ColorPair {

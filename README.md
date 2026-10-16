@@ -37,8 +37,9 @@ developed on its own.
 ## What it does
 
 - **Dots, grouped by agent.** One dot per session behind each agent's icon, colored by state:
-  waiting for permission, waiting for your answer, or working. A finished result you have not
-  read yet is a hollow ring. The dots sit on a small translucent pill so they stay readable
+  waiting for permission, waiting for your answer, or working, plus one for each finished result
+  you have not read yet. Dots that wait on you breathe slowly between hollow and solid; working
+  dots hold still. The dots sit on a small translucent pill so they stay readable
   over any wallpaper, and move beside the camera notch when the menu bar has no room.
 - **Hover to peek.** Rest the pointer on the dots and the panel opens without taking keyboard
   focus from the app you are typing in. Move away and it closes, even after you click a session

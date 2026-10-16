@@ -3,15 +3,25 @@ import AppKit
 /// Renders the menubar item as per-agent groups of session dots (see `StatusDotLayout`) on a
 /// small translucent pill, so the dots stay readable over any wallpaper showing through the
 /// menu bar. With nothing worth a look it becomes a short monochrome template line.
+///
+/// With `breathing`, the dots that wait on the user are drawn as rings only; `MenubarIndicator`
+/// lays a fading fill over each one (see `breathingSpots`).
 @MainActor
 enum MenubarIconRenderer {
+    /// Where a breathing dot sits in the image, and where in its breath it starts.
+    struct BreathingSpot: Equatable {
+        let rect: NSRect
+        let dot: StatusDotGroup.Dot
+        let phase: Double
+    }
+
     private static let height: CGFloat = 18
     private static let emptyLine = NSSize(width: 14, height: 3)
     private static let ringWidth: CGFloat = 1.2
     /// Space between the pill's edge and the first mark or last dot.
     static let pillPadding: CGFloat = 6
 
-    static func render(counts: StatusCounts) -> NSImage {
+    static func render(counts: StatusCounts, breathing: Bool = false) -> NSImage {
         guard !counts.dotGroups.isEmpty else { return emptyImage() }
         let layout = StatusDotLayout(groups: counts.dotGroups, metrics: .menubar)
         let size = NSSize(width: layout.width + pillPadding * 2, height: height)
@@ -23,11 +33,36 @@ enum MenubarIconRenderer {
             NSGraphicsContext.saveGraphicsState()
             defer { NSGraphicsContext.restoreGraphicsState() }
             NSGraphicsContext.current?.cgContext.translateBy(x: pillPadding, y: 0)
-            draw(layout, metrics: .menubar, appearance: appearance)
+            draw(layout, metrics: .menubar, appearance: appearance, breathing: breathing)
             return true
         }
         image.isTemplate = false
         return image
+    }
+
+    /// The breathing dots of `render(counts:breathing: true)`, in image coordinates.
+    static func breathingSpots(counts: StatusCounts) -> [BreathingSpot] {
+        guard !counts.dotGroups.isEmpty else { return [] }
+        let metrics = StatusDotMetrics.menubar
+        let layout = StatusDotLayout(groups: counts.dotGroups, metrics: metrics)
+        return layout.dotSpots.filter(\.dot.breathes).map { spot in
+            BreathingSpot(
+                rect: NSRect(
+                    x: pillPadding + spot.xPos, y: (height - metrics.dotDiameter) / 2,
+                    width: metrics.dotDiameter, height: metrics.dotDiameter
+                ),
+                dot: spot.dot,
+                phase: spot.phase
+            )
+        }
+    }
+
+    /// A dot's color: the theme's status color, or the system accent for an unread result.
+    static func color(for dot: StatusDotGroup.Dot, appearance: NSAppearance) -> NSColor {
+        switch dot {
+        case .unreadDone: return .controlAccentColor
+        case .permission, .attention, .working: return StatusColors.color(for: dot.segmentKind, appearance: appearance)
+        }
     }
 
     /// A translucent capsule with a hairline rim, like the panel's own buttons: frosted white on a
@@ -58,7 +93,9 @@ enum MenubarIconRenderer {
         return image
     }
 
-    private static func draw(_ layout: StatusDotLayout, metrics: StatusDotMetrics, appearance: NSAppearance) {
+    private static func draw(
+        _ layout: StatusDotLayout, metrics: StatusDotMetrics, appearance: NSAppearance, breathing: Bool
+    ) {
         let midY = height / 2
         for item in layout.items {
             switch item {
@@ -67,7 +104,7 @@ enum MenubarIconRenderer {
                     x: xPos, y: midY - metrics.dotDiameter / 2,
                     width: metrics.dotDiameter, height: metrics.dotDiameter
                 )
-                drawDot(dot, in: rect, appearance: appearance)
+                drawDot(dot, in: rect, appearance: appearance, hollow: breathing && dot.breathes)
             case .mark(let badge, let xPos, let width):
                 let rect = NSRect(
                     x: xPos, y: midY - metrics.markHeight / 2,
@@ -85,15 +122,16 @@ enum MenubarIconRenderer {
         }
     }
 
-    private static func drawDot(_ dot: StatusDotGroup.Dot, in rect: NSRect, appearance: NSAppearance) {
-        switch dot {
-        case .unreadDone:
-            NSColor.controlAccentColor.setStroke()
+    /// An unread result is a ring and any other dot is solid; a breathing dot is just its ring.
+    private static func drawDot(_ dot: StatusDotGroup.Dot, in rect: NSRect, appearance: NSAppearance, hollow: Bool) {
+        let color = color(for: dot, appearance: appearance)
+        if hollow || dot == .unreadDone {
+            color.setStroke()
             let ring = NSBezierPath(ovalIn: rect.insetBy(dx: ringWidth / 2, dy: ringWidth / 2))
             ring.lineWidth = ringWidth
             ring.stroke()
-        case .permission, .attention, .working:
-            StatusColors.color(for: dot.segmentKind, appearance: appearance).setFill()
+        } else {
+            color.setFill()
             NSBezierPath(ovalIn: rect).fill()
         }
     }
