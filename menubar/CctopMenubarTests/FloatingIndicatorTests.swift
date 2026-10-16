@@ -48,6 +48,25 @@ final class FloatingIndicatorTests: XCTestCase {
         XCTAssertTrue(FloatingIndicatorPlacement.isDrag(from: .zero, to: NSPoint(x: 3, y: 0)))
     }
 
+    // MARK: - Glass
+
+    /// The capsule relies on two private settings of AppKit's glass; this fails first when a
+    /// macOS update drops them, so the fallback to public glass gets noticed.
+    @MainActor
+    func testThePrivateGlassSettingsAreStillThere() throws {
+        try XCTSkipUnless(PanelSurfaceStyle.liquidGlassAvailable, "Liquid Glass needs macOS 26")
+        XCTAssertTrue(SystemGlass.isAvailable)
+        if #available(macOS 26.0, *) {
+            let glass = try XCTUnwrap(SystemGlass.make(cornerRadius: 13))
+            if glass.responds(to: NSSelectorFromString("_variant")) {
+                XCTAssertEqual(glass.value(forKey: "_variant") as? Int, SystemGlass.notificationCenter)
+            }
+            if glass.responds(to: NSSelectorFromString("_subduedState")) {
+                XCTAssertEqual(glass.value(forKey: "_subduedState") as? Int, 0)
+            }
+        }
+    }
+
     // MARK: - Light or dark
 
     func testEachModeGivesTheIndicatorItsAppearance() {

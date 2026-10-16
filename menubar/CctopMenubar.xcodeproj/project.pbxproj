@@ -160,6 +160,7 @@
 		MBI000010000000000000001 /* MenubarIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = MBI000020000000000000001 /* MenubarIndicator.swift */; };
 		SDV000010000000000000001 /* StatusDotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDV000020000000000000001 /* StatusDotsView.swift */; };
 		FLI000010000000000000001 /* FloatingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLI000020000000000000001 /* FloatingIndicator.swift */; };
+		SGL000010000000000000001 /* SystemGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = SGL000020000000000000001 /* SystemGlass.swift */; };
 		FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLT000020000000000000001 /* FloatingIndicatorTests.swift */; };
 		DBT000010000000000000001 /* DotBreathingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBT000020000000000000001 /* DotBreathingTests.swift */; };
 		MRT000010000000000000001 /* MenubarIconRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = MRT000020000000000000001 /* MenubarIconRendererTests.swift */; };
@@ -378,6 +379,7 @@
 		MBI000020000000000000001 /* MenubarIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarIndicator.swift; sourceTree = "<group>"; };
 		SDV000020000000000000001 /* StatusDotsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDotsView.swift; sourceTree = "<group>"; };
 		FLI000020000000000000001 /* FloatingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicator.swift; sourceTree = "<group>"; };
+		SGL000020000000000000001 /* SystemGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGlass.swift; sourceTree = "<group>"; };
 		FLT000020000000000000001 /* FloatingIndicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicatorTests.swift; sourceTree = "<group>"; };
 		DBT000020000000000000001 /* DotBreathingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotBreathingTests.swift; sourceTree = "<group>"; };
 		SCTRL0020000000000000001 /* SettingsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsControls.swift; sourceTree = "<group>"; };
@@ -613,6 +615,7 @@
 				MBI000020000000000000001 /* MenubarIndicator.swift */,
 				SDV000020000000000000001 /* StatusDotsView.swift */,
 				FLI000020000000000000001 /* FloatingIndicator.swift */,
+				SGL000020000000000000001 /* SystemGlass.swift */,
 				NSP000020000000000000001 /* NotchStatusPanel.swift */,
 				NSV000020000000000000001 /* NotchStatusView.swift */,
 				WCV000020000000000000001 /* WorktreeCleanupCardView.swift */,
@@ -896,6 +899,7 @@
 				MBI000010000000000000001 /* MenubarIndicator.swift in Sources */,
 				SDV000010000000000000001 /* StatusDotsView.swift in Sources */,
 				FLI000010000000000000001 /* FloatingIndicator.swift in Sources */,
+				SGL000010000000000000001 /* SystemGlass.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,
 				RPM000010000000000000001 /* RecentProject+Mock.swift in Sources */,
 				NSN000010000000000000001 /* NSScreen+Notch.swift in Sources */,

@@ -53,6 +53,8 @@ final class FloatingIndicatorModel: ObservableObject {
 /// The floating indicator: the menu bar's dots on a small glass capsule.
 struct FloatingIndicatorView: View {
     @ObservedObject var model: FloatingIndicatorModel
+    /// Off when the window wraps the view in `SystemGlass` instead.
+    var drawsGlass = true
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     static let height: CGFloat = 26
@@ -81,7 +83,7 @@ struct FloatingIndicatorView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .modifier(CapsuleGlass(reduceTransparency: reduceTransparency))
+        .modifier(CapsuleGlass(enabled: drawsGlass, reduceTransparency: reduceTransparency))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.counts.accessibilityLabel)
         .accessibilityAddTraits(.isButton)
@@ -94,10 +96,13 @@ struct FloatingIndicatorView: View {
 /// pinned as in the panel. The behind-window blur before macOS 26, and the theme's solid color
 /// when the user reduces transparency.
 private struct CapsuleGlass: ViewModifier {
+    let enabled: Bool
     let reduceTransparency: Bool
 
     func body(content: Content) -> some View {
-        if reduceTransparency {
+        if !enabled {
+            content
+        } else if reduceTransparency {
             content.background(Color.panelBackground, in: Capsule())
         } else if #available(macOS 26.0, *) {
             content
@@ -225,9 +230,9 @@ final class FloatingIndicatorController {
     private func makeWindow() -> FloatingIndicatorWindow {
         let window = FloatingIndicatorWindow()
         window.appearance = AppearanceMode.current.appearance
-        let host = NSHostingView(rootView: FloatingIndicatorView(model: model))
+        let host = NSHostingView(rootView: FloatingIndicatorView(model: model, drawsGlass: !SystemGlass.isAvailable))
         host.sizingOptions = []
-        window.contentView = host
+        window.contentView = SystemGlass.wrapping(host, cornerRadius: FloatingIndicatorView.height / 2)
         window.onClick = { [weak self] in self?.onClick() }
         window.onMoved = { frame in
             UserDefaults.standard.set(frame.minX, forKey: Self.originXKey)
