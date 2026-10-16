@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 
 struct NotchStatusView: View {
@@ -44,16 +45,45 @@ struct NotchStatusView: View {
     }
 }
 
+/// The pill's dots. Dots waiting on the user breathe (see `DotBreathing`), redrawn on the
+/// animation timeline only while one is shown and motion is allowed.
 private struct NotchStatusDots: View {
     let layout: StatusDotLayout
     let metrics: StatusDotMetrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private struct Entry {
+        let item: StatusDotLayout.Item
+        /// Set for a dot that breathes.
+        let phase: Double?
+    }
 
     var body: some View {
+        let entries = Self.entries(for: layout)
+        if reduceMotion || !entries.contains(where: { $0.phase != nil }) {
+            dots(entries, time: nil)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 30)) { _ in
+                dots(entries, time: CACurrentMediaTime())
+            }
+        }
+    }
+
+    /// Each layout item, with the breathing phase of a dot that breathes.
+    private static func entries(for layout: StatusDotLayout) -> [Entry] {
+        var spots = layout.dotSpots.makeIterator()
+        return layout.items.map { item in
+            guard case .dot = item, let spot = spots.next() else { return Entry(item: item, phase: nil) }
+            return Entry(item: item, phase: spot.dot.breathes ? spot.phase : nil)
+        }
+    }
+
+    private func dots(_ entries: [Entry], time: TimeInterval?) -> some View {
         ZStack(alignment: .leading) {
-            ForEach(Array(layout.items.enumerated()), id: \.offset) { _, item in
-                switch item {
+            ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
+                switch entry.item {
                 case .dot(let dot, let xPos):
-                    dotView(dot)
+                    dotView(dot, fill: time.flatMap { time in entry.phase.map { DotBreathing.fill(at: time, phase: $0) } })
                         .frame(width: metrics.dotDiameter, height: metrics.dotDiameter)
                         .offset(x: xPos)
                 case .mark(let badge, let xPos, let width):
@@ -75,13 +105,19 @@ private struct NotchStatusDots: View {
         .frame(width: layout.width, height: 11, alignment: .leading)
     }
 
+    /// `fill` is set for a breathing dot: its ring, with the fill faded in that far.
     @ViewBuilder
-    private func dotView(_ dot: StatusDotGroup.Dot) -> some View {
-        switch dot {
-        case .unreadDone:
-            Circle().strokeBorder(Color.accentColor, lineWidth: 1.1)
-        case .permission, .attention, .working:
-            Circle().fill(StatusColors.notchColor(for: dot.segmentKind))
+    private func dotView(_ dot: StatusDotGroup.Dot, fill: Double?) -> some View {
+        let color = dot == .unreadDone ? Color.accentColor : StatusColors.notchColor(for: dot.segmentKind)
+        if let fill {
+            ZStack {
+                Circle().strokeBorder(color, lineWidth: 1.1)
+                Circle().fill(color).opacity(fill)
+            }
+        } else if dot == .unreadDone {
+            Circle().strokeBorder(color, lineWidth: 1.1)
+        } else {
+            Circle().fill(color)
         }
     }
 }

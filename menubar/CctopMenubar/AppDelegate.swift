@@ -8,6 +8,7 @@ import UserNotifications
 
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
+    private var menubarIndicator: MenubarIndicator?
     var panel: FloatingPanel!
     var sessionManager: SessionManager!
     var updater: UpdaterBase!
@@ -302,7 +303,7 @@ extension AppDelegate {
 extension AppDelegate {
     @MainActor func refreshStatusDisplay(counts: StatusCounts) {
         lastRenderedCounts = counts
-        statusItem.button?.image = MenubarIconRenderer.render(counts: counts)
+        menubarIndicator?.show(counts)
         notchController.update(counts: counts)
         updateNotchVisibility()
         statusItem.button?.setAccessibilityLabel(counts.accessibilityLabel)
@@ -311,7 +312,8 @@ extension AppDelegate {
     @MainActor private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = MenubarIconRenderer.render(counts: .zero)
+            menubarIndicator = MenubarIndicator(button: button)
+            menubarIndicator?.show(.zero)
             button.action = #selector(togglePanel)
             button.target = self
         }

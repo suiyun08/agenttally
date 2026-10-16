@@ -69,6 +69,27 @@ final class MenubarIconRendererTests: XCTestCase {
         )
     }
 
+    func testBreathingLeavesAWaitingDotHollowForItsFadingFill() {
+        let groups = [StatusDotGroup(family: .codex, dots: [.attention])]
+        let light = NSAppearance(named: .aqua)!
+        let still = MenubarIconRenderer.render(counts: counts(groups))
+        let breathing = MenubarIconRenderer.render(counts: counts(groups), breathing: true)
+        assertColor(dotCenterPixel(in: still, appearance: light), equals: StatusColors.color(for: .attention, appearance: light))
+        assertColor(
+            dotCenterPixel(in: breathing, appearance: light),
+            equals: pixel(in: breathing, appearance: light, xPos: MenubarIconRenderer.pillPadding / 2),
+            "The pill shows through the ring until the fill fades in"
+        )
+    }
+
+    func testBreathingLeavesRunningWorkSolid() {
+        let light = NSAppearance(named: .aqua)!
+        let image = MenubarIconRenderer.render(
+            counts: counts([StatusDotGroup(family: .claude, dots: [.working])]), breathing: true
+        )
+        assertColor(dotCenterPixel(in: image, appearance: light), equals: StatusColors.color(for: .working, appearance: light))
+    }
+
     func testDotsSitOnATranslucentPill() {
         let image = MenubarIconRenderer.render(counts: counts([StatusDotGroup(family: .claude, dots: [.working])]))
         for name in [NSAppearance.Name.aqua, .darkAqua] {
