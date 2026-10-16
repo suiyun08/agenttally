@@ -10,6 +10,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     var statusItem: NSStatusItem!
     private var menubarIndicator: MenubarIndicator?
     var panel: FloatingPanel!
+    /// The panel's SwiftUI content, which `panel.contentView` may wrap in `SystemGlass`.
+    var panelHost: NSView!
     var sessionManager: SessionManager!
     var updater: UpdaterBase!
     var pluginManager: PluginManager!
@@ -98,7 +100,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             backing: .buffered,
             defer: false
         )
-        panel.contentView = hostingView
+        panel.contentView = SystemGlass.wrapping(hostingView, cornerRadius: AppChrome.panelCornerRadius)
+        panelHost = hostingView
         panel.panelDelegate = self
         setupPanelHover()
 

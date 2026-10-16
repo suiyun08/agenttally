@@ -34,8 +34,8 @@ enum PanelGlassTint {
     }
 }
 
-/// The panel's own backdrop. Under Liquid Glass the tint rides on the glass (see `PanelLiquidGlass`);
-/// before macOS 26 it lies over the blur in `PanelGlassWindow`.
+/// The panel's own backdrop: the theme tint. Over `SystemGlass` and before macOS 26 it lies on top
+/// of the glass or blur; over the public SwiftUI glass it rides on the glass (see `PanelLiquidGlass`).
 struct PanelSurfaceBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
@@ -47,15 +47,16 @@ struct PanelSurfaceBackground: View {
         ) {
         case .solid:
             Color.panelBackground
-        case .liquidGlass:
+        case .liquidGlass where !SystemGlass.isAvailable:
             Color.clear
-        case .blur:
+        case .liquidGlass, .blur:
             Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))
         }
     }
 }
 
-/// Regular Liquid Glass behind the panel's content, in the panel's own window. Glass and text
+/// Regular Liquid Glass behind the panel's content, in the panel's own window, when `SystemGlass`
+/// is unavailable. Glass and text
 /// share a window, so the system adapts both to what is behind the panel and keeps the text
 /// readable. The active state is pinned, so the glass keeps one look whether or not the panel
 /// holds keyboard focus. The transparency setting only thins the theme tint on it: regular glass
@@ -65,7 +66,7 @@ struct PanelLiquidGlass: ViewModifier {
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
 
     func body(content: Content) -> some View {
-        if #available(macOS 26.0, *), !reduceTransparency {
+        if #available(macOS 26.0, *), !reduceTransparency, !SystemGlass.isAvailable {
             content
                 .glassEffect(
                     .regular.tint(Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))),

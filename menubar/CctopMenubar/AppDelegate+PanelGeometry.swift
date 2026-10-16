@@ -162,8 +162,8 @@ extension AppDelegate {
     }
 
     private func panelFittingSize() -> NSSize? {
-        panel.contentView?.layout()
-        guard let size = panel.contentView?.fittingSize else { return nil }
+        panelHost?.layout()
+        guard let size = panelHost?.fittingSize else { return nil }
         return NSSize(width: max(size.width, CGFloat(PanelWidth.current.rawValue)), height: size.height)
     }
 
@@ -246,7 +246,7 @@ extension AppDelegate: FloatingPanelDelegate {
     /// The content takes the new width first, so the window never shows it at the old one.
     @MainActor func applyDraggedWidth(_ frame: NSRect) {
         panelResizeState.width = frame.width
-        panel.contentView?.layout()
+        panelHost?.layout()
         panel.setFrame(frame, display: true)
     }
 }
