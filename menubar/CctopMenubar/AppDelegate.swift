@@ -86,14 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         seedPanelHeightLimit()
         _ = AppLanguage.launchSelection
-        let contentView = makePanelContentView()
-        let hostingView = NSHostingView(rootView: contentView)
-        hostingView.wantsLayer = true
-        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
-        hostingView.layer?.cornerRadius = AppChrome.panelCornerRadius
-        hostingView.layer?.masksToBounds = true
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
-
+        let hostingView = makePanelHostingView()
         panel = FloatingPanel(
             contentRect: .zero,
             styleMask: [],
@@ -115,6 +108,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             self.pendingURL = nil
             handleURLCommand(pendingURL)
         }
+    }
+
+    private func makePanelHostingView() -> NSView {
+        let hostingView = NSHostingView(rootView: makePanelContentView())
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingView.layer?.cornerRadius = AppChrome.panelCornerRadius
+        hostingView.layer?.masksToBounds = true
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        return hostingView
     }
 
     private func makePanelContentView() -> PanelContentView {
