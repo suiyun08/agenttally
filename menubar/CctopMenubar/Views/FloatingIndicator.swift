@@ -102,10 +102,31 @@ private struct CapsuleGlass: ViewModifier {
         } else if #available(macOS 26.0, *) {
             content
                 .glassEffect(.clear.interactive(), in: Capsule())
+                .overlay(SpecularRim())
                 .environment(\.controlActiveState, .key)
         } else {
             content.background(BehindWindowBlur().clipShape(Capsule()))
         }
+    }
+}
+
+/// A bright hairline that fades from the top edge down and catches again at the bottom, like the
+/// rim on Control Center's glass. The system draws only a faint rim on a capsule this small.
+private struct SpecularRim: View {
+    var body: some View {
+        Capsule()
+            .strokeBorder(
+                LinearGradient(
+                    stops: [
+                        .init(color: .white.opacity(0.65), location: 0),
+                        .init(color: .white.opacity(0.12), location: 0.5),
+                        .init(color: .white.opacity(0.32), location: 1),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                ),
+                lineWidth: 1
+            )
+            .allowsHitTesting(false)
     }
 }
 
