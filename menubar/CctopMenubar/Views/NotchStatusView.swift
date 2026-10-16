@@ -45,8 +45,8 @@ struct NotchStatusView: View {
     }
 }
 
-/// The pill's dots. Dots waiting on the user breathe (see `DotBreathing`), redrawn on the
-/// animation timeline only while one is shown and motion is allowed.
+/// The pill's dots. Dots waiting on the user breathe (see `DotBreathing`) unless macOS asks apps
+/// to reduce motion.
 private struct NotchStatusDots: View {
     let layout: StatusDotLayout
     let metrics: StatusDotMetrics
@@ -59,31 +59,11 @@ private struct NotchStatusDots: View {
     }
 
     var body: some View {
-        let entries = Self.entries(for: layout)
-        if reduceMotion || !entries.contains(where: { $0.phase != nil }) {
-            dots(entries, time: nil)
-        } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 30)) { _ in
-                dots(entries, time: CACurrentMediaTime())
-            }
-        }
-    }
-
-    /// Each layout item, with the breathing phase of a dot that breathes.
-    private static func entries(for layout: StatusDotLayout) -> [Entry] {
-        var spots = layout.dotSpots.makeIterator()
-        return layout.items.map { item in
-            guard case .dot = item, let spot = spots.next() else { return Entry(item: item, phase: nil) }
-            return Entry(item: item, phase: spot.dot.breathes ? spot.phase : nil)
-        }
-    }
-
-    private func dots(_ entries: [Entry], time: TimeInterval?) -> some View {
         ZStack(alignment: .leading) {
-            ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
+            ForEach(Array(Self.entries(for: layout).enumerated()), id: \.offset) { _, entry in
                 switch entry.item {
                 case .dot(let dot, let xPos):
-                    dotView(dot, fill: time.flatMap { time in entry.phase.map { DotBreathing.fill(at: time, phase: $0) } })
+                    dotView(dot, phase: reduceMotion ? nil : entry.phase)
                         .frame(width: metrics.dotDiameter, height: metrics.dotDiameter)
                         .offset(x: xPos)
                 case .mark(let badge, let xPos, let width):
@@ -105,19 +85,75 @@ private struct NotchStatusDots: View {
         .frame(width: layout.width, height: 11, alignment: .leading)
     }
 
-    /// `fill` is set for a breathing dot: its ring, with the fill faded in that far.
+    /// Each layout item, with the breathing phase of a dot that breathes.
+    private static func entries(for layout: StatusDotLayout) -> [Entry] {
+        var spots = layout.dotSpots.makeIterator()
+        return layout.items.map { item in
+            guard case .dot = item, let spot = spots.next() else { return Entry(item: item, phase: nil) }
+            return Entry(item: item, phase: spot.dot.breathes ? spot.phase : nil)
+        }
+    }
+
+    /// `phase` is set for a breathing dot: its ring, with a fill fading in and out over it.
     @ViewBuilder
-    private func dotView(_ dot: StatusDotGroup.Dot, fill: Double?) -> some View {
-        let color = dot == .unreadDone ? Color.accentColor : StatusColors.notchColor(for: dot.segmentKind)
-        if let fill {
+    private func dotView(_ dot: StatusDotGroup.Dot, phase: Double?) -> some View {
+        let color = dot == .unreadDone ? NSColor.controlAccentColor : StatusColors.notchNSColor(for: dot.segmentKind)
+        if let phase {
             ZStack {
-                Circle().strokeBorder(color, lineWidth: 1.1)
-                Circle().fill(color).opacity(fill)
+                Circle().strokeBorder(Color(nsColor: color), lineWidth: 1.1)
+                BreathingFill(color: color, phase: phase)
             }
         } else if dot == .unreadDone {
-            Circle().strokeBorder(color, lineWidth: 1.1)
+            Circle().strokeBorder(Color(nsColor: color), lineWidth: 1.1)
         } else {
-            Circle().fill(color)
+            Circle().fill(Color(nsColor: color))
+        }
+    }
+}
+
+/// A breathing dot's fill: a round layer whose opacity Core Animation fades along
+/// `DotBreathing`, so the pill is not redrawn per frame.
+private struct BreathingFill: NSViewRepresentable {
+    let color: NSColor
+    let phase: Double
+
+    func makeNSView(context: Context) -> FillView { FillView() }
+
+    func updateNSView(_ view: FillView, context: Context) {
+        view.color = color
+        view.phase = phase
+    }
+
+    final class FillView: NSView {
+        var color: NSColor = .clear { didSet { needsDisplay = true } }
+        var phase: Double = 0 { didSet { if phase != oldValue { startBreathing() } } }
+
+        override init(frame: NSRect) {
+            super.init(frame: frame)
+            wantsLayer = true
+        }
+
+        required init?(coder: NSCoder) { nil }
+
+        override var wantsUpdateLayer: Bool { true }
+
+        override func updateLayer() {
+            layer?.backgroundColor = color.cgColor
+        }
+
+        override func layout() {
+            super.layout()
+            layer?.cornerRadius = bounds.width / 2
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            startBreathing()
+        }
+
+        private func startBreathing() {
+            guard window != nil else { return }
+            layer?.add(DotBreathing.animation(phase: phase, now: CACurrentMediaTime()), forKey: "breathing")
         }
     }
 }

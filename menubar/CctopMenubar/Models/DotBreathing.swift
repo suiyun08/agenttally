@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 
 /// The slow breathing of the dots that wait on the user: each one eases between hollow and
 /// solid, keeping its color. Neighbouring dots start at different points, so they never pulse
@@ -18,6 +19,24 @@ enum DotBreathing {
     /// neighbours never line up. A place keeps its phase, so a refresh never makes a dot jump.
     static func phase(groupIndex: Int, dotIndex: Int) -> Double {
         (Double(groupIndex) * 0.5 + Double(dotIndex) * 0.618).truncatingRemainder(dividingBy: 1)
+    }
+
+    /// Fades a fill layer's opacity along `fill`, in Core Animation so nothing is redrawn per
+    /// frame. The offset ties it to absolute time, so a fill rebuilt after a refresh continues
+    /// the breath its dot was in. A slow fade looks smooth at about 20 frames a second.
+    static func animation(phase: Double, now: CFTimeInterval) -> CAKeyframeAnimation {
+        let steps = 24
+        let animation = CAKeyframeAnimation(keyPath: "opacity")
+        animation.values = (0...steps).map { step in
+            fill(at: period * Double(step) / Double(steps), phase: 0)
+        }
+        animation.duration = period
+        animation.repeatCount = .infinity
+        animation.isRemovedOnCompletion = false
+        animation.preferredFrameRateRange = CAFrameRateRange(minimum: 10, maximum: 30, preferred: 20)
+        let cycles = now / period + phase
+        animation.timeOffset = (cycles - cycles.rounded(.down)) * period
+        return animation
     }
 }
 

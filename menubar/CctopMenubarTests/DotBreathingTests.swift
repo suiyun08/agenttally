@@ -77,10 +77,11 @@ final class DotBreathingTests: XCTestCase {
     }
 
     func testAFillRebuiltMidBreathCarriesOn() {
-        let first = MenubarIndicator.breathing(phase: 0.3, now: 100)
-        let later = MenubarIndicator.breathing(phase: 0.3, now: 101.2)
+        let first = DotBreathing.animation(phase: 0.3, now: 100)
+        let later = DotBreathing.animation(phase: 0.3, now: 101.2)
         XCTAssertEqual(first.duration, DotBreathing.period)
         XCTAssertEqual(first.repeatCount, .infinity)
+        XCTAssertEqual(first.preferredFrameRateRange.preferred, 20, "A slow fade needs no more frames than this")
         // Each fill starts where the absolute-time breath is, so a rebuilt one does not jump.
         XCTAssertEqual(DotBreathing.fill(at: first.timeOffset, phase: 0), DotBreathing.fill(at: 100, phase: 0.3), accuracy: 1e-9)
         XCTAssertEqual(DotBreathing.fill(at: later.timeOffset, phase: 0), DotBreathing.fill(at: 101.2, phase: 0.3), accuracy: 1e-9)

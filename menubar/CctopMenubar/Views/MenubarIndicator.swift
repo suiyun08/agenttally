@@ -77,24 +77,8 @@ final class MenubarIndicator {
             appearance.performAsCurrentDrawingAppearance {
                 layer.backgroundColor = MenubarIconRenderer.color(for: spot.dot, appearance: appearance).cgColor
             }
-            layer.add(Self.breathing(phase: spot.phase, now: now), forKey: "breathing")
+            layer.add(DotBreathing.animation(phase: spot.phase, now: now), forKey: "breathing")
             return layer
         }
-    }
-
-    /// Fades a fill along `DotBreathing.fill`. The offset ties it to absolute time, so a fill
-    /// rebuilt after a refresh continues the breath its dot was in.
-    static func breathing(phase: Double, now: CFTimeInterval) -> CAKeyframeAnimation {
-        let steps = 24
-        let animation = CAKeyframeAnimation(keyPath: "opacity")
-        animation.values = (0...steps).map { step in
-            DotBreathing.fill(at: DotBreathing.period * Double(step) / Double(steps), phase: 0)
-        }
-        animation.duration = DotBreathing.period
-        animation.repeatCount = .infinity
-        animation.isRemovedOnCompletion = false
-        let cycles = now / DotBreathing.period + phase
-        animation.timeOffset = (cycles - cycles.rounded(.down)) * DotBreathing.period
-        return animation
     }
 }
