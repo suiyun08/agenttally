@@ -136,6 +136,10 @@ class FloatingPanel: NSPanel {
     private func attachGlass() {
         guard !PanelSurfaceStyle.liquidGlassAvailable || SystemGlass.isAvailable else { return }
         guard glassWindow.parent == nil else { return syncGlassFrame() }
+        // macOS shapes a window's shadow from what it draws. Over the glass window the panel
+        // draws only its rows' faint fills, which would each get a dark outline; the glass
+        // window, filled edge to edge, casts the panel's shadow instead.
+        hasShadow = false
         glassWindow.setFrame(frame, display: false)
         glassWindow.alphaValue = 0
         addChildWindow(glassWindow, ordered: .below)
@@ -149,6 +153,7 @@ class FloatingPanel: NSPanel {
         guard glassWindow.parent != nil else { return }
         removeChildWindow(glassWindow)
         glassWindow.orderOut(nil)
+        hasShadow = true
     }
 
     /// Child windows follow the panel's moves on their own, but not its size.

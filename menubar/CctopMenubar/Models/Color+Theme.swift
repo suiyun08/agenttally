@@ -56,18 +56,10 @@ extension Color {
     }
 
     /// Segmented control inactive text.
-    static var segmentText: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.segmentText.resolve(appearance)
-        })
-    }
+    static var segmentText: Color { textSecondary }
 
     /// Active segment text.
-    static var segmentActiveText: Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            ThemeManager.shared.current.segmentActiveText.resolve(appearance)
-        })
-    }
+    static var segmentActiveText: Color { textPrimary }
 
     /// Text shown on accent-filled action buttons.
     static var accentButtonText: Color {
@@ -209,20 +201,20 @@ extension Color {
         })
     }
 
-    // Text on glass follows Apple's monochrome label levels, so it turns dark or light with the
-    // glass; theme color is kept for status and actions.
+    // Text on glass is monochrome in three levels, as Apple's labels are, a little stronger than
+    // the system's so it holds on translucent glass; theme color is kept for status and actions.
 
     /// Secondary text — project, branch, last message, setting descriptions.
-    static var textSecondary: Color { Color(nsColor: .secondaryLabelColor) }
+    static var textSecondary: Color { Color(nsColor: .glassText(dark: 0.78, light: 0.62)) }
 
     /// Muted text — timestamps, section headers, unselected tabs, footer.
-    static var textMuted: Color { Color(nsColor: .tertiaryTextColor) }
+    static var textMuted: Color { Color(nsColor: .glassText(dark: 0.6, light: 0.48)) }
 
     /// Dimmed primary — idle project names.
-    static var textDimmed: Color { Color(nsColor: .secondaryLabelColor) }
+    static var textDimmed: Color { textSecondary }
 
     /// Primary text.
-    static var textPrimary: Color { Color(nsColor: .labelColor) }
+    static var textPrimary: Color { Color(nsColor: .glassText(dark: 1, light: 0.88)) }
 
     /// Agent badge color.
     static var agentBadge: Color {
@@ -262,9 +254,11 @@ extension Color {
 }
 
 private extension NSColor {
-    /// Between Apple's secondary (50%) and tertiary (26%) labels: faint, yet readable on glass.
-    static let tertiaryTextColor = NSColor(name: nil) { appearance in
-        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(white: 1, alpha: 0.4) : NSColor(white: 0, alpha: 0.4)
+    /// White at `dark` opacity on dark glass, black at `light` opacity on light glass.
+    static func glassText(dark: CGFloat, light: CGFloat) -> NSColor {
+        NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor(white: 1, alpha: dark) : NSColor(white: 0, alpha: light)
+        }
     }
 }

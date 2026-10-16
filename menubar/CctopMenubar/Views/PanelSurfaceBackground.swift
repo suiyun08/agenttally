@@ -34,10 +34,11 @@ enum PanelGlassTint {
     }
 
     /// The least tint on the panel's glass. The panel draws white text whatever is behind it, and
-    /// this glass turns light over bright content, so — as Apple's guidance for translucent glass
-    /// under light text asks — a dark layer of about 35% stays underneath. Over dark content it
-    /// barely shows.
-    static let dimmingFloor = 0.35
+    /// this glass turns light over bright content, so a dark layer stays underneath, as Apple's
+    /// guidance for translucent glass under light text asks. Apple suggests 35%; 25% keeps the
+    /// glass from reading as black, and the text is drawn a little stronger instead. Over dark
+    /// content it barely shows.
+    static let dimmingFloor = 0.25
 
     /// The theme tint on the panel's `SystemGlass` in `appearance`: as strong as the transparency
     /// setting asks, and never below the dimming floor.
@@ -134,7 +135,8 @@ final class PanelGlassWindow: NSWindow {
         super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = false
+        // The panel's shadow: the panel window itself has only its rows' faint fills to cast one.
+        hasShadow = true
         ignoresMouseEvents = true
         isReleasedWhenClosed = false
         animationBehavior = .none
