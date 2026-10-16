@@ -26,31 +26,19 @@ enum PanelSurfaceStyle: Equatable {
 enum PanelGlassTint {
     /// How see-through the panel is, 0 (solid theme color) to 1 (bare glass).
     static let transparencyKey = "panelTransparency"
-    static let defaultTransparency = 0.75
+    /// Bare glass: the system's own look.
+    static let defaultTransparency = 1.0
 
     static func opacity(transparency: Double) -> Double {
         1 - min(max(transparency, 0), 1)
     }
 }
 
-/// The panel's own backdrop: just the theme tint. The glass lives in `PanelGlassWindow` below the
-/// panel, so it keeps one look whether or not the panel holds keyboard focus.
+/// The panel's own backdrop. Under Liquid Glass the tint rides on the glass (see `PanelLiquidGlass`);
+/// before macOS 26 it lies over the blur in `PanelGlassWindow`.
 struct PanelSurfaceBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
-
-    var body: some View {
-        if reduceTransparency {
-            Color.panelBackground
-        } else {
-            Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))
-        }
-    }
-}
-
-/// The glass itself, filling `PanelGlassWindow`.
-struct PanelGlassBackdrop: View {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
         switch PanelSurfaceStyle.resolve(
@@ -58,23 +46,48 @@ struct PanelGlassBackdrop: View {
             liquidGlassAvailable: PanelSurfaceStyle.liquidGlassAvailable
         ) {
         case .solid:
-            Color.clear
+            Color.panelBackground
         case .liquidGlass:
-            liquidGlass
+            Color.clear
         case .blur:
-            BehindWindowBlur()
-                .clipShape(shape)
+            Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))
         }
     }
+}
 
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous)
+/// Regular Liquid Glass behind the panel's content, in the panel's own window. Glass and text
+/// share a window, so the system adapts both to what is behind the panel and keeps the text
+/// readable. The active state is pinned, so the glass keeps one look whether or not the panel
+/// holds keyboard focus. The transparency setting only thins the theme tint on it: regular glass
+/// has no transparency of its own to set.
+struct PanelLiquidGlass: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @AppStorage(PanelGlassTint.transparencyKey) private var transparency = PanelGlassTint.defaultTransparency
+
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *), !reduceTransparency {
+            content
+                .glassEffect(
+                    .regular.tint(Color.panelBackground.opacity(PanelGlassTint.opacity(transparency: transparency))),
+                    in: RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous)
+                )
+                .environment(\.controlActiveState, .key)
+        } else {
+            content
+        }
     }
+}
 
-    @ViewBuilder private var liquidGlass: some View {
-        if #available(macOS 26.0, *) {
-            // Clear glass: far less frosting than .regular, so what is behind the panel shows.
-            Color.clear.glassEffect(.clear, in: shape)
+/// The blur before macOS 26, filling `PanelGlassWindow`.
+struct PanelGlassBackdrop: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        if reduceTransparency {
+            Color.clear
+        } else {
+            BehindWindowBlur()
+                .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
         }
     }
 }
@@ -92,10 +105,10 @@ private struct BehindWindowBlur: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
-/// Holds the panel's glass in a window of its own, attached right below the panel. macOS draws
-/// glass in a key window with a brighter active look and in any other window with a quieter
-/// inactive look; this window never becomes key, so the glass never switches as the panel
-/// gains and loses focus. It takes no clicks, and the panel keeps it on its frame.
+/// Holds the panel's blur in a window of its own, attached right below the panel, before macOS 26.
+/// It never becomes key, so the blur never switches look as the panel gains and loses focus. It
+/// takes no clicks, and the panel keeps it on its frame. On macOS 26 the glass is drawn in the
+/// panel itself (see `PanelLiquidGlass`) and this window stays detached.
 final class PanelGlassWindow: NSWindow {
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)

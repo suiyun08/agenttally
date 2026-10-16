@@ -274,6 +274,7 @@ struct PanelContentView: View {
         .background {
             PanelSurfaceBackground()
         }
+        .modifier(PanelLiquidGlass())
         .overlay {
             // Glass draws its own rim, so the hairline only has to hint at the edge.
             PanelAccentHairline(cornerRadius: AppChrome.panelCornerRadius)
