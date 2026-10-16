@@ -15,7 +15,12 @@ class FloatingPanel: NSPanel {
     private weak var edgeTrackingView: NSView?
     private var hoveredEdge: PanelResizeEdge?
     /// The panel's glass, kept in a never-key window right below it (see `PanelGlassWindow`).
-    private lazy var glassWindow = PanelGlassWindow()
+    /// It is a window of its own, so it takes the panel's light or dark choice explicitly.
+    private(set) lazy var glassWindow: PanelGlassWindow = {
+        let window = PanelGlassWindow()
+        window.appearance = appearance
+        return window
+    }()
     /// While both windows animate, the glass runs its own animation; frame syncs would jump it.
     private var isAnimatingFrame = false
     /// Height of the header drag zone (shared with PanelTopBar).
@@ -86,6 +91,12 @@ class FloatingPanel: NSPanel {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+
+    /// Settings › Appearance › Mode sets this; the glass window follows, or it would keep drawing
+    /// the system's light or dark glass under content drawn the other way.
+    override var appearance: NSAppearance? {
+        didSet { glassWindow.appearance = appearance }
+    }
 
     override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)

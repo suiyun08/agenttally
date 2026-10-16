@@ -59,4 +59,20 @@ final class FloatingPanelMouseEventTests: XCTestCase {
 
         XCTAssertEqual(recorder.hovered, [.leading, nil, .trailing, nil])
     }
+
+    /// The glass lives in its own window; a light or dark choice that skipped it drew light
+    /// text on light glass.
+    @MainActor
+    func testGlassFollowsThePanelsLightOrDarkChoice() {
+        let panel = FloatingPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [], backing: .buffered, defer: true
+        )
+        panel.appearance = NSAppearance(named: .darkAqua)
+        XCTAssertEqual(panel.glassWindow.appearance?.name, .darkAqua)
+        panel.appearance = NSAppearance(named: .aqua)
+        XCTAssertEqual(panel.glassWindow.appearance?.name, .aqua)
+        panel.appearance = nil
+        XCTAssertNil(panel.glassWindow.appearance, "Following the system leaves both on the system's choice")
+    }
 }
