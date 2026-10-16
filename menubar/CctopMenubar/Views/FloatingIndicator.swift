@@ -90,8 +90,9 @@ struct FloatingIndicatorView: View {
 
 /// Clear, interactive Liquid Glass on macOS 26 — Apple's glass for small controls over content,
 /// which lets far more of what is behind show than regular glass; the dots are bold enough to
-/// read on it. The behind-window blur before macOS 26, and the theme's solid color when the user
-/// reduces transparency.
+/// read on it. Its window never becomes key, and glass in an inactive window is drawn thicker, so
+/// the active state is pinned as in the panel. The behind-window blur before macOS 26, and the
+/// theme's solid color when the user reduces transparency.
 private struct CapsuleGlass: ViewModifier {
     let reduceTransparency: Bool
 
@@ -99,7 +100,9 @@ private struct CapsuleGlass: ViewModifier {
         if reduceTransparency {
             content.background(Color.panelBackground, in: Capsule())
         } else if #available(macOS 26.0, *) {
-            content.glassEffect(.clear.interactive(), in: Capsule())
+            content
+                .glassEffect(.clear.interactive(), in: Capsule())
+                .environment(\.controlActiveState, .key)
         } else {
             content.background(BehindWindowBlur().clipShape(Capsule()))
         }
