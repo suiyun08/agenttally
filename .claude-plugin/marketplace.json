@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "AgentTally: a menu bar indicator for AI coding sessions",
-    "version": "1.0.1"
+    "version": "1.0.2"
   },
   "plugins": [
     {
       "name": "cctop",
       "source": "./plugins/cctop",
       "description": "Report Claude Code sessions to AgentTally",
-      "version": "1.0.1"
+      "version": "1.0.2"
     }
   ]
 }
