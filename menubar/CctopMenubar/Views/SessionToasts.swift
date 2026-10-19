@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// One floating notice: the agent's mark, the session's title, why it needs the user, and its
-/// latest message. A click opens the session; the close button hides the notice.
+/// One floating notice: the agent's mark, the session's title, its state, and what it is doing or
+/// saying. A click opens the session; the close button hides the notice.
 struct SessionToastView: View {
     let toast: SessionToast
     let onOpen: () -> Void
@@ -62,7 +62,13 @@ struct SessionToastView: View {
             label("Needs Input", dot: .statusAttention, text: .statusAttentionText)
         case .needsAttention:
             label("Error", dot: .statusAttention, text: .statusAttentionText)
-        default:
+        case .working:
+            label("Working", dot: .statusGreen, text: .statusWorkingText)
+        case .compacting:
+            label("Compacting", dot: .statusGreen, text: .statusWorkingText)
+        case .background:
+            label("Background", dot: .statusGreen.opacity(0.55), text: .statusWorkingText)
+        case .done, .idle:
             label("Done", dot: .accentColor, text: .textPrimary)
         }
     }
@@ -118,9 +124,14 @@ private final class FirstClickHostingView<Content: View>: NSHostingView<Content>
 }
 
 /// A notice's window: the floating indicator's glass, on every desktop and over full-screen apps,
-/// never taking keyboard focus. Drawn dark, with white text, as the panel is.
+/// never taking keyboard focus. Drawn dark, with white text, as the panel is. A press that moves
+/// drags the whole stack; one that does not is a click for the notice's buttons.
 final class SessionToastWindow: NSPanel {
     static let cornerRadius: CGFloat = 14
+
+    var onDragBegan: (() -> Void)?
+    var onDragChanged: ((CGVector) -> Void)?
+    var onDragEnded: (() -> Void)?
 
     private let host: NSHostingView<AnyView>
 
@@ -147,12 +158,45 @@ final class SessionToastWindow: NSPanel {
     func setContent(_ content: some View) {
         host.rootView = AnyView(content)
     }
+
+    override func sendEvent(_ event: NSEvent) {
+        guard event.type == .leftMouseDown else { return super.sendEvent(event) }
+        let start = NSEvent.mouseLocation
+        var dragging = false
+        while let next = nextEvent(
+            matching: [.leftMouseDragged, .leftMouseUp], until: .distantFuture, inMode: .eventTracking, dequeue: true
+        ) {
+            if next.type == .leftMouseUp {
+                if dragging {
+                    onDragEnded?()
+                } else {
+                    // Not a drag: hand the press to the notice's buttons, with its release
+                    // waiting for them at the front of the queue.
+                    NSApp.postEvent(next, atStart: true)
+                    super.sendEvent(event)
+                }
+                return
+            }
+            let location = NSEvent.mouseLocation
+            if !dragging, FloatingIndicatorPlacement.isDrag(from: start, to: location) {
+                dragging = true
+                onDragBegan?()
+            }
+            if dragging { onDragChanged?(CGVector(dx: location.x - start.x, dy: location.y - start.y)) }
+        }
+    }
 }
 
 /// Shows the floating notices while the floating indicator is on, hides them while the panel is
-/// open, and keeps them stacked against the indicator as it moves.
+/// open, and keeps them stacked against the indicator, or where the user dragged them.
 @MainActor
 final class SessionToastController {
+    static let limitKey = "floatingNoticeLimit"
+    private static let originXKey = "floatingNoticeOriginX"
+    private static let originYKey = "floatingNoticeOriginY"
+    /// Dropped this close to its place under the indicator, the stack goes back to following it.
+    private static let reattachDistance: CGFloat = 30
+
     var anchor: () -> NSRect? = { nil }
     var onOpen: (String) -> Void = { _ in }
     var onOverflow: () -> Void = {}
@@ -164,33 +208,35 @@ final class SessionToastController {
     private(set) var board = SessionToastBoard()
     private var windows: [String: SessionToastWindow] = [:]
     private var overflowWindow: SessionToastWindow?
+    private var dragOrigins: [NSWindow: NSPoint] = [:]
 
-    func apply(_ actions: [SessionNotificationAction], toast: (String) -> SessionToast?) {
-        guard FloatingIndicatorController.isEnabled else {
-            if !board.toasts.isEmpty { board.clear() }
-            return layout()
-        }
-        let before = board
-        board.apply(actions, toast: toast)
-        board.refresh(toast)
-        if board != before { layout() }
+    static var limit: Int {
+        let stored = UserDefaults.standard.object(forKey: limitKey) as? Int ?? SessionToastBoard.defaultLimit
+        return min(max(stored, SessionToastBoard.limitRange.lowerBound), SessionToastBoard.limitRange.upperBound)
     }
 
-    func dismiss(_ id: String) {
-        board.dismiss(id)
+    func update(_ candidates: [SessionToast]) {
+        if FloatingIndicatorController.isEnabled {
+            board.update(candidates)
+        } else if board != SessionToastBoard() {
+            // Turned off, the indicator forgets its notices; turned on again, it starts afresh.
+            board.reset()
+        }
+        guard dragOrigins.isEmpty else { return }
+        layout()
+    }
+
+    func close(_ id: String) {
+        board.close(id)
         layout()
     }
 
     func layout() {
-        // Turning the indicator off forgets its notices; turned on again, it starts afresh.
-        if !FloatingIndicatorController.isEnabled, !board.toasts.isEmpty { board.clear() }
-        guard !isSuppressed, FloatingIndicatorController.isEnabled, let anchor = anchor(),
-              let visible = NSScreen.screens.first(where: { $0.frame.intersects(anchor) })?.visibleFrame else {
-            return hideAll()
-        }
-        let shown = board.visible
+        guard !isSuppressed, FloatingIndicatorController.isEnabled, let start = stackStart() else { return hideAll() }
+        let limit = Self.limit
+        let shown = board.visible(limit: limit)
         let frames = SessionToastLayout.frames(
-            count: shown.count, overflow: board.overflowCount > 0, anchor: anchor, visible: visible
+            count: shown.count, overflow: board.overflowCount(limit: limit) > 0, start: start.start, visible: start.visible
         )
         for (id, window) in windows where !shown.contains(where: { $0.id == id }) {
             fadeOut(window)
@@ -200,30 +246,109 @@ final class SessionToastController {
             let view = SessionToastView(
                 toast: toast,
                 onOpen: { [weak self] in self?.onOpen(toast.id) },
-                onClose: { [weak self] in self?.dismiss(toast.id) }
+                onClose: { [weak self] in self?.close(toast.id) }
             )
             if let window = windows[toast.id] {
                 window.setContent(view)
                 move(window, to: frame)
             } else {
-                windows[toast.id] = show(SessionToastWindow(content: view, cornerRadius: SessionToastWindow.cornerRadius), at: frame)
+                windows[toast.id] = show(makeWindow(view, cornerRadius: SessionToastWindow.cornerRadius), at: frame)
             }
         }
-        layoutOverflow(frame: frames.overflow)
+        layoutOverflow(frame: frames.overflow, limit: limit)
     }
 
-    private func layoutOverflow(frame: NSRect?) {
+    // MARK: - Where the stack starts
+
+    /// Where the user left the stack, while that spot is still on a screen; otherwise under the
+    /// floating indicator.
+    private func stackStart() -> (start: SessionToastLayout.Start, visible: NSRect)? {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: Self.originXKey) != nil, defaults.object(forKey: Self.originYKey) != nil {
+            let card = NSRect(
+                x: defaults.double(forKey: Self.originXKey), y: defaults.double(forKey: Self.originYKey),
+                width: SessionToastLayout.width, height: SessionToastLayout.height
+            )
+            if let visible = visibleFrame(containing: NSPoint(x: card.midX, y: card.midY)) {
+                return (SessionToastLayout.start(forFirstCard: card, visible: visible), visible)
+            }
+        }
+        guard let indicator = anchor(), let visible = visibleFrame(containing: NSPoint(x: indicator.midX, y: indicator.midY))
+        else { return nil }
+        return (SessionToastLayout.start(under: indicator, visible: visible), visible)
+    }
+
+    private func visibleFrame(containing point: NSPoint) -> NSRect? {
+        NSScreen.screens.first { $0.frame.contains(point) }?.visibleFrame
+    }
+
+    // MARK: - Dragging the stack
+
+    private func beginDrag() {
+        var origins: [NSWindow: NSPoint] = [:]
+        for window in Array(windows.values) + [overflowWindow].compactMap({ $0 }) {
+            origins[window] = window.frame.origin
+        }
+        dragOrigins = origins
+    }
+
+    private func drag(by delta: CGVector) {
+        for (window, origin) in dragOrigins {
+            window.setFrameOrigin(NSPoint(x: origin.x + delta.dx, y: origin.y + delta.dy))
+        }
+    }
+
+    /// Remembers where the first notice landed, or goes back to following the indicator when it
+    /// was dropped next to its place there.
+    private func endDrag() {
+        dragOrigins = [:]
+        if let first = board.visible(limit: Self.limit).first, let card = windows[first.id]?.frame {
+            remember(firstCard: card)
+        }
+        layout()
+    }
+
+    private func remember(firstCard card: NSRect) {
+        let defaults = UserDefaults.standard
+        if let home = homeFrame(), hypot(card.minX - home.minX, card.maxY - home.maxY) < Self.reattachDistance {
+            defaults.removeObject(forKey: Self.originXKey)
+            defaults.removeObject(forKey: Self.originYKey)
+        } else {
+            defaults.set(card.minX, forKey: Self.originXKey)
+            defaults.set(card.minY, forKey: Self.originYKey)
+        }
+    }
+
+    /// The first notice's place under the floating indicator.
+    private func homeFrame() -> NSRect? {
+        guard let indicator = anchor(),
+              let visible = visibleFrame(containing: NSPoint(x: indicator.midX, y: indicator.midY)) else { return nil }
+        let start = SessionToastLayout.start(under: indicator, visible: visible)
+        return SessionToastLayout.frames(count: 1, overflow: false, start: start, visible: visible).cards.first
+    }
+
+    // MARK: - Windows
+
+    private func makeWindow(_ view: some View, cornerRadius: CGFloat) -> SessionToastWindow {
+        let window = SessionToastWindow(content: view, cornerRadius: cornerRadius)
+        window.onDragBegan = { [weak self] in self?.beginDrag() }
+        window.onDragChanged = { [weak self] delta in self?.drag(by: delta) }
+        window.onDragEnded = { [weak self] in self?.endDrag() }
+        return window
+    }
+
+    private func layoutOverflow(frame: NSRect?, limit: Int) {
         guard let frame else {
             if let overflowWindow { fadeOut(overflowWindow) }
             overflowWindow = nil
             return
         }
-        let view = SessionToastOverflowView(count: board.overflowCount) { [weak self] in self?.onOverflow() }
+        let view = SessionToastOverflowView(count: board.overflowCount(limit: limit)) { [weak self] in self?.onOverflow() }
         if let overflowWindow {
             overflowWindow.setContent(view)
             move(overflowWindow, to: frame)
         } else {
-            overflowWindow = show(SessionToastWindow(content: view, cornerRadius: frame.height / 2), at: frame)
+            overflowWindow = show(makeWindow(view, cornerRadius: frame.height / 2), at: frame)
         }
     }
 
@@ -234,10 +359,10 @@ final class SessionToastController {
         overflowWindow = nil
     }
 
-    /// A new notice fades in while easing a few points out of the indicator's side.
+    /// A new notice fades in while easing a few points out of the stack's starting side.
     private func show(_ window: SessionToastWindow, at frame: NSRect) -> SessionToastWindow {
-        let fromIndicator = (anchor()?.midY ?? frame.midY) > frame.midY ? 8.0 : -8.0
-        window.setFrame(frame.offsetBy(dx: 0, dy: fromIndicator), display: false)
+        let growsDown = stackStart()?.start.growsDown ?? true
+        window.setFrame(frame.offsetBy(dx: 0, dy: growsDown ? 8 : -8), display: false)
         window.alphaValue = 0
         window.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in

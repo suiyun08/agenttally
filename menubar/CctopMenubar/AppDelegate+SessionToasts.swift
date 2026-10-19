@@ -4,20 +4,22 @@ import AppKit
 
 extension AppDelegate {
     /// The floating notices hang off the floating indicator and stand in for system banners while
-    /// it is on; a click jumps to the session as a banner click would.
+    /// it is on; a click jumps to the session as a banner click would, and the notice stays until
+    /// it is closed or the session no longer needs it.
     @MainActor func setupSessionToasts() {
         sessionToasts.anchor = { [weak self] in self?.floatingIndicator.visibleFrame }
         sessionToasts.onOpen = { [weak self] id in self?.openSessionToast(id) }
         sessionToasts.onOverflow = { [weak self] in self?.openPanelAtFloatingIndicator() }
-        sessionManager.onAttentionTransitions = { [weak self] actions in
-            guard let self else { return }
-            self.sessionToasts.apply(actions) { self.sessionManager.sessionToast(forCctopSessionID: $0) }
-        }
-        floatingIndicator.onFrameChanged = { [weak self] in self?.sessionToasts.layout() }
+        sessionManager.onSessionsUpdated = { [weak self] in self?.refreshSessionToasts() }
+        // Shown, hidden, moved, or resized: the notices follow, and start afresh when turned on.
+        floatingIndicator.onFrameChanged = { [weak self] in self?.refreshSessionToasts() }
+    }
+
+    @MainActor private func refreshSessionToasts() {
+        sessionToasts.update(sessionManager.sessionToastCandidates())
     }
 
     @MainActor private func openSessionToast(_ id: String) {
-        sessionToasts.dismiss(id)
         guard let target = sessionManager.focusTarget(forCctopSessionID: id) else { return }
         focusTerminal(session: target)
     }

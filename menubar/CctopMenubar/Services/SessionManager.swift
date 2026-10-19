@@ -19,9 +19,8 @@ class SessionManager: ObservableObject {
     let historyManager: HistoryManager
     let dataSources: SessionDataSources
     var cleanupRefreshHandler: (([SessionDataCleanupSource], Set<String>) -> Void)?
-    /// Called on every refresh with the sessions that start or stop needing the user, as for
-    /// system notifications; the floating notices follow it.
-    var onAttentionTransitions: (([SessionNotificationAction]) -> Void)?
+    /// Called whenever the sessions change; the floating notices follow it.
+    var onSessionsUpdated: (() -> Void)?
     private(set) var cleanupSources: [SessionDataCleanupSource] = []
     private(set) var cleanupActiveProjectPaths: Set<String> = []
     private var currentClassificationCleanupSources: [SessionDataCleanupSource] = []
@@ -212,10 +211,8 @@ class SessionManager: ObservableObject {
         if let oldUserSessions {
             syncTransitionNotifications(for: newUserSessions, oldUserSessions: oldUserSessions)
             ringTransitionSounds(for: newUserSessions, oldUserSessions: oldUserSessions)
-            onAttentionTransitions?(Self.notificationActions(
-                newUserSessions: newUserSessions, oldUserSessions: oldUserSessions, notificationsEnabled: true
-            ))
         }
+        onSessionsUpdated?()
     }
 
     func cleanupSnapshotForRemoval() -> WorktreeCleanupSessionSnapshot {

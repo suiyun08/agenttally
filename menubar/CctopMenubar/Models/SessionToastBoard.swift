@@ -1,86 +1,127 @@
 import AppKit
 
-/// One floating notice: a session that needs the user, shown under the floating indicator.
+/// One floating notice: a session that is working or needs the user, shown by the floating
+/// indicator.
 struct SessionToast: Equatable, Identifiable {
+    enum Kind: Equatable {
+        /// Working, compacting, or running background tasks.
+        case working
+        /// Waiting for permission, an answer, or after an error.
+        case needsYou
+        /// A finished turn the user has not read.
+        case done
+    }
+
     /// The session's cctop session ID.
     let id: String
+    let kind: Kind
     let badge: AgentBadge
     let title: String
     let status: SessionStatus
     let message: String?
+    let lastActivity: Date
 }
 
-/// Which floating notices show: the sessions that would get a system notification, newest first.
-/// They follow the same transitions — a new reason posts a session's notice, replacing an older
-/// one, and a session that no longer needs the user loses it — and closing one hides it until the
-/// session needs the user for a new reason. Sessions already waiting when the board starts get
-/// none, as with system notifications.
+/// Which floating notices show: every session that is working or needs the user, most recent
+/// activity first, each until the user closes it or the session goes idle, is read, or ends.
+///
+/// A closed notice comes back when its session needs the user again — it starts waiting or
+/// finishes — or starts new work after going idle; carrying on with the same work does not bring
+/// it back. When the board starts, live sessions (working or waiting) show at once, but results
+/// that finished earlier and wait unread do not, so they never flood the screen.
 struct SessionToastBoard: Equatable {
-    static let maxVisible = 4
+    static let defaultLimit = 4
+    static let limitRange = 1...10
 
+    /// Every notice that shows, most recent activity first; `visible` caps it.
     private(set) var toasts: [SessionToast] = []
+    private var closed: Set<String> = []
+    private var lastKinds: [String: SessionToast.Kind] = [:]
+    private var started = false
 
-    var visible: [SessionToast] { Array(toasts.prefix(Self.maxVisible)) }
-    var overflowCount: Int { max(0, toasts.count - Self.maxVisible) }
+    func visible(limit: Int) -> [SessionToast] { Array(toasts.prefix(limit)) }
+    func overflowCount(limit: Int) -> Int { max(0, toasts.count - limit) }
 
-    mutating func apply(_ actions: [SessionNotificationAction], toast: (String) -> SessionToast?) {
-        for action in actions {
-            switch action {
-            case .remove(let id):
-                toasts.removeAll { $0.id == id }
-            case .post(let id):
-                toasts.removeAll { $0.id == id }
-                if let posted = toast(id) { toasts.insert(posted, at: 0) }
+    /// Brings the notices in line with the sessions that are working or need the user now.
+    mutating func update(_ candidates: [SessionToast]) {
+        var kinds: [String: SessionToast.Kind] = [:]
+        for candidate in candidates {
+            kinds[candidate.id] = candidate.kind
+            let before = lastKinds[candidate.id]
+            if !started, candidate.kind == .done {
+                closed.insert(candidate.id)
+            } else if closed.contains(candidate.id), before != candidate.kind,
+                      candidate.kind != .working || before == .done {
+                // A new reason to look: it started waiting, finished, or took up new work after
+                // finishing. Back to work after an answer is the same work.
+                closed.remove(candidate.id)
             }
         }
+        // A session that went idle, was read, or ended starts afresh next time.
+        closed.formIntersection(kinds.keys)
+        lastKinds = kinds
+        started = true
+        toasts = candidates
+            .filter { !closed.contains($0.id) }
+            .sorted { $0.lastActivity > $1.lastActivity }
     }
 
-    /// Keeps each notice's title and message current, and drops any whose session no longer
-    /// needs the user or is gone.
-    mutating func refresh(_ toast: (String) -> SessionToast?) {
-        toasts = toasts.compactMap { toast($0.id) }
-    }
-
-    mutating func dismiss(_ id: String) {
+    mutating func close(_ id: String) {
+        closed.insert(id)
         toasts.removeAll { $0.id == id }
     }
 
-    mutating func clear() {
-        toasts = []
+    /// Forgets everything, as when the floating indicator is turned off.
+    mutating func reset() {
+        self = SessionToastBoard()
     }
 }
 
-/// Where the floating notices sit: stacked under the floating indicator, or over it when it sits
-/// in the lower half of the screen, lined up with the indicator's edge nearest the screen's side.
+/// Where the floating notices sit: a stack lined up with its left edge, growing down from its top
+/// when it starts in the upper half of the screen and up from its bottom in the lower half. It
+/// starts under (or over) the floating indicator, or wherever the user dragged it.
 enum SessionToastLayout {
     static let width: CGFloat = 300
     static let height: CGFloat = 56
     static let gap: CGFloat = 8
     static let overflowSize = NSSize(width: 120, height: 28)
 
+    /// The stack's starting edge: the left end of its top edge when it grows down, of its bottom
+    /// edge when it grows up.
+    struct Start: Equatable {
+        let point: NSPoint
+        let growsDown: Bool
+    }
+
     struct Frames: Equatable {
         let cards: [NSRect]
         let overflow: NSRect?
     }
 
-    static func frames(count: Int, overflow: Bool, anchor: NSRect, visible: NSRect) -> Frames {
-        let below = anchor.midY > visible.midY
-        let alignsRight = anchor.midX > visible.midX
-        var edge = below ? anchor.minY - gap : anchor.maxY + gap
+    /// Hanging off the floating indicator, left edges aligned.
+    static func start(under indicator: NSRect, visible: NSRect) -> Start {
+        let growsDown = indicator.midY > visible.midY
+        return Start(
+            point: NSPoint(x: indicator.minX, y: growsDown ? indicator.minY - gap : indicator.maxY + gap),
+            growsDown: growsDown
+        )
+    }
+
+    /// Where the user left the stack, given its first notice's frame.
+    static func start(forFirstCard frame: NSRect, visible: NSRect) -> Start {
+        let growsDown = frame.midY > visible.midY
+        return Start(point: NSPoint(x: frame.minX, y: growsDown ? frame.maxY : frame.minY), growsDown: growsDown)
+    }
+
+    static func frames(count: Int, overflow: Bool, start: Start, visible: NSRect) -> Frames {
+        var edge = start.point.y
         func place(_ size: NSSize) -> NSRect {
-            let originX = alignsRight ? anchor.maxX - size.width : anchor.minX
-            let originY = below ? edge - size.height : edge
-            edge = below ? originY - gap : originY + size.height + gap
-            let frame = NSRect(x: originX, y: originY, width: size.width, height: size.height)
-            return frame.offsetBy(dx: horizontalShift(frame, into: visible), dy: 0)
+            let originY = start.growsDown ? edge - size.height : edge
+            edge = start.growsDown ? originY - gap : originY + size.height + gap
+            let originX = min(max(start.point.x, visible.minX), visible.maxX - size.width)
+            return NSRect(x: originX, y: originY, width: size.width, height: size.height)
         }
         let cards = (0..<count).map { _ in place(NSSize(width: width, height: height)) }
         return Frames(cards: cards, overflow: overflow ? place(overflowSize) : nil)
-    }
-
-    private static func horizontalShift(_ frame: NSRect, into visible: NSRect) -> CGFloat {
-        if frame.minX < visible.minX { return visible.minX - frame.minX }
-        if frame.maxX > visible.maxX { return visible.maxX - frame.maxX }
-        return 0
     }
 }

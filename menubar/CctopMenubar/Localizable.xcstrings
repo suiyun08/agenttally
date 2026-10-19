@@ -3207,6 +3207,26 @@
           }
         }
       }
+    },
+    "Floating Notices": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浮窗显示上限"
+          }
+        }
+      }
+    },
+    "How many floating notices show at once; the rest wait behind a count.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时最多显示几个浮窗，其余的合并成“还有 N 条”。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
