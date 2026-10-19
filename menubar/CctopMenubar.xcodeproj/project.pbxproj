@@ -163,6 +163,7 @@
 		SGL000010000000000000001 /* SystemGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = SGL000020000000000000001 /* SystemGlass.swift */; };
 		TSB000010000000000000001 /* SessionToastBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSB000020000000000000001 /* SessionToastBoard.swift */; };
 		TSV000010000000000000001 /* SessionToasts.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSV000020000000000000001 /* SessionToasts.swift */; };
+		TSS000010000000000000001 /* SessionToastStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSS000020000000000000001 /* SessionToastStack.swift */; };
 		ADT000010000000000000001 /* AppDelegate+SessionToasts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADT000020000000000000001 /* AppDelegate+SessionToasts.swift */; };
 		TST000010000000000000001 /* SessionToastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000020000000000000001 /* SessionToastTests.swift */; };
 		FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLT000020000000000000001 /* FloatingIndicatorTests.swift */; };
@@ -386,6 +387,7 @@
 		SGL000020000000000000001 /* SystemGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGlass.swift; sourceTree = "<group>"; };
 		TSB000020000000000000001 /* SessionToastBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastBoard.swift; sourceTree = "<group>"; };
 		TSV000020000000000000001 /* SessionToasts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToasts.swift; sourceTree = "<group>"; };
+		TSS000020000000000000001 /* SessionToastStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastStack.swift; sourceTree = "<group>"; };
 		ADT000020000000000000001 /* AppDelegate+SessionToasts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+SessionToasts.swift"; sourceTree = "<group>"; };
 		TST000020000000000000001 /* SessionToastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastTests.swift; sourceTree = "<group>"; };
 		FLT000020000000000000001 /* FloatingIndicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicatorTests.swift; sourceTree = "<group>"; };
@@ -627,6 +629,7 @@
 				FLI000020000000000000001 /* FloatingIndicator.swift */,
 				SGL000020000000000000001 /* SystemGlass.swift */,
 				TSV000020000000000000001 /* SessionToasts.swift */,
+				TSS000020000000000000001 /* SessionToastStack.swift */,
 				NSP000020000000000000001 /* NotchStatusPanel.swift */,
 				NSV000020000000000000001 /* NotchStatusView.swift */,
 				WCV000020000000000000001 /* WorktreeCleanupCardView.swift */,
@@ -913,6 +916,7 @@
 				FLI000010000000000000001 /* FloatingIndicator.swift in Sources */,
 				SGL000010000000000000001 /* SystemGlass.swift in Sources */,
 				TSV000010000000000000001 /* SessionToasts.swift in Sources */,
+				TSS000010000000000000001 /* SessionToastStack.swift in Sources */,
 				TSB000010000000000000001 /* SessionToastBoard.swift in Sources */,
 				ADT000010000000000000001 /* AppDelegate+SessionToasts.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,

@@ -136,6 +136,62 @@ final class SessionToastTests: XCTestCase {
         XCTAssertLessThanOrEqual(frames.cards[0].maxX, visible.maxX)
     }
 
+    // MARK: - Clicks
+
+    /// Two notices and the "N more", stacked as the window lays them out.
+    private func stackView() -> SessionToastStackView {
+        let stack = SessionToastStackView(frame: NSRect(x: 0, y: 0, width: 300, height: 156))
+        stack.add(NSView(frame: NSRect(x: 0, y: 92, width: 300, height: 56)), for: .notice("a"))
+        stack.add(NSView(frame: NSRect(x: 0, y: 28, width: 300, height: 56)), for: .notice("b"))
+        stack.add(NSView(frame: NSRect(x: 0, y: 0, width: 120, height: 28)), for: .overflow)
+        return stack
+    }
+
+    func testAClickOpensANoticeOrClosesItInItsCorner() {
+        let stack = stackView()
+        XCTAssertEqual(stack.action(at: NSPoint(x: 100, y: 110)), .open("a"))
+        XCTAssertEqual(stack.action(at: NSPoint(x: 290, y: 140)), .close("a"), "Top-right corner")
+        XCTAssertEqual(stack.action(at: NSPoint(x: 290, y: 35)), .open("b"), "Bottom-right is not the corner")
+        XCTAssertEqual(stack.action(at: NSPoint(x: 60, y: 14)), .overflow)
+    }
+
+    func testClicksBetweenAndBesideNoticesFallThrough() {
+        let stack = stackView()
+        XCTAssertNil(stack.action(at: NSPoint(x: 100, y: 88)), "The gap between notices")
+        XCTAssertNil(stack.action(at: NSPoint(x: 200, y: 14)), "Beside the N more")
+        XCTAssertNil(stack.hitTest(NSPoint(x: 100, y: 88)))
+        XCTAssertTrue(stack.hitTest(NSPoint(x: 100, y: 110)) === stack)
+    }
+
+    /// Takes the stack's actions for a press at `down` let go at `up`, without moving between.
+    private func click(_ stack: SessionToastStackView, down: NSPoint, up: NSPoint) -> [SessionToastStackView.Action] {
+        var actions: [SessionToastStackView.Action] = []
+        stack.onAction = { actions.append($0) }
+        stack.mouseDown(with: mouse(.leftMouseDown, at: down))
+        stack.mouseUp(with: mouse(.leftMouseUp, at: up))
+        return actions
+    }
+
+    private func mouse(_ type: NSEvent.EventType, at point: NSPoint) -> NSEvent {
+        NSEvent.mouseEvent(
+            with: type, location: point, modifierFlags: [], timestamp: 0, windowNumber: 0, context: nil,
+            eventNumber: 0, clickCount: 1, pressure: 1
+        )!
+    }
+
+    func testEveryClickActsAgainAfterTheLast() {
+        let stack = stackView()
+        XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 100, y: 110)), [.open("a")])
+        XCTAssertEqual(click(stack, down: NSPoint(x: 290, y: 75), up: NSPoint(x: 290, y: 75)), [.close("b")])
+        XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 100, y: 110)), [.open("a")])
+    }
+
+    func testLettingGoOverAnotherNoticeDoesNothing() {
+        let stack = stackView()
+        XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 100, y: 50)), [])
+        XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 290, y: 140)), [], "Body to corner")
+    }
+
     // MARK: - Which sessions get one
 
     func testWorkingSessionsNeedingTheUserAndUnreadResultsGetNotices() {

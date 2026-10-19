@@ -84,6 +84,7 @@ enum SessionToastLayout {
     static let width: CGFloat = 300
     static let height: CGFloat = 56
     static let gap: CGFloat = 8
+    static let cornerRadius: CGFloat = 14
     static let overflowSize = NSSize(width: 120, height: 28)
 
     /// The stack's starting edge: the left end of its top edge when it grows down, of its bottom
