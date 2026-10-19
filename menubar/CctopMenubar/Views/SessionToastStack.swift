@@ -152,7 +152,9 @@ final class SessionToastStackWindow: NSPanel {
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        // The glass draws its own edge, as on the floating indicator. A window shadow would trace
+        // every notice with a dark line over light windows, and a light one over dark windows.
+        hasShadow = false
         level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         hidesOnDeactivate = false
@@ -202,7 +204,6 @@ final class SessionToastStackWindow: NSPanel {
                 move.view.frame = move.frame
             }
             moves = []
-            invalidateShadow()
         }
         if !isVisible {
             alphaValue = 0
@@ -289,7 +290,6 @@ final class SessionToastStackWindow: NSPanel {
             // Mid-drag the window keeps its size; the drag's end lays the stack out afresh.
             guard let self, self.generation == current, !self.stack.isDragging else { return }
             if self.frame != target { self.setFrame(target, display: true) }
-            self.invalidateShadow()
         }
     }
 
