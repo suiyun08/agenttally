@@ -251,26 +251,50 @@ struct HoverToOpenSettingsRow: View {
 }
 
 /// Whether the dots also show in a small floating window, which stays visible over full-screen
-/// apps.
+/// apps; while it does, how many floating notices show under it.
 struct FloatingIndicatorSettingsRow: View {
     @AppStorage(FloatingIndicatorController.enabledKey) private var enabled = false
+    @AppStorage(SessionToastController.limitKey) private var limit = SessionToastBoard.defaultLimit
 
     var body: some View {
+        VStack(spacing: 0) {
+            row("Floating Indicator") {
+                Toggle("", isOn: $enabled)
+                    .toggleStyle(.switch).controlSize(.mini)
+                    .tint(Color.amber)
+                    .labelsHidden()
+                    .accessibilityLabel("Floating Indicator")
+            }
+            .help("Shows the dots in a small window you can drag anywhere, also over full-screen apps.")
+            if enabled {
+                Rectangle()
+                    .fill(Color.groupedRowBorder)
+                    .frame(height: 0.5)
+                row("Floating Notices") {
+                    Picker("Floating Notices", selection: $limit) {
+                        ForEach(SessionToastBoard.limitRange, id: \.self) { Text(verbatim: "\($0)").tag($0) }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .controlSize(.small)
+                    .fixedSize()
+                }
+                .help("How many floating notices show at once; the rest wait behind a count.")
+            }
+        }
+    }
+
+    private func row<Trailing: View>(_ title: LocalizedStringKey, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 8) {
-            Text("Floating Indicator")
+            Text(title)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
             Spacer(minLength: 8)
-            Toggle("", isOn: $enabled)
-                .toggleStyle(.switch).controlSize(.mini)
-                .tint(Color.amber)
-                .labelsHidden()
-                .accessibilityLabel("Floating Indicator")
+            trailing()
         }
         .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
         .padding(.vertical, 4)
         .frame(minHeight: 25)
-        .help("Shows the dots in a small window you can drag anywhere, also over full-screen apps.")
     }
 }

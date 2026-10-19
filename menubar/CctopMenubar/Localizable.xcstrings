@@ -3177,6 +3177,56 @@
           }
         }
       }
+    },
+    "Close": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "%lld more": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还有 %lld 条"
+          }
+        }
+      }
+    },
+    "Shown under the floating indicator while it is on": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬浮指示灯开着时，改为显示在它下方的浮窗里"
+          }
+        }
+      }
+    },
+    "Floating Notices": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浮窗显示上限"
+          }
+        }
+      }
+    },
+    "How many floating notices show at once; the rest wait behind a count.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时最多显示几个浮窗，其余的合并成“还有 N 条”。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

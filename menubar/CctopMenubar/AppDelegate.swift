@@ -45,6 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
     @MainActor lazy var panelHover = PanelHoverController()
     @MainActor lazy var floatingIndicator = FloatingIndicatorController()
+    @MainActor lazy var sessionToasts = SessionToastController()
 
     private static var isXcodeTestHost: Bool {
         let environment = ProcessInfo.processInfo.environment

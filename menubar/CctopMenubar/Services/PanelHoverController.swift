@@ -51,24 +51,18 @@ final class PanelHoverController: NSResponder {
     }
 
     /// Watches the pointer entering and leaving `view`, an anchor.
-    /// Watches the pointer entering and leaving `view`, an anchor. The menu bar waits `restDelay`
-    /// so a pointer sweeping along it opens nothing; the floating indicator opens at once.
-    func track(_ view: NSView, restDelay: TimeInterval = PanelHoverController.restDelay) {
+    func track(_ view: NSView) {
         view.addTrackingArea(NSTrackingArea(
             rect: .zero,
             options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
             owner: self,
-            userInfo: [Self.restDelayKey: restDelay]
+            userInfo: nil
         ))
     }
 
-    static let restDelayKey = "restDelay"
-
     override func mouseEntered(with event: NSEvent) {
         restTimer?.invalidate()
-        let delay = event.trackingArea?.userInfo?[Self.restDelayKey] as? TimeInterval ?? Self.restDelay
-        guard delay > 0 else { return restElapsed() }
-        restTimer = scheduledTimer(after: delay, repeats: false) { [weak self] in self?.restElapsed() }
+        restTimer = scheduledTimer(after: Self.restDelay, repeats: false) { [weak self] in self?.restElapsed() }
     }
 
     override func mouseExited(with event: NSEvent) {

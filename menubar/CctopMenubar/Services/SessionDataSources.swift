@@ -32,7 +32,11 @@ struct SessionDataSources {
             claudeDesktopSessions: ClaudeDesktopSessionArchiveLookup(),
             desktopAppConnection: .live,
             processAlive: { $0.isAlive },
-            notificationsEnabled: { UserDefaults.standard.bool(forKey: "notificationsEnabled") },
+            // With the floating indicator on, its floating notices stand in for system banners.
+            notificationsEnabled: {
+                UserDefaults.standard.bool(forKey: "notificationsEnabled")
+                    && !UserDefaults.standard.bool(forKey: FloatingIndicatorController.enabledKey)
+            },
             clientReadState: ClientReadStateLookup(),
             playAlertSound: { $0.ring() },
             now: Date.init

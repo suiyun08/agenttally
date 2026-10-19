@@ -216,6 +216,42 @@ extension SessionManager {
         }
     }
 
+    /// A floating notice for every session that is working or needs the user now.
+    func sessionToastCandidates() -> [SessionToast] {
+        SessionDisplayPolicy.activeSessions(from: userSessions).compactMap { userSession in
+            let data = userSession.displayRecord.data
+            guard let id = userSession.identity.cctopSessionID, CctopSessionID.isValid(id), data.lifecycle == .active,
+                  let kind = Self.toastKind(for: data),
+                  !dataSources.manualSessionVisibility.isHidden(cctopSessionID: id) else { return nil }
+            let content = data.notificationContent
+            let message = kind == .working ? data.contextLine : content.body
+            let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return SessionToast(
+                id: id, kind: kind, badge: data.agentBadge, title: content.title, status: data.status,
+                message: trimmed?.isEmpty == false ? trimmed : nil, lastActivity: data.lastActivity
+            )
+        }
+    }
+
+    /// Working sessions, sessions that need the user, and unread results get a notice.
+    nonisolated static func toastKind(for data: SessionData) -> SessionToast.Kind? {
+        switch data.status {
+        case .working, .compacting, .background:
+            return .working
+        default:
+            guard data.shouldPostAttentionNotification else { return nil }
+            return data.status == .done ? .done : .needsYou
+        }
+    }
+
+    /// Where a jump to the session goes, as for a click on its system notification.
+    func focusTarget(forCctopSessionID cctopSessionID: String) -> SessionData? {
+        FocusTargetResolver.currentUserSession(
+            forCctopSessionID: cctopSessionID,
+            in: SessionDisplayPolicy.connectedSessions(from: userSessions)
+        )?.focusTarget
+    }
+
     private func sendNotification(forCctopSessionID cctopSessionID: String) {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in

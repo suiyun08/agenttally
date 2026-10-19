@@ -75,6 +75,7 @@ extension AppDelegate {
     /// A peek leaves keyboard focus with the app the user is typing in; a full open takes it.
     @MainActor private func presentPanel(takingFocus: Bool) {
         notchVisibilityWork?.cancel()
+        sessionToasts.isSuppressed = true
         // Plugin/hook state can change outside the app (e.g. trusting
         // Codex hooks in Codex itself) — re-read it on every open.
         pluginManager.refresh()
@@ -97,6 +98,7 @@ extension AppDelegate {
 
     @MainActor private func dismissPanel() {
         panel.orderOut(nil)
+        sessionToasts.isSuppressed = false
         updateCleanupPanelVisibility()
         focusLocation = nil
         previousApp = nil
@@ -191,14 +193,14 @@ extension AppDelegate {
         panelHover.onLeave = { [weak self] in self?.handleEvent(.pointerLeft) }
         if let button = statusItem.button { panelHover.track(button) }
         notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
-        floatingIndicator.onViewCreated = { [weak self] view in self?.panelHover.track(view, restDelay: 0) }
         floatingIndicator.onClick = { [weak self] in self?.togglePanel() }
+        setupSessionToasts()
         floatingIndicator.syncVisibility()
     }
 
-    /// Where the dots are on screen: the status item, the notch pill when it stands in, and the
-    /// floating indicator when it is on.
+    /// Where the menu bar's dots are on screen: the status item, and the notch pill when it stands
+    /// in. The floating indicator opens the panel only on a click.
     @MainActor private var hoverAnchors: [NSRect] {
-        [statusItem.button?.window?.frame, notchController.pillFrame, floatingIndicator.visibleFrame].compactMap { $0 }
+        [statusItem.button?.window?.frame, notchController.pillFrame].compactMap { $0 }
     }
 }

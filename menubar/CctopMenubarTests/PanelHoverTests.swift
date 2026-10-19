@@ -92,18 +92,6 @@ final class PanelHoverTests: XCTestCase {
         XCTAssertFalse(PanelHoverController.contains([statusItem], NSPoint(x: 1100, y: 982)))
     }
 
-    @MainActor
-    func testTheFloatingIndicatorOpensWithoutTheMenuBarsPause() {
-        let hover = PanelHoverController()
-        let menubar = NSView()
-        let capsule = NSView()
-        hover.track(menubar)
-        hover.track(capsule, restDelay: 0)
-        let key = PanelHoverController.restDelayKey
-        XCTAssertEqual(menubar.trackingAreas.first?.userInfo?[key] as? TimeInterval, PanelHoverController.restDelay)
-        XCTAssertEqual(capsule.trackingAreas.first?.userInfo?[key] as? TimeInterval, 0)
-    }
-
     // MARK: - When a peek closes
 
     func testPeekClosesOnlyAfterThePointerStaysAwayForTheGrace() {

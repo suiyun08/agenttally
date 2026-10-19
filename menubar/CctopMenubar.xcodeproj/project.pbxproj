@@ -161,6 +161,11 @@
 		SDV000010000000000000001 /* StatusDotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDV000020000000000000001 /* StatusDotsView.swift */; };
 		FLI000010000000000000001 /* FloatingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLI000020000000000000001 /* FloatingIndicator.swift */; };
 		SGL000010000000000000001 /* SystemGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = SGL000020000000000000001 /* SystemGlass.swift */; };
+		TSB000010000000000000001 /* SessionToastBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSB000020000000000000001 /* SessionToastBoard.swift */; };
+		TSV000010000000000000001 /* SessionToasts.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSV000020000000000000001 /* SessionToasts.swift */; };
+		TSS000010000000000000001 /* SessionToastStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSS000020000000000000001 /* SessionToastStack.swift */; };
+		ADT000010000000000000001 /* AppDelegate+SessionToasts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADT000020000000000000001 /* AppDelegate+SessionToasts.swift */; };
+		TST000010000000000000001 /* SessionToastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000020000000000000001 /* SessionToastTests.swift */; };
 		FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLT000020000000000000001 /* FloatingIndicatorTests.swift */; };
 		DBT000010000000000000001 /* DotBreathingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBT000020000000000000001 /* DotBreathingTests.swift */; };
 		MRT000010000000000000001 /* MenubarIconRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = MRT000020000000000000001 /* MenubarIconRendererTests.swift */; };
@@ -380,6 +385,11 @@
 		SDV000020000000000000001 /* StatusDotsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDotsView.swift; sourceTree = "<group>"; };
 		FLI000020000000000000001 /* FloatingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicator.swift; sourceTree = "<group>"; };
 		SGL000020000000000000001 /* SystemGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGlass.swift; sourceTree = "<group>"; };
+		TSB000020000000000000001 /* SessionToastBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastBoard.swift; sourceTree = "<group>"; };
+		TSV000020000000000000001 /* SessionToasts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToasts.swift; sourceTree = "<group>"; };
+		TSS000020000000000000001 /* SessionToastStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastStack.swift; sourceTree = "<group>"; };
+		ADT000020000000000000001 /* AppDelegate+SessionToasts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+SessionToasts.swift"; sourceTree = "<group>"; };
+		TST000020000000000000001 /* SessionToastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionToastTests.swift; sourceTree = "<group>"; };
 		FLT000020000000000000001 /* FloatingIndicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingIndicatorTests.swift; sourceTree = "<group>"; };
 		DBT000020000000000000001 /* DotBreathingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotBreathingTests.swift; sourceTree = "<group>"; };
 		SCTRL0020000000000000001 /* SettingsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsControls.swift; sourceTree = "<group>"; };
@@ -534,6 +544,7 @@
 				EXT000010000000000000001 /* Extensions */,
 				32C0340D28BC497986926D02 /* AppDelegate+PanelGeometry.swift */,
 				C6FC4F60BBCB4F0486A3A3CB /* AppDelegate+PanelEvents.swift */,
+				ADT000020000000000000001 /* AppDelegate+SessionToasts.swift */,
 				D6674CA488EE4C65B28AE4B3 /* AppDelegate+URLCommands.swift */,
 			);
 			path = CctopMenubar;
@@ -574,6 +585,7 @@
 				STC000020000000000000001 /* StatusColors.swift */,
 				SDP000020000000000000001 /* SessionDisplayPolicy.swift */,
 				SCN000020000000000000001 /* StatusCounts.swift */,
+				TSB000020000000000000001 /* SessionToastBoard.swift */,
 				DBR000020000000000000001 /* DotBreathing.swift */,
 				PPO000020000000000000001 /* PanelPositioning.swift */,
 				WCC000020000000000000001 /* WorktreeCleanupCandidate.swift */,
@@ -616,6 +628,8 @@
 				SDV000020000000000000001 /* StatusDotsView.swift */,
 				FLI000020000000000000001 /* FloatingIndicator.swift */,
 				SGL000020000000000000001 /* SystemGlass.swift */,
+				TSV000020000000000000001 /* SessionToasts.swift */,
+				TSS000020000000000000001 /* SessionToastStack.swift */,
 				NSP000020000000000000001 /* NotchStatusPanel.swift */,
 				NSV000020000000000000001 /* NotchStatusView.swift */,
 				WCV000020000000000000001 /* WorktreeCleanupCardView.swift */,
@@ -680,6 +694,7 @@
 				MRT000020000000000000001 /* MenubarIconRendererTests.swift */,
 				DBT000020000000000000001 /* DotBreathingTests.swift */,
 				FLT000020000000000000001 /* FloatingIndicatorTests.swift */,
+				TST000020000000000000001 /* SessionToastTests.swift */,
 				SCT000020000000000000001 /* StatusCountsTests.swift */,
 				HVT000020000000000000001 /* StatusCountsUserSessionInitTests.swift */,
 				SDPT00020000000000000001 /* SessionDisplayPolicyTests.swift */,
@@ -900,6 +915,10 @@
 				SDV000010000000000000001 /* StatusDotsView.swift in Sources */,
 				FLI000010000000000000001 /* FloatingIndicator.swift in Sources */,
 				SGL000010000000000000001 /* SystemGlass.swift in Sources */,
+				TSV000010000000000000001 /* SessionToasts.swift in Sources */,
+				TSS000010000000000000001 /* SessionToastStack.swift in Sources */,
+				TSB000010000000000000001 /* SessionToastBoard.swift in Sources */,
+				ADT000010000000000000001 /* AppDelegate+SessionToasts.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,
 				RPM000010000000000000001 /* RecentProject+Mock.swift in Sources */,
 				NSN000010000000000000001 /* NSScreen+Notch.swift in Sources */,
@@ -1015,6 +1034,7 @@
 				MRT000010000000000000001 /* MenubarIconRendererTests.swift in Sources */,
 				DBT000010000000000000001 /* DotBreathingTests.swift in Sources */,
 				FLT000010000000000000001 /* FloatingIndicatorTests.swift in Sources */,
+				TST000010000000000000001 /* SessionToastTests.swift in Sources */,
 				SCT000010000000000000001 /* StatusCountsTests.swift in Sources */,
 				HVT000010000000000000001 /* StatusCountsUserSessionInitTests.swift in Sources */,
 				SDPT00010000000000000001 /* SessionDisplayPolicyTests.swift in Sources */,
@@ -1112,7 +1132,7 @@
 				CODE_SIGN_ENTITLEMENTS = CctopMenubar/CctopMenubar.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
@@ -1122,7 +1142,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1139,7 +1159,7 @@
 				CODE_SIGN_ENTITLEMENTS = CctopMenubar/CctopMenubar.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
@@ -1149,7 +1169,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1163,9 +1183,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_NAME = "cctop-hook";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1175,9 +1195,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_NAME = "cctop-hook";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1188,10 +1208,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1205,10 +1225,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10003;
+				CURRENT_PROJECT_VERSION = 10004;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

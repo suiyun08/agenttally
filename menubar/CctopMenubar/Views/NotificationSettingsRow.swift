@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotificationSettingsRow: View {
     @ObservedObject var notificationPermission: NotificationPermissionController
+    @AppStorage(FloatingIndicatorController.enabledKey) private var floatingIndicatorOn = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -51,8 +52,10 @@ struct NotificationSettingsRow: View {
 
     private var statusText: String? {
         switch notificationPermission.state {
-        case .off, .enabled:
+        case .off:
             return nil
+        case .enabled:
+            return floatingIndicatorOn ? String(localized: "Shown under the floating indicator while it is on") : nil
         case .enabling:
             return String(localized: "Checking macOS permission")
         case .pendingSystemPermission:
