@@ -48,12 +48,18 @@ developed on its own.
 - **Floating indicator.** Turn on **Settings › General › Floating Indicator** for the same dots on
   a small glass capsule you can drag anywhere. It shows on every desktop and over full-screen apps;
   rest the pointer on it and the panel opens at once, click it and the panel stays.
+- **Floating notices.** While the floating indicator is on, each session that is working, needs
+  you, or has an unread result gets a small glass notice under the capsule instead of a system
+  banner. Click one to jump to its session, or close it with ×. A notice stays until its session
+  goes idle or is read, newest activity first, up to the number set in
+  **Settings › General › Floating Notices**. Drag them anywhere as one stack.
 - **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
   unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
 - **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
   to the exact terminal pane, editor window, or desktop conversation.
-- **Alerts you choose.** A notification when a session finishes, and two separate sounds, one for
-  "done" and one for "needs you". Each sound has its own setting, separate from notifications.
+- **Alerts you choose.** A notification when a session finishes (a floating notice while the
+  floating indicator is on), and two separate sounds, one for "done" and one for "needs you". Each
+  sound has its own setting, separate from notifications.
 - **Read sync.** Reading a finished turn in Claude Desktop or Codex Desktop clears its unread dot
   here too.
 - **A panel that fits your screen.** Liquid Glass on macOS 26 with white text that stays readable
