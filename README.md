@@ -47,12 +47,13 @@ developed on its own.
   **Settings › General › Open on Hover**.
 - **Floating indicator.** Turn on **Settings › General › Floating Indicator** for the same dots on
   a small glass capsule you can drag anywhere. It shows on every desktop and over full-screen apps;
-  rest the pointer on it and the panel opens at once, click it and the panel stays.
+  click it to open the panel.
 - **Floating notices.** While the floating indicator is on, each session that is working, needs
   you, or has an unread result gets a small glass notice under the capsule instead of a system
   banner. Click one to jump to its session, or close it with ×. A notice stays until its session
   goes idle or is read, newest activity first, up to the number set in
-  **Settings › General › Floating Notices**. Drag them anywhere as one stack.
+  **Settings › General › Floating Notices**; they hold still while the pointer rests on them. Drag
+  them anywhere as one stack.
 - **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
   unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
 - **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
