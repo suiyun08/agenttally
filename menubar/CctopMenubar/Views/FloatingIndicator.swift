@@ -119,6 +119,8 @@ private struct CapsuleGlass: ViewModifier {
 final class FloatingIndicatorWindow: NSPanel {
     var onClick: (() -> Void)?
     var onMoved: ((NSRect) -> Void)?
+    /// Called on every step of a drag, so what hangs off the indicator follows it.
+    var onDragged: (() -> Void)?
 
     init() {
         super.init(
@@ -159,6 +161,7 @@ final class FloatingIndicatorWindow: NSPanel {
             let visible = NSScreen.screens.first(where: { $0.frame.contains(location) })?.visibleFrame
                 ?? screen?.visibleFrame
             setFrameOrigin(visible.map { FloatingIndicatorPlacement.kept(moved, within: $0) }?.origin ?? moved.origin)
+            onDragged?()
         }
         if dragged {
             onMoved?(frame)
@@ -172,11 +175,13 @@ final class FloatingIndicatorWindow: NSPanel {
 /// step with the menu bar's dots, and remembers where the user put it.
 @MainActor
 final class FloatingIndicatorController {
-    static let enabledKey = "floatingIndicatorEnabled"
+    nonisolated static let enabledKey = "floatingIndicatorEnabled"
     private static let originXKey = "floatingIndicatorOriginX"
     private static let topYKey = "floatingIndicatorTopY"
 
     var onClick: () -> Void = {}
+    /// Called whenever the indicator moves, resizes, shows, or hides.
+    var onFrameChanged: () -> Void = {}
     /// Called with the indicator's view once it exists, for hover tracking.
     var onViewCreated: (NSView) -> Void = { _ in }
 
@@ -218,6 +223,7 @@ final class FloatingIndicatorController {
         } else {
             window?.orderOut(nil)
         }
+        onFrameChanged()
     }
 
     private func show() {
@@ -232,10 +238,12 @@ final class FloatingIndicatorController {
         host.sizingOptions = []
         window.contentView = SystemGlass.wrapping(host, cornerRadius: FloatingIndicatorView.height / 2)
         window.onClick = { [weak self] in self?.onClick() }
-        window.onMoved = { frame in
+        window.onMoved = { [weak self] frame in
             UserDefaults.standard.set(frame.minX, forKey: Self.originXKey)
             UserDefaults.standard.set(frame.maxY, forKey: Self.topYKey)
+            self?.onFrameChanged()
         }
+        window.onDragged = { [weak self] in self?.onFrameChanged() }
         window.setFrame(initialFrame(size: FloatingIndicatorView.size(for: model.counts)), display: false)
         self.window = window
         onViewCreated(host)
@@ -261,6 +269,9 @@ final class FloatingIndicatorController {
         let size = FloatingIndicatorView.size(for: model.counts)
         guard let visible = (window.screen ?? NSScreen.main)?.visibleFrame else { return }
         let fitted = FloatingIndicatorPlacement.resized(window.frame, to: size, within: visible)
-        if fitted != window.frame { window.setFrame(fitted, display: true) }
+        if fitted != window.frame {
+            window.setFrame(fitted, display: true)
+            onFrameChanged()
+        }
     }
 }

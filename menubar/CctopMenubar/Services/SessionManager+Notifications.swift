@@ -216,6 +216,30 @@ extension SessionManager {
         }
     }
 
+    /// The floating notice for a session that would get a system notification now, or nil.
+    func sessionToast(forCctopSessionID cctopSessionID: String) -> SessionToast? {
+        guard let data = FocusTargetResolver.currentUserSession(
+                  forCctopSessionID: cctopSessionID,
+                  in: SessionDisplayPolicy.activeSessions(from: userSessions)
+              )?.focusTarget,
+              data.shouldPostAttentionNotification,
+              !dataSources.manualSessionVisibility.isHidden(cctopSessionID: cctopSessionID) else { return nil }
+        let content = data.notificationContent
+        let message = content.body.trimmingCharacters(in: .whitespacesAndNewlines)
+        return SessionToast(
+            id: cctopSessionID, badge: data.agentBadge, title: content.title, status: data.status,
+            message: message.isEmpty ? nil : message
+        )
+    }
+
+    /// Where a jump to the session goes, as for a click on its system notification.
+    func focusTarget(forCctopSessionID cctopSessionID: String) -> SessionData? {
+        FocusTargetResolver.currentUserSession(
+            forCctopSessionID: cctopSessionID,
+            in: SessionDisplayPolicy.connectedSessions(from: userSessions)
+        )?.focusTarget
+    }
+
     private func sendNotification(forCctopSessionID cctopSessionID: String) {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in

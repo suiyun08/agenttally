@@ -75,6 +75,7 @@ extension AppDelegate {
     /// A peek leaves keyboard focus with the app the user is typing in; a full open takes it.
     @MainActor private func presentPanel(takingFocus: Bool) {
         notchVisibilityWork?.cancel()
+        sessionToasts.isSuppressed = true
         // Plugin/hook state can change outside the app (e.g. trusting
         // Codex hooks in Codex itself) — re-read it on every open.
         pluginManager.refresh()
@@ -97,6 +98,7 @@ extension AppDelegate {
 
     @MainActor private func dismissPanel() {
         panel.orderOut(nil)
+        sessionToasts.isSuppressed = false
         updateCleanupPanelVisibility()
         focusLocation = nil
         previousApp = nil
@@ -193,6 +195,7 @@ extension AppDelegate {
         notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
         floatingIndicator.onViewCreated = { [weak self] view in self?.panelHover.track(view, restDelay: 0) }
         floatingIndicator.onClick = { [weak self] in self?.togglePanel() }
+        setupSessionToasts()
         floatingIndicator.syncVisibility()
     }
 
