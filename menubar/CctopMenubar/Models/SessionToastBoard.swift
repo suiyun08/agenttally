@@ -39,7 +39,16 @@ struct SessionToastBoard: Equatable {
     private var lastKinds: [String: SessionToast.Kind] = [:]
     private var started = false
 
-    func visible(limit: Int) -> [SessionToast] { Array(toasts.prefix(limit)) }
+    /// The notices that show, at most `limit`. Given `held`, the order showing while the pointer
+    /// rests on them, those still showing keep their places and newcomers go after them, so
+    /// nothing moves under the pointer.
+    func visible(limit: Int, holding held: [String] = []) -> [SessionToast] {
+        guard !held.isEmpty else { return Array(toasts.prefix(limit)) }
+        let kept = held.compactMap { id in toasts.first { $0.id == id } }
+        let newcomers = toasts.filter { !held.contains($0.id) }
+        return Array((kept + newcomers).prefix(limit))
+    }
+
     func overflowCount(limit: Int) -> Int { max(0, toasts.count - limit) }
 
     /// Brings the notices in line with the sessions that are working or need the user now.
@@ -61,9 +70,10 @@ struct SessionToastBoard: Equatable {
         closed.formIntersection(kinds.keys)
         lastKinds = kinds
         started = true
+        // Ties go by session ID, so equal times never swap places between refreshes.
         toasts = candidates
             .filter { !closed.contains($0.id) }
-            .sorted { $0.lastActivity > $1.lastActivity }
+            .sorted { $0.lastActivity != $1.lastActivity ? $0.lastActivity > $1.lastActivity : $0.id < $1.id }
     }
 
     mutating func close(_ id: String) {
@@ -112,6 +122,17 @@ enum SessionToastLayout {
     static func start(forFirstCard frame: NSRect, visible: NSRect) -> Start {
         let growsDown = frame.midY > visible.midY
         return Start(point: NSPoint(x: frame.minX, y: growsDown ? frame.maxY : frame.minY), growsDown: growsDown)
+    }
+
+    /// How many of `total` notices show from `start`: at most `limit`, and only as many as fit
+    /// on screen, leaving room for the "N more" when some must wait behind it.
+    static func shownCount(limit: Int, of total: Int, start: Start, visible: NSRect) -> Int {
+        let room = start.growsDown ? start.point.y - visible.minY : visible.maxY - start.point.y
+        let step = height + gap
+        let wanted = min(limit, total)
+        if wanted == total, CGFloat(wanted) * step - gap <= room { return wanted }
+        let fitting = Int(((room - overflowSize.height) / step).rounded(.down))
+        return max(1, min(wanted, fitting))
     }
 
     static func frames(count: Int, overflow: Bool, start: Start, visible: NSRect) -> Frames {

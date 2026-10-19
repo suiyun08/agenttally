@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import CctopMenubar
 
@@ -88,6 +89,28 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(board.toasts.map(\.id), ["a"])
     }
 
+    func testEqualTimesKeepOneOrder() {
+        var board = startedBoard()
+        board.update([toast("b", .working), toast("a", .working)])
+        XCTAssertEqual(board.toasts.map(\.id), ["a", "b"])
+        board.update([toast("a", .working), toast("b", .working)])
+        XCTAssertEqual(board.toasts.map(\.id), ["a", "b"])
+    }
+
+    func testUnderThePointerNoticesHoldTheirPlacesAndNewcomersGoLast() {
+        var board = startedBoard()
+        board.update([toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 3)])
+        XCTAssertEqual(board.visible(limit: 4).map(\.id), ["a", "b", "c"])
+        // c works again and d arrives, both newer than the rest, while the pointer rests on them.
+        board.update([
+            toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 0),
+            toast("d", .needsYou, ago: 0),
+        ])
+        XCTAssertEqual(board.visible(limit: 4, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c", "d"])
+        XCTAssertEqual(board.visible(limit: 3, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c"])
+        XCTAssertEqual(board.visible(limit: 4).map(\.id), ["c", "d", "a", "b"], "Re-sorted once the pointer leaves")
+    }
+
     func testTheLimitCapsWhatShowsAndCountsTheRest() {
         var board = startedBoard()
         board.update((1...6).map { toast(String($0), .working, ago: TimeInterval($0)) })
@@ -129,6 +152,26 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(frames.cards[1].maxY, card.minY - SessionToastLayout.gap)
     }
 
+    func testAllNoticesShowWhenTheyFit() {
+        let start = SessionToastLayout.Start(point: NSPoint(x: 40, y: 820), growsDown: true)
+        XCTAssertEqual(SessionToastLayout.shownCount(limit: 4, of: 3, start: start, visible: visible), 3)
+        XCTAssertEqual(SessionToastLayout.shownCount(limit: 4, of: 9, start: start, visible: visible), 4)
+        XCTAssertEqual(SessionToastLayout.shownCount(limit: 10, of: 10, start: start, visible: visible), 10)
+    }
+
+    func testWhatDoesNotFitOnScreenWaitsBehindTheCount() {
+        let start = SessionToastLayout.Start(point: NSPoint(x: 40, y: 450), growsDown: true)
+        let count = SessionToastLayout.shownCount(limit: 10, of: 10, start: start, visible: visible)
+        XCTAssertLessThan(count, 10)
+        let frames = SessionToastLayout.frames(count: count, overflow: true, start: start, visible: visible)
+        XCTAssertGreaterThanOrEqual(frames.overflow?.minY ?? -1, visible.minY, "The count stays on screen")
+        XCTAssertTrue(frames.cards.allSatisfy { $0.minY >= visible.minY })
+        let growingUp = SessionToastLayout.Start(point: NSPoint(x: 40, y: 400), growsDown: false)
+        let upCount = SessionToastLayout.shownCount(limit: 10, of: 10, start: growingUp, visible: visible)
+        let upFrames = SessionToastLayout.frames(count: upCount, overflow: true, start: growingUp, visible: visible)
+        XCTAssertLessThanOrEqual(upFrames.overflow?.maxY ?? .infinity, visible.maxY)
+    }
+
     func testTheyStayOnScreenBesideAnIndicatorAtTheEdge() {
         let indicator = NSRect(x: 1400, y: 820, width: 30, height: 32)
         let start = SessionToastLayout.start(under: indicator, visible: visible)
@@ -153,6 +196,20 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(stack.action(at: NSPoint(x: 290, y: 140)), .close("a"), "Top-right corner")
         XCTAssertEqual(stack.action(at: NSPoint(x: 290, y: 35)), .open("b"), "Bottom-right is not the corner")
         XCTAssertEqual(stack.action(at: NSPoint(x: 60, y: 14)), .overflow)
+    }
+
+    func testTheStatusBesideTheCloseButtonStillOpens() {
+        let stack = stackView()
+        XCTAssertEqual(stack.action(at: NSPoint(x: 271, y: 140)), .open("a"), "The status label's last letter")
+        XCTAssertEqual(stack.action(at: NSPoint(x: 290, y: 118)), .open("a"), "The message line's end")
+        XCTAssertEqual(stack.action(at: NSPoint(x: 284, y: 132)), .close("a"), "On the close button")
+    }
+
+    func testNoticesOnTheirWayOutTakeNoClicks() {
+        let stack = stackView()
+        stack.takesClicks = false
+        XCTAssertNil(stack.action(at: NSPoint(x: 100, y: 110)))
+        XCTAssertNil(stack.hitTest(NSPoint(x: 100, y: 110)))
     }
 
     func testClicksBetweenAndBesideNoticesFallThrough() {
@@ -190,6 +247,35 @@ final class SessionToastTests: XCTestCase {
         let stack = stackView()
         XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 100, y: 50)), [])
         XCTAssertEqual(click(stack, down: NSPoint(x: 100, y: 110), up: NSPoint(x: 290, y: 140)), [], "Body to corner")
+    }
+
+    // MARK: - The window
+
+    @MainActor
+    func testWhenANoticeGoesTheOnesAfterItCloseTheGap() {
+        let window = SessionToastStackWindow()
+        defer { window.orderOut(nil) }
+        let start = SessionToastLayout.Start(point: NSPoint(x: 100, y: 800), growsDown: true)
+        func entries(_ ids: [String]) -> [SessionToastStackWindow.Entry] {
+            let frames = SessionToastLayout.frames(count: ids.count, overflow: false, start: start, visible: visible)
+            return zip(ids, frames.cards).map { id, frame in
+                SessionToastStackWindow.Entry(item: .notice(id), frame: frame, cornerRadius: 14, content: AnyView(Color.clear))
+            }
+        }
+        window.show(entries(["a", "b", "c"]), growsDown: true)
+        settle()
+        window.show(entries(["a", "c"]), growsDown: true)
+        settle()
+        let slots = SessionToastLayout.frames(count: 2, overflow: false, start: start, visible: visible).cards
+        XCTAssertNil(window.stack.items[.notice("b")])
+        XCTAssertEqual(window.screenFrame(of: .notice("a")), slots[0])
+        XCTAssertEqual(window.screenFrame(of: .notice("c")), slots[1], "c moved up into b's place")
+        XCTAssertEqual(window.frame, slots[0].union(slots[1]), "The window shrank to fit")
+    }
+
+    /// Lets the window's animations finish.
+    private func settle() {
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
     }
 
     // MARK: - Which sessions get one

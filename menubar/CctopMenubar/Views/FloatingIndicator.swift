@@ -182,8 +182,6 @@ final class FloatingIndicatorController {
     var onClick: () -> Void = {}
     /// Called whenever the indicator moves, resizes, shows, or hides.
     var onFrameChanged: () -> Void = {}
-    /// Called with the indicator's view once it exists, for hover tracking.
-    var onViewCreated: (NSView) -> Void = { _ in }
 
     private let model = FloatingIndicatorModel()
     private var window: FloatingIndicatorWindow?
@@ -218,12 +216,13 @@ final class FloatingIndicatorController {
 
     /// Shows or hides the indicator with its setting.
     func syncVisibility() {
+        let before = visibleFrame
         if Self.isEnabled {
             show()
         } else {
             window?.orderOut(nil)
         }
-        onFrameChanged()
+        if visibleFrame != before { onFrameChanged() }
     }
 
     private func show() {
@@ -246,7 +245,6 @@ final class FloatingIndicatorController {
         window.onDragged = { [weak self] in self?.onFrameChanged() }
         window.setFrame(initialFrame(size: FloatingIndicatorView.size(for: model.counts)), display: false)
         self.window = window
-        onViewCreated(host)
         return window
     }
 

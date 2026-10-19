@@ -124,13 +124,27 @@ final class SessionToastController {
     }
 
     private(set) var board = SessionToastBoard()
+    /// The notices showing now, in order, held while the pointer rests on them.
+    private var shownIDs: [String] = []
+    private var appliedLimit = 0
+    private var observer: NSObjectProtocol?
 
     private lazy var window: SessionToastStackWindow = {
         let window = SessionToastStackWindow()
         window.stack.onAction = { [weak self] action in self?.perform(action) }
         window.stack.onDragEnded = { [weak self] in self?.endDrag() }
+        window.stack.onPointerLeft = { [weak self] in self?.layout() }
         return window
     }()
+
+    init() {
+        appliedLimit = Self.limit
+        observer = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyLimit() }
+        }
+    }
 
     static var limit: Int {
         let stored = UserDefaults.standard.object(forKey: limitKey) as? Int ?? SessionToastBoard.defaultLimit
@@ -153,18 +167,30 @@ final class SessionToastController {
     }
 
     /// Puts the notices in place. Mid-drag it leaves them be: the drag's end lays them out
-    /// where they landed.
+    /// where they landed. While the pointer rests on them they keep their order, so a click
+    /// lands on the notice under it; they re-sort once it leaves.
     func layout() {
         guard !window.stack.isDragging else { return }
         guard !isSuppressed, FloatingIndicatorController.isEnabled, let start = stackStart() else {
+            shownIDs = []
             return window.hideAll()
         }
-        let limit = Self.limit
-        let shown = board.visible(limit: limit)
-        let overflow = board.overflowCount(limit: limit)
+        let count = SessionToastLayout.shownCount(
+            limit: Self.limit, of: board.toasts.count, start: start.start, visible: start.visible
+        )
+        let pointerOn = window.isVisible && window.frame.contains(NSEvent.mouseLocation)
+        let shown = board.visible(limit: count, holding: pointerOn ? shownIDs : [])
+        shownIDs = shown.map(\.id)
+        let overflow = board.overflowCount(limit: count)
         let frames = SessionToastLayout.frames(
             count: shown.count, overflow: overflow > 0, start: start.start, visible: start.visible
         )
+        window.show(entries(shown, overflow: overflow, frames: frames), growsDown: start.start.growsDown)
+    }
+
+    private func entries(
+        _ shown: [SessionToast], overflow: Int, frames: SessionToastLayout.Frames
+    ) -> [SessionToastStackWindow.Entry] {
         var entries = zip(shown, frames.cards).map { toast, frame in
             SessionToastStackWindow.Entry(
                 item: .notice(toast.id), frame: frame, cornerRadius: SessionToastLayout.cornerRadius,
@@ -177,7 +203,14 @@ final class SessionToastController {
                 content: AnyView(SessionToastOverflowView(count: overflow))
             ))
         }
-        window.show(entries, growsDown: start.start.growsDown)
+        return entries
+    }
+
+    /// A new limit from Settings shows at once.
+    private func applyLimit() {
+        guard Self.limit != appliedLimit else { return }
+        appliedLimit = Self.limit
+        layout()
     }
 
     private func perform(_ action: SessionToastStackView.Action) {

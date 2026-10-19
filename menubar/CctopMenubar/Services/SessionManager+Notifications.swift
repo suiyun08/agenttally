@@ -220,7 +220,7 @@ extension SessionManager {
     func sessionToastCandidates() -> [SessionToast] {
         SessionDisplayPolicy.activeSessions(from: userSessions).compactMap { userSession in
             let data = userSession.displayRecord.data
-            guard let id = userSession.identity.cctopSessionID, data.lifecycle == .active,
+            guard let id = userSession.identity.cctopSessionID, CctopSessionID.isValid(id), data.lifecycle == .active,
                   let kind = Self.toastKind(for: data),
                   !dataSources.manualSessionVisibility.isHidden(cctopSessionID: id) else { return nil }
             let content = data.notificationContent

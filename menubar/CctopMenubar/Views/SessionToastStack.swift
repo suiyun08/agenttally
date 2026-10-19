@@ -9,7 +9,7 @@ enum SessionToastItem: Hashable {
 
 /// The floating notices' window's content. It takes every click on a notice itself instead of
 /// handing it on to buttons, since the window never becomes key: a press that moves drags the
-/// window, and one that does not opens the notice, or closes it in its close button's corner.
+/// window, and one that does not opens the notice, or closes it on its close button.
 /// Around the notices the mouse falls through to whatever is behind.
 final class SessionToastStackView: NSView {
     enum Action: Equatable {
@@ -18,12 +18,16 @@ final class SessionToastStackView: NSView {
         case overflow
     }
 
-    /// The square in a notice's top-right corner where a click closes it: around its close
-    /// button, and wide enough to hit without aiming.
-    static let closeZone: CGFloat = 32
+    /// The square in a notice's top-right corner where a click closes it: the close button and a
+    /// little around it, clear of the status label and the message beside and below it.
+    static let closeZone: CGFloat = 26
 
     var onAction: (Action) -> Void = { _ in }
     var onDragEnded: () -> Void = {}
+    /// The pointer left the notices; held still while it rested on them, they may now re-sort.
+    var onPointerLeft: () -> Void = {}
+    /// Off while the notices fade away, so nothing on its way out takes a click.
+    var takesClicks = true
     private(set) var items: [SessionToastItem: NSView] = [:]
 
     private struct Press {
@@ -55,7 +59,7 @@ final class SessionToastStackView: NSView {
     }
 
     func action(at point: NSPoint) -> Action? {
-        guard let hit = items.first(where: { $0.value.frame.contains(point) }) else { return nil }
+        guard takesClicks, let hit = items.first(where: { $0.value.frame.contains(point) }) else { return nil }
         switch hit.key {
         case .overflow:
             return .overflow
@@ -70,6 +74,18 @@ final class SessionToastStackView: NSView {
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        guard trackingAreas.isEmpty else { return }
+        addTrackingArea(NSTrackingArea(
+            rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self, userInfo: nil
+        ))
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        onPointerLeft()
+    }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         action(at: convert(point, from: superview)) == nil ? nil : self
@@ -150,8 +166,11 @@ final class SessionToastStackWindow: NSPanel {
     override var canBecomeMain: Bool { false }
 
     /// The first notice's frame on screen, wherever the user has dragged it.
-    var firstFrame: NSRect? {
-        guard let first, let view = stack.items[first] else { return nil }
+    var firstFrame: NSRect? { first.flatMap(screenFrame(of:)) }
+
+    /// Where `item` is going on screen, or is, once it has stopped moving.
+    func screenFrame(of item: SessionToastItem) -> NSRect? {
+        guard let view = stack.items[item] else { return nil }
         return convertToScreen(stack.convert(view.frame, to: nil))
     }
 
@@ -168,6 +187,7 @@ final class SessionToastStackWindow: NSPanel {
             && Self.start(of: frame, growsDown: growsDown) == Self.start(of: target, growsDown: growsDown)
         self.growsDown = growsDown
         isHiding = false
+        stack.takesClicks = true
         first = entries.first?.item
         let gone = stack.items.keys.filter { item in !entries.contains { $0.item == item } }
         gone.forEach(fadeOut)
@@ -195,6 +215,7 @@ final class SessionToastStackWindow: NSPanel {
     func hideAll() {
         guard isVisible, !isHiding else { return }
         isHiding = true
+        stack.takesClicks = false
         generation += 1
         let current = generation
         NSAnimationContext.runAnimationGroup { context in
