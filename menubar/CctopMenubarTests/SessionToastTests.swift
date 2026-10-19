@@ -102,7 +102,7 @@ final class SessionToastTests: XCTestCase {
     private let visible = NSRect(x: 0, y: 0, width: 1440, height: 870)
 
     func testUnderAnIndicatorHighOnScreenTheyStackDownAlignedLeft() {
-        let indicator = NSRect(x: 1200, y: 820, width: 120, height: 32)
+        let indicator = NSRect(x: 1000, y: 820, width: 120, height: 32)
         let start = SessionToastLayout.start(under: indicator, visible: visible)
         let frames = SessionToastLayout.frames(count: 2, overflow: true, start: start, visible: visible)
         XCTAssertEqual(frames.cards[0].maxY, indicator.minY - SessionToastLayout.gap)
