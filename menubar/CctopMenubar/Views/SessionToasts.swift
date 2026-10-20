@@ -193,9 +193,10 @@ final class SessionToastController {
         followWaiting(wasVisible: wasVisible)
     }
 
-    /// Keeps the notices out while a notice waits for the user, and folds them back once none does.
+    /// Keeps the notices out while a notice waits for the user's permission or answer, and folds
+    /// them back once none does.
     private func followWaiting(wasVisible: Bool) {
-        visibility.setWaiting(Set(board.toasts.filter { $0.kind == .needsYou }.map(\.id)))
+        visibility.setWaiting(Set(board.toasts.filter(\.waitsForUser).map(\.id)))
         if wasVisible, !visibility.isVisible(now: Date()) { return reasonEnded() }
         layout()
     }

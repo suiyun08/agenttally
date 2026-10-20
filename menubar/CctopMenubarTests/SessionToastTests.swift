@@ -139,6 +139,17 @@ final class SessionToastTests: XCTestCase {
         XCTAssertFalse(visibility.isVisible(now: now), "Answered: they go")
     }
 
+    func testOnlyPermissionAndAnswerWaitForTheUser() {
+        func waits(_ status: SessionStatus) -> Bool {
+            SessionToast(
+                id: "a", kind: .needsYou, badge: .cc, title: "Session", status: status, message: nil, lastActivity: now
+            ).waitsForUser
+        }
+        XCTAssertTrue(waits(.waitingPermission))
+        XCTAssertTrue(waits(.waitingInput))
+        XCTAssertFalse(waits(.needsAttention), "An error shows for a moment, as a finished turn does")
+    }
+
     func testAClickPutsWaitingSessionsAwayUntilAnotherStartsWaiting() {
         var visibility = SessionToastVisibility()
         visibility.setWaiting(["a"])

@@ -20,6 +20,9 @@ struct SessionToast: Equatable, Identifiable {
     let status: SessionStatus
     let message: String?
     let lastActivity: Date
+
+    /// Waiting for the user's permission or answer; a session stopped by an error is not.
+    var waitsForUser: Bool { status == .waitingPermission || status == .waitingInput }
 }
 
 /// Which floating notices show: every session that is working or needs the user, most recent
