@@ -44,6 +44,8 @@ final class PanelHoverController: NSResponder {
     var restDelay = PanelHoverController.restDelay
     var onRest: () -> Void = {}
     var onLeave: () -> Void = {}
+    /// The pointer left a tracked view, whether or not anything opened.
+    var onExit: () -> Void = {}
 
     private var restTimer: Timer?
     private var leaveTimer: Timer?
@@ -71,6 +73,7 @@ final class PanelHoverController: NSResponder {
 
     override func mouseExited(with event: NSEvent) {
         cancelPendingRest()
+        onExit()
     }
 
     /// A click decides on its own; a rest still pending from before it must not reopen the panel.

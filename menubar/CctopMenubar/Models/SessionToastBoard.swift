@@ -131,6 +131,11 @@ struct SessionToastVisibility: Equatable {
         }
     }
 
+    /// The pointer left the floating indicator: resting on it again may show the notices.
+    mutating func pointerLeftIndicator() {
+        peekWaitsForLeave = false
+    }
+
     mutating func alert(now: Date) {
         alertUntil = now.addingTimeInterval(Self.alertDuration)
     }

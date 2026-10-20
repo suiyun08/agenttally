@@ -131,6 +131,15 @@ final class SessionToastTests: XCTestCase {
         XCTAssertTrue(visibility.isVisible(now: now), "Once the pointer left and came back, they show")
     }
 
+    func testLeavingTheIndicatorAfterPuttingThemAwayLetsHoverShowThemAgain() {
+        var visibility = SessionToastVisibility()
+        visibility.toggle()
+        visibility.toggle()
+        visibility.pointerLeftIndicator()
+        visibility.setPeeking(true)
+        XCTAssertTrue(visibility.isVisible(now: now), "Put away by a click with no hover showing, then left: hover works")
+    }
+
     func testEqualTimesKeepOneOrder() {
         var board = startedBoard()
         board.update([toast("b", .working), toast("a", .working)])

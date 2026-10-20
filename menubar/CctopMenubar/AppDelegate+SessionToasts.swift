@@ -28,6 +28,7 @@ extension AppDelegate {
             self?.noticeHover.watchLeave()
         }
         noticeHover.onLeave = { [weak self] in self?.sessionToasts.setPeeking(false) }
+        noticeHover.onExit = { [weak self] in self?.sessionToasts.pointerLeftIndicator() }
     }
 
     @MainActor private func refreshSessionToasts() {

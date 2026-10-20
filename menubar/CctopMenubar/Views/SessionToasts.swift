@@ -197,6 +197,10 @@ final class SessionToastController {
         layout()
     }
 
+    func pointerLeftIndicator() {
+        visibility.pointerLeftIndicator()
+    }
+
     func setPeeking(_ on: Bool) {
         visibility.setPeeking(on)
         if !visibility.isVisible(now: Date()) { collapse() }
