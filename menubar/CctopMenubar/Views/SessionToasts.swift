@@ -142,16 +142,10 @@ final class SessionToastController {
     private var scrollOffset: CGFloat = 0
     private var appliedLimit = 0
     private var observer: NSObjectProtocol?
+    private var desktopObserver: NSObjectProtocol?
     private var alertTimer: Timer?
 
-    private lazy var window: SessionToastStackWindow = {
-        let window = SessionToastStackWindow()
-        window.stack.onAction = { [weak self] action in self?.perform(action) }
-        window.stack.onScroll = { [weak self] delta in self?.scroll(by: delta) }
-        window.stack.onPointerEntered = { [weak self] in self?.pointerCameOn() }
-        window.stack.onPointerLeft = { [weak self] in self?.layout() }
-        return window
-    }()
+    private lazy var window = makeWindow()
 
     init() {
         appliedLimit = Self.limit
@@ -161,6 +155,31 @@ final class SessionToastController {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.applyLimit() }
         }
+        desktopObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.followDesktop() }
+        }
+    }
+
+    private func makeWindow() -> SessionToastStackWindow {
+        let window = SessionToastStackWindow()
+        window.stack.onAction = { [weak self] action in self?.perform(action) }
+        window.stack.onScroll = { [weak self] delta in self?.scroll(by: delta) }
+        window.stack.onPointerEntered = { [weak self] in self?.pointerCameOn() }
+        window.stack.onPointerLeft = { [weak self] in self?.layout() }
+        return window
+    }
+
+    /// The notices' window is on every desktop, as the indicator's is, yet after hours of hiding
+    /// and showing macOS has been seen to keep it on one desktop only. Showing while the user is
+    /// on another desktop, it gives way to a fresh window, which joins every desktop.
+    private func followDesktop() {
+        guard window.isVisible, !window.isOnActiveSpace else { return }
+        window.orderOut(nil)
+        window = makeWindow()
+        shownIDs = []
+        layout(animated: false)
     }
 
     static var limit: Int {
