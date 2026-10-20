@@ -92,6 +92,12 @@ final class PanelHoverTests: XCTestCase {
         XCTAssertFalse(PanelHoverController.contains([statusItem], NSPoint(x: 1100, y: 982)))
     }
 
+    @MainActor
+    func testTheMenuBarWaitsAMomentBeforeOpening() {
+        XCTAssertEqual(PanelHoverController().restDelay, PanelHoverController.restDelay)
+        XCTAssertGreaterThan(PanelHoverController.restDelay, 0)
+    }
+
     // MARK: - When a peek closes
 
     func testPeekClosesOnlyAfterThePointerStaysAwayForTheGrace() {

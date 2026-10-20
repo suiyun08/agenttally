@@ -45,6 +45,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
     @MainActor lazy var panelHover = PanelHoverController()
     @MainActor lazy var floatingIndicator = FloatingIndicatorController()
+    /// Hover for the floating indicator's notices, as `panelHover` is for the menu bar's panel.
+    @MainActor lazy var noticeHover = PanelHoverController()
     @MainActor lazy var sessionToasts = SessionToastController()
 
     private static var isXcodeTestHost: Bool {
@@ -85,6 +87,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         hasNotch = NSScreen.builtin?.hasPhysicalNotch == true
 
         seedPanelHeightLimit()
+        // Panels dragged under earlier versions saved their place; the panel now opens against the
+        // menu bar's dots every time.
+        panelGeometry.clearAllPositions()
         _ = AppLanguage.launchSelection
         let hostingView = makePanelHostingView()
         panel = FloatingPanel(

@@ -246,7 +246,9 @@ struct HoverToOpenSettingsRow: View {
         .padding(.horizontal, AppChrome.settingsRowHorizontalPadding)
         .padding(.vertical, 4)
         .frame(minHeight: 25)
-        .help("Rest the pointer on the menu bar dots to open the panel; move away to close it.")
+        .help(
+            "Rest the pointer on the menu bar dots to open the panel, or on the floating indicator to show its notices; move away to put them away."
+        )
     }
 }
 

@@ -81,12 +81,9 @@ extension AppDelegate {
 
     /// What the panel opens against: the floating indicator when the click or hover came from
     /// it, else the notch pill when it stands in for the menu bar icon, else the icon.
+    /// The panel always opens against the menu bar's dots: the notch pill when it stands in.
     @MainActor private func anchorRect() -> NSRect? {
-        if let floating = floatingIndicator.visibleFrame, let point = focusLocation,
-           floating.insetBy(dx: -2, dy: -2).contains(point) {
-            return floating
-        }
-        return notchController.pillFrame ?? menubarIconRect()
+        notchController.pillFrame ?? menubarIconRect()
     }
 
     /// The screen-space rect of the menubar icon, even when the notch pill
@@ -196,14 +193,9 @@ private extension NSRect {
 
 // MARK: - FloatingPanelDelegate
 extension AppDelegate: FloatingPanelDelegate {
-    @MainActor func panelDidDrag(originX: CGFloat, topY: CGFloat) {
-        panelGeometry.saveUserDraggedPosition(
-            originX: originX,
-            topY: topY,
-            panelSize: panel.frame.size,
-            screens: screenLayouts
-        )
-    }
+    /// A dragged panel stays where it was dropped while it shows; it opens against the menu bar's
+    /// dots again next time.
+    @MainActor func panelDidDrag(originX: CGFloat, topY: CGFloat) {}
 
     @MainActor func panelDidRequestReset() {
         panelGeometry.clearUserPosition(forPanelFrame: panel.frame, screens: screenLayouts)

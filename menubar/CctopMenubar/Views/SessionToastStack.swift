@@ -8,8 +8,8 @@ enum SessionToastItem: Hashable {
 }
 
 /// The floating notices' window's content. It takes every click on a notice itself instead of
-/// handing it on to buttons, since the window never becomes key: a press that moves drags the
-/// window, and one that does not opens the notice, or closes it on its close button.
+/// handing it on to buttons, since the window never becomes key: a click opens the notice, or
+/// closes it on its close button, and the scroll wheel scrolls a stack too long for the screen.
 /// Around the notices the mouse falls through to whatever is behind.
 final class SessionToastStackView: NSView {
     enum Action: Equatable {
@@ -23,25 +23,18 @@ final class SessionToastStackView: NSView {
     static let closeZone: CGFloat = 26
 
     var onAction: (Action) -> Void = { _ in }
-    var onDragEnded: () -> Void = {}
-    /// The pointer left the notices; held still while it rested on them, they may now re-sort.
+    /// The scroll wheel moved over a notice, by this many points (content following the finger).
+    var onScroll: (CGFloat) -> Void = { _ in }
+    /// The pointer came onto the notices, or left them; held still while it rested on them, they
+    /// may re-sort once it leaves.
+    var onPointerEntered: () -> Void = {}
     var onPointerLeft: () -> Void = {}
     /// Off while the notices fade away, so nothing on its way out takes a click.
     var takesClicks = true
     private(set) var items: [SessionToastItem: NSView] = [:]
 
-    private struct Press {
-        let start: NSPoint
-        let windowOrigin: NSPoint
-        let action: Action?
-    }
-
-    private var press: Press?
-    private var dragging = false
-
-    /// Whether the user is dragging the stack. A drag whose release never arrived ends once the
-    /// button is up, so it cannot hold the notices still for good.
-    var isDragging: Bool { dragging && NSEvent.pressedMouseButtons & 1 != 0 }
+    /// What a press would do, kept until it is let go.
+    private var pressed: Action?
 
     func add(_ view: NSView, for item: SessionToastItem) {
         items[item] = view
@@ -83,8 +76,17 @@ final class SessionToastStackView: NSView {
         ))
     }
 
+    override func mouseEntered(with event: NSEvent) {
+        onPointerEntered()
+    }
+
     override func mouseExited(with event: NSEvent) {
         onPointerLeft()
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        let delta = event.hasPreciseScrollingDeltas ? event.scrollingDeltaY : event.scrollingDeltaY * 10
+        onScroll(delta)
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -92,44 +94,23 @@ final class SessionToastStackView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        if dragging { endDrag() }
-        press = Press(
-            start: NSEvent.mouseLocation, windowOrigin: window?.frame.origin ?? .zero,
-            action: action(at: convert(event.locationInWindow, from: nil))
-        )
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        guard let press, let window else { return }
-        let location = NSEvent.mouseLocation
-        if !dragging, FloatingIndicatorPlacement.isDrag(from: press.start, to: location) { dragging = true }
-        guard dragging else { return }
-        window.setFrameOrigin(NSPoint(
-            x: press.windowOrigin.x + location.x - press.start.x, y: press.windowOrigin.y + location.y - press.start.y
-        ))
+        pressed = action(at: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard let press else { return }
-        self.press = nil
-        if dragging { return endDrag() }
+        defer { pressed = nil }
         // A click counts where it was let go too, so pressing one notice and letting go over
         // another does nothing.
-        if let action = press.action, action == self.action(at: convert(event.locationInWindow, from: nil)) {
-            onAction(action)
+        if let pressed, pressed == action(at: convert(event.locationInWindow, from: nil)) {
+            onAction(pressed)
         }
-    }
-
-    private func endDrag() {
-        dragging = false
-        onDragEnded()
     }
 }
 
 /// The floating notices' one window: the floating indicator's glass behind each notice, on every
 /// desktop and over full-screen apps, never taking keyboard focus, drawn dark with white text as
-/// the panel is. Sharing it keeps the notices together: the stack drags as one, and when a notice
-/// goes, those after it slide up to close the gap.
+/// the panel is. Sharing it keeps the notices together: when a notice goes, those after it slide
+/// up to close the gap, and a stack too long for the screen shows the part that fits.
 final class SessionToastStackWindow: NSPanel {
     struct Entry {
         let item: SessionToastItem
@@ -141,8 +122,6 @@ final class SessionToastStackWindow: NSPanel {
 
     let stack = SessionToastStackView()
     private var hosts: [SessionToastItem: NSHostingView<AnyView>] = [:]
-    /// The item nearest the stack's start: where the user dropped the stack is where it is.
-    private var first: SessionToastItem?
     private var growsDown = true
     private var isHiding = false
     /// Counts changes, so the tail of an animation does not undo a newer change.
@@ -167,9 +146,6 @@ final class SessionToastStackWindow: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
-    /// The first notice's frame on screen, wherever the user has dragged it.
-    var firstFrame: NSRect? { first.flatMap(screenFrame(of:)) }
-
     /// Where `item` is going on screen, or is, once it has stopped moving.
     func screenFrame(of item: SessionToastItem) -> NSRect? {
         guard let view = stack.items[item] else { return nil }
@@ -177,11 +153,13 @@ final class SessionToastStackWindow: NSPanel {
     }
 
     /// Shows exactly `entries`, each at its frame: new ones fade in, gone ones fade out, and the
-    /// rest slide to their new places, all within one window that fits around them.
-    func show(_ entries: [Entry], growsDown: Bool) {
+    /// rest slide to their new places, all within one window that fits around them, or within
+    /// `viewport`, which clips a stack too long for the screen. Without `animated`, as while
+    /// scrolling, everything moves at once.
+    func show(_ entries: [Entry], growsDown: Bool, viewport: NSRect? = nil, animated: Bool = true) {
         guard !entries.isEmpty else { return hideAll() }
         generation += 1
-        let target = entries.reduce(NSRect.null) { $0.union($1.frame) }
+        let target = viewport ?? entries.reduce(NSRect.null) { $0.union($1.frame) }
         let wasShown = isVisible && !isHiding
         // Kept in place, the stack's starting edge stays put and the window only grows or
         // shrinks away from it, which moves nothing on screen.
@@ -190,15 +168,14 @@ final class SessionToastStackWindow: NSPanel {
         self.growsDown = growsDown
         isHiding = false
         stack.takesClicks = true
-        first = entries.first?.item
         let gone = stack.items.keys.filter { item in !entries.contains { $0.item == item } }
         gone.forEach(fadeOut)
-        let span = keepsStart ? frame.union(target) : target
+        let span = keepsStart && animated ? frame.union(target) : target
         if frame != span { setFrame(span, display: false) }
-        let placed = place(entries, in: span, fadingIn: wasShown)
+        let placed = place(entries, in: span, fadingIn: wasShown && animated)
         var moves = placed.moves
         let arrivals = placed.arrivals
-        if !keepsStart, !moves.isEmpty {
+        if !keepsStart || !animated, !moves.isEmpty {
             for move in moves {
                 move.view.layer?.removeAllAnimations()
                 move.view.frame = move.frame
@@ -287,8 +264,7 @@ final class SessionToastStackWindow: NSPanel {
                 arrival.view.animator().alphaValue = 1
             }
         } completionHandler: { [weak self] in
-            // Mid-drag the window keeps its size; the drag's end lays the stack out afresh.
-            guard let self, self.generation == current, !self.stack.isDragging else { return }
+            guard let self, self.generation == current else { return }
             if self.frame != target { self.setFrame(target, display: true) }
         }
     }

@@ -39,6 +39,9 @@ final class PanelHoverController: NSResponder {
     /// Screen frames that keep a peek open: the anchors and the panel.
     var keepOpenZones: () -> [NSRect] = { [] }
     var isPeeking: () -> Bool = { false }
+    /// How long the pointer rests before `onRest`: the menu bar waits a moment so a pointer
+    /// sweeping along it opens nothing.
+    var restDelay = PanelHoverController.restDelay
     var onRest: () -> Void = {}
     var onLeave: () -> Void = {}
 
@@ -62,7 +65,8 @@ final class PanelHoverController: NSResponder {
 
     override func mouseEntered(with event: NSEvent) {
         restTimer?.invalidate()
-        restTimer = scheduledTimer(after: Self.restDelay, repeats: false) { [weak self] in self?.restElapsed() }
+        guard restDelay > 0 else { return restElapsed() }
+        restTimer = scheduledTimer(after: restDelay, repeats: false) { [weak self] in self?.restElapsed() }
     }
 
     override func mouseExited(with event: NSEvent) {

@@ -193,13 +193,12 @@ extension AppDelegate {
         panelHover.onLeave = { [weak self] in self?.handleEvent(.pointerLeft) }
         if let button = statusItem.button { panelHover.track(button) }
         notchController.onPillViewCreated = { [weak self] view in self?.panelHover.track(view) }
-        floatingIndicator.onClick = { [weak self] in self?.togglePanel() }
         setupSessionToasts()
         floatingIndicator.syncVisibility()
     }
 
     /// Where the menu bar's dots are on screen: the status item, and the notch pill when it stands
-    /// in. The floating indicator opens the panel only on a click.
+    /// in. The floating indicator controls its notices, not the panel.
     @MainActor private var hoverAnchors: [NSRect] {
         [statusItem.button?.window?.frame, notchController.pillFrame].compactMap { $0 }
     }

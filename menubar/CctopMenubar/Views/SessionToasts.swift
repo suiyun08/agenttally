@@ -76,16 +76,23 @@ struct SessionToastView: View {
     }
 }
 
-/// "N more" under the visible notices; a click opens the panel.
+/// The chip under the notices: "N more" shows them all; "Show less" goes back to the limit.
 struct SessionToastOverflowView: View {
-    let count: Int
+    /// Notices waiting behind the chip; nil once they all show.
+    let count: Int?
 
     var body: some View {
-        Text("\(count) more")
-            .font(.system(size: 11.5, weight: .medium))
-            .foregroundStyle(Color.textPrimary)
-            .frame(width: SessionToastLayout.overflowSize.width, height: SessionToastLayout.overflowSize.height)
-            .modifier(ToastBackground(cornerRadius: SessionToastLayout.overflowSize.height / 2))
+        Group {
+            if let count {
+                Text("\(count) more")
+            } else {
+                Text("Show less")
+            }
+        }
+        .font(.system(size: 11.5, weight: .medium))
+        .foregroundStyle(Color.textPrimary)
+        .frame(width: SessionToastLayout.overflowSize.width, height: SessionToastLayout.overflowSize.height)
+        .modifier(ToastBackground(cornerRadius: SessionToastLayout.overflowSize.height / 2))
     }
 }
 
@@ -105,40 +112,49 @@ private struct ToastBackground: ViewModifier {
     }
 }
 
-/// Shows the floating notices while the floating indicator is on, hides them while the panel is
-/// open, and keeps them stacked against the indicator, or where the user dragged them.
+/// Shows the floating notices for the floating indicator, lined up with it: while the pointer
+/// rests on the indicator or on them, while pinned by a click on the indicator, and for a few
+/// seconds when a session newly needs the user or finishes. They step aside while the panel is
+/// open. "N more" shows them all, scrolling when they run past the screen.
 @MainActor
 final class SessionToastController {
     static let limitKey = "floatingNoticeLimit"
-    private static let originXKey = "floatingNoticeOriginX"
-    private static let originYKey = "floatingNoticeOriginY"
-    /// Dropped this close to its place under the indicator, the stack goes back to following it.
-    private static let reattachDistance: CGFloat = 30
+    /// Where an earlier version let the user drag the stack; cleared, as the stack now always
+    /// follows the indicator.
+    private static let retiredOriginKeys = ["floatingNoticeOriginX", "floatingNoticeOriginY"]
 
     var anchor: () -> NSRect? = { nil }
     var onOpen: (String) -> Void = { _ in }
-    var onOverflow: () -> Void = {}
+    /// Asks the hover tracking to watch for the pointer leaving the indicator and the notices.
+    var watchLeave: () -> Void = {}
     /// While the panel is open the notices step aside; it lists the same sessions.
     var isSuppressed = false {
         didSet { if isSuppressed != oldValue { layout() } }
     }
 
     private(set) var board = SessionToastBoard()
+    private(set) var visibility = SessionToastVisibility()
     /// The notices showing now, in order, held while the pointer rests on them.
     private var shownIDs: [String] = []
+    /// Showing every notice instead of the limit, scrolled this far when they run past the screen.
+    private var expanded = false
+    private var scrollOffset: CGFloat = 0
     private var appliedLimit = 0
     private var observer: NSObjectProtocol?
+    private var alertTimer: Timer?
 
     private lazy var window: SessionToastStackWindow = {
         let window = SessionToastStackWindow()
         window.stack.onAction = { [weak self] action in self?.perform(action) }
-        window.stack.onDragEnded = { [weak self] in self?.endDrag() }
+        window.stack.onScroll = { [weak self] delta in self?.scroll(by: delta) }
+        window.stack.onPointerEntered = { [weak self] in self?.pointerCameOn() }
         window.stack.onPointerLeft = { [weak self] in self?.layout() }
         return window
     }()
 
     init() {
         appliedLimit = Self.limit
+        Self.retiredOriginKeys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
         observer = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -151,12 +167,18 @@ final class SessionToastController {
         return min(max(stored, SessionToastBoard.limitRange.lowerBound), SessionToastBoard.limitRange.upperBound)
     }
 
+    /// The notices' frame on screen while they show.
+    var visibleFrame: NSRect? {
+        window.isVisible ? window.frame : nil
+    }
+
     func update(_ candidates: [SessionToast]) {
         if FloatingIndicatorController.isEnabled {
-            board.update(candidates)
+            if board.update(candidates) { alert() }
         } else if board != SessionToastBoard() {
             // Turned off, the indicator forgets its notices; turned on again, it starts afresh.
             board.reset()
+            visibility = SessionToastVisibility()
         }
         layout()
     }
@@ -166,30 +188,93 @@ final class SessionToastController {
         layout()
     }
 
-    /// Puts the notices in place. Mid-drag it leaves them be: the drag's end lays them out
-    /// where they landed. While the pointer rests on them they keep their order, so a click
-    /// lands on the notice under it; they re-sort once it leaves.
-    func layout() {
-        guard !window.stack.isDragging else { return }
-        guard !isSuppressed, FloatingIndicatorController.isEnabled, let start = stackStart() else {
+    // MARK: - When they show
+
+    /// A click on the floating indicator: pins the notices, or puts pinned ones away.
+    func toggle() {
+        visibility.toggle()
+        if !visibility.isVisible(now: Date()) { collapse() }
+        layout()
+    }
+
+    func setPeeking(_ on: Bool) {
+        visibility.setPeeking(on)
+        if !visibility.isVisible(now: Date()) { collapse() }
+        layout()
+    }
+
+    /// Shows the notices for a moment; the pointer resting on them keeps them out.
+    private func alert() {
+        let now = Date()
+        visibility.alert(now: now)
+        alertTimer?.invalidate()
+        alertTimer = Timer.scheduledTimer(withTimeInterval: SessionToastVisibility.alertDuration + 0.05, repeats: false) {
+            [weak self] _ in
+            MainActor.assumeIsolated { self?.alertEnded() }
+        }
+    }
+
+    private func alertEnded() {
+        if pointerIsOn { return pointerCameOn() }
+        if !visibility.isVisible(now: Date()) { collapse() }
+        layout()
+    }
+
+    /// The pointer on the notices keeps them out as resting on the indicator does.
+    private func pointerCameOn() {
+        guard window.isVisible, !visibility.peeking else { return }
+        visibility.setPeeking(true)
+        watchLeave()
+        layout()
+    }
+
+    private var pointerIsOn: Bool {
+        let point = NSEvent.mouseLocation
+        return [anchor(), visibleFrame].compactMap { $0 }.contains { $0.insetBy(dx: -2, dy: -2).contains(point) }
+    }
+
+    // MARK: - Laying them out
+
+    /// Puts the notices in place. While the pointer rests on them they keep their order, so a
+    /// click lands on the notice under it; they re-sort once it leaves.
+    func layout(animated: Bool = true) {
+        guard !isSuppressed, FloatingIndicatorController.isEnabled, visibility.isVisible(now: Date()),
+              let start = stackStart() else {
             shownIDs = []
             return window.hideAll()
         }
-        let count = SessionToastLayout.shownCount(
-            limit: Self.limit, of: board.toasts.count, start: start.start, visible: start.visible
-        )
+        let total = board.toasts.count
         let pointerOn = window.isVisible && window.frame.contains(NSEvent.mouseLocation)
+        if expanded, total <= Self.limit { collapse() }
+        let count = expanded
+            ? total
+            : SessionToastLayout.shownCount(limit: Self.limit, of: total, start: start.start, visible: start.visible)
         let shown = board.visible(limit: count, holding: pointerOn ? shownIDs : [])
         shownIDs = shown.map(\.id)
-        let overflow = board.waitingCount(besides: shown)
-        let frames = SessionToastLayout.frames(
-            count: shown.count, overflow: overflow > 0, start: start.start, visible: start.visible
+        let waiting = board.waitingCount(besides: shown)
+        var frames = SessionToastLayout.frames(
+            count: shown.count, overflow: expanded || waiting > 0, start: start.start, visible: start.visible
         )
-        window.show(entries(shown, overflow: overflow, frames: frames), growsDown: start.start.growsDown)
+        var viewport: NSRect?
+        if expanded {
+            let room = SessionToastLayout.room(from: start.start, visible: start.visible)
+            let overrun = max(0, SessionToastLayout.length(of: frames, start: start.start) - room)
+            scrollOffset = min(max(0, scrollOffset), overrun)
+            if overrun > 0 {
+                frames = SessionToastLayout.scrolled(frames, by: scrollOffset, growsDown: start.start.growsDown)
+                viewport = SessionToastLayout.viewport(
+                    start: start.start, visible: start.visible, minX: frames.cards.first?.minX ?? start.start.point.x
+                )
+            }
+        }
+        window.show(
+            entries(shown, chip: expanded ? nil : waiting, frames: frames),
+            growsDown: start.start.growsDown, viewport: viewport, animated: animated
+        )
     }
 
     private func entries(
-        _ shown: [SessionToast], overflow: Int, frames: SessionToastLayout.Frames
+        _ shown: [SessionToast], chip: Int?, frames: SessionToastLayout.Frames
     ) -> [SessionToastStackWindow.Entry] {
         var entries = zip(shown, frames.cards).map { toast, frame in
             SessionToastStackWindow.Entry(
@@ -200,10 +285,22 @@ final class SessionToastController {
         if let frame = frames.overflow {
             entries.append(SessionToastStackWindow.Entry(
                 item: .overflow, frame: frame, cornerRadius: frame.height / 2,
-                content: AnyView(SessionToastOverflowView(count: overflow))
+                content: AnyView(SessionToastOverflowView(count: chip))
             ))
         }
         return entries
+    }
+
+    /// Scrolls a stack too long for the screen, the content following the finger.
+    private func scroll(by delta: CGFloat) {
+        guard expanded, let start = stackStart() else { return }
+        scrollOffset += start.start.growsDown ? -delta : delta
+        layout(animated: false)
+    }
+
+    private func collapse() {
+        expanded = false
+        scrollOffset = 0
     }
 
     /// A new limit from Settings shows at once.
@@ -217,59 +314,17 @@ final class SessionToastController {
         switch action {
         case .open(let id): onOpen(id)
         case .close(let id): close(id)
-        case .overflow: onOverflow()
+        case .overflow:
+            if expanded { collapse() } else { expanded = true }
+            layout()
         }
     }
 
-    // MARK: - Where the stack starts
-
-    /// Where the user left the stack, while that spot is still on a screen; otherwise under the
-    /// floating indicator.
+    /// Under the floating indicator, or over it when it sits low on the screen.
     private func stackStart() -> (start: SessionToastLayout.Start, visible: NSRect)? {
-        let defaults = UserDefaults.standard
-        if defaults.object(forKey: Self.originXKey) != nil, defaults.object(forKey: Self.originYKey) != nil {
-            let card = NSRect(
-                x: defaults.double(forKey: Self.originXKey), y: defaults.double(forKey: Self.originYKey),
-                width: SessionToastLayout.width, height: SessionToastLayout.height
-            )
-            if let visible = visibleFrame(containing: NSPoint(x: card.midX, y: card.midY)) {
-                return (SessionToastLayout.start(forFirstCard: card, visible: visible), visible)
-            }
-        }
-        guard let indicator = anchor(), let visible = visibleFrame(containing: NSPoint(x: indicator.midX, y: indicator.midY))
-        else { return nil }
-        return (SessionToastLayout.start(under: indicator, visible: visible), visible)
-    }
-
-    private func visibleFrame(containing point: NSPoint) -> NSRect? {
-        NSScreen.screens.first { $0.frame.contains(point) }?.visibleFrame
-    }
-
-    // MARK: - Dragging the stack
-
-    /// Remembers where the first notice landed, or goes back to following the indicator when it
-    /// was dropped next to its place there.
-    private func endDrag() {
-        if let card = window.firstFrame { remember(firstCard: card) }
-        layout()
-    }
-
-    private func remember(firstCard card: NSRect) {
-        let defaults = UserDefaults.standard
-        if let home = homeFrame(), hypot(card.minX - home.minX, card.maxY - home.maxY) < Self.reattachDistance {
-            defaults.removeObject(forKey: Self.originXKey)
-            defaults.removeObject(forKey: Self.originYKey)
-        } else {
-            defaults.set(card.minX, forKey: Self.originXKey)
-            defaults.set(card.minY, forKey: Self.originYKey)
-        }
-    }
-
-    /// The first notice's place under the floating indicator.
-    private func homeFrame() -> NSRect? {
         guard let indicator = anchor(),
-              let visible = visibleFrame(containing: NSPoint(x: indicator.midX, y: indicator.midY)) else { return nil }
-        let start = SessionToastLayout.start(under: indicator, visible: visible)
-        return SessionToastLayout.frames(count: 1, overflow: false, start: start, visible: visible).cards.first
+              let visible = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: indicator.midX, y: indicator.midY)) })?
+                .visibleFrame else { return nil }
+        return (SessionToastLayout.start(under: indicator, visible: visible), visible)
     }
 }

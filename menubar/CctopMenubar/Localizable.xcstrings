@@ -3148,16 +3148,6 @@
         }
       }
     },
-    "Rest the pointer on the menu bar dots to open the panel; move away to close it.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "鼠标停在菜单栏指示灯上展开面板，移开后自动收起。"
-          }
-        }
-      }
-    },
     "Floating Indicator": {
       "localizations": {
         "zh-Hans": {
@@ -3224,6 +3214,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "同时最多显示几个浮窗，其余的合并成“还有 N 条”。"
+          }
+        }
+      }
+    },
+    "Rest the pointer on the menu bar dots to open the panel, or on the floating indicator to show its notices; move away to put them away.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鼠标停在菜单栏指示灯上展开面板，停在悬浮胶囊上展开浮窗；移开后自动收起。"
+          }
+        }
+      }
+    },
+    "Show less": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起"
           }
         }
       }
