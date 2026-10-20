@@ -44,16 +44,18 @@ developed on its own.
 - **Hover to peek.** Rest the pointer on the dots and the panel opens without taking keyboard
   focus from the app you are typing in. Move away and it closes, even after you click a session
   in it. Click the dots or press the toggle shortcut to keep the panel open. Turn hovering off in
-  **Settings › General › Open on Hover**.
+  **Settings › General › Open on Hover**; the setting covers the floating indicator too.
 - **Floating indicator.** Turn on **Settings › General › Floating Indicator** for the same dots on
-  a small glass capsule you can drag anywhere. It shows on every desktop and over full-screen apps;
-  click it to open the panel.
+  a small glass capsule you can drag anywhere. It shows on every desktop and over full-screen apps.
+  It shows its floating notices the way the menu bar dots show the panel: rest the pointer on it,
+  or click it to keep them out and click again to put them away.
 - **Floating notices.** While the floating indicator is on, each session that is working, needs
-  you, or has an unread result gets a small glass notice under the capsule instead of a system
-  banner. Click one to jump to its session, or close it with ×. A notice stays until its session
-  goes idle or is read, newest activity first, up to the number set in
-  **Settings › General › Floating Notices**; they hold still while the pointer rests on them. Drag
-  them anywhere as one stack.
+  you, or has an unread result gets a small glass notice lined up with the capsule instead of a
+  system banner. They show for 5 seconds when a session finishes, and stay out while a session
+  waits for your permission or answer. Click one to jump to its session, or close it with ×. A
+  notice stays until its session goes idle or is read, newest activity first, up to the number set
+  in **Settings › General › Floating Notices**; "N more" shows the rest. They hold still while the
+  pointer rests on them.
 - **Tabs by attention.** **Active** holds sessions that are working or waiting for you, plus
   unread results. **Idle**, **Recent**, and **Cleanup** hold the rest.
 - **Jump straight back.** Click a session card, or press the Navigate hotkey and a number, to go
@@ -65,8 +67,9 @@ developed on its own.
   here too.
 - **A panel that fits your screen.** Liquid Glass on macOS 26 with white text that stays readable
   over any window, and a slider for how much theme color tints the glass. It shows on every
-  desktop. Drag a side edge to resize; it settles on three widths. Drag the top bar to move it; it
-  snaps to screen edges. Double-click the top bar to put it back under the menu bar.
+  desktop and opens under the menu bar dots. Drag a side edge to resize; it settles on three widths.
+  Drag the top bar to move it while it is open; it snaps to screen edges. Double-click the top bar
+  to put it back under the menu bar.
 - **English and 简体中文**, and four color themes for the status and accent colors.
 - **Local only.** Session state is plain JSON on your Mac. No analytics, telemetry, or upload.
 
