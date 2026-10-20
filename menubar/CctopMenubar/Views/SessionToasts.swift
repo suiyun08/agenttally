@@ -208,8 +208,8 @@ final class SessionToastController {
         let now = Date()
         visibility.alert(now: now)
         alertTimer?.invalidate()
-        alertTimer = Timer.scheduledTimer(withTimeInterval: SessionToastVisibility.alertDuration + 0.05, repeats: false) {
-            [weak self] _ in
+        let duration = SessionToastVisibility.alertDuration + 0.05
+        alertTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.alertEnded() }
         }
     }
