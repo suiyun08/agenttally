@@ -40,16 +40,16 @@ struct SessionToastBoard: Equatable {
     private var started = false
 
     /// The notices that show, at most `limit`. Given `held`, the order showing while the pointer
-    /// rests on them, those still showing keep their places and newcomers go after them, so
-    /// nothing moves under the pointer.
+    /// rests on them, those still showing keep their places and newcomers wait behind the count,
+    /// so nothing moves under the pointer, the count included.
     func visible(limit: Int, holding held: [String] = []) -> [SessionToast] {
         guard !held.isEmpty else { return Array(toasts.prefix(limit)) }
         let kept = held.compactMap { id in toasts.first { $0.id == id } }
-        let newcomers = toasts.filter { !held.contains($0.id) }
-        return Array((kept + newcomers).prefix(limit))
+        return Array(kept.prefix(limit))
     }
 
-    func overflowCount(limit: Int) -> Int { max(0, toasts.count - limit) }
+    /// How many notices wait behind the count while `shown` show.
+    func waitingCount(besides shown: [SessionToast]) -> Int { toasts.count - shown.count }
 
     /// Brings the notices in line with the sessions that are working or need the user now.
     mutating func update(_ candidates: [SessionToast]) {

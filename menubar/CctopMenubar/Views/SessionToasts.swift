@@ -181,7 +181,7 @@ final class SessionToastController {
         let pointerOn = window.isVisible && window.frame.contains(NSEvent.mouseLocation)
         let shown = board.visible(limit: count, holding: pointerOn ? shownIDs : [])
         shownIDs = shown.map(\.id)
-        let overflow = board.overflowCount(limit: count)
+        let overflow = board.waitingCount(besides: shown)
         let frames = SessionToastLayout.frames(
             count: shown.count, overflow: overflow > 0, start: start.start, visible: start.visible
         )

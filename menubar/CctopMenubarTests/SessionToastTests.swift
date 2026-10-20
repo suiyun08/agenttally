@@ -97,7 +97,7 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(board.toasts.map(\.id), ["a", "b"])
     }
 
-    func testUnderThePointerNoticesHoldTheirPlacesAndNewcomersGoLast() {
+    func testUnderThePointerNoticesHoldTheirPlacesAndNewcomersWaitBehindTheCount() {
         var board = startedBoard()
         board.update([toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 3)])
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["a", "b", "c"])
@@ -106,8 +106,10 @@ final class SessionToastTests: XCTestCase {
             toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 0),
             toast("d", .needsYou, ago: 0),
         ])
-        XCTAssertEqual(board.visible(limit: 4, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c", "d"])
-        XCTAssertEqual(board.visible(limit: 3, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c"])
+        let held = board.visible(limit: 4, holding: ["a", "b", "c"])
+        XCTAssertEqual(held.map(\.id), ["a", "b", "c"], "d does not push the count down under the pointer")
+        XCTAssertEqual(board.waitingCount(besides: held), 1)
+        XCTAssertEqual(board.visible(limit: 2, holding: ["a", "b", "c"]).map(\.id), ["a", "b"])
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["c", "d", "a", "b"], "Re-sorted once the pointer leaves")
     }
 
@@ -115,9 +117,9 @@ final class SessionToastTests: XCTestCase {
         var board = startedBoard()
         board.update((1...6).map { toast(String($0), .working, ago: TimeInterval($0)) })
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["1", "2", "3", "4"])
-        XCTAssertEqual(board.overflowCount(limit: 4), 2)
+        XCTAssertEqual(board.waitingCount(besides: board.visible(limit: 4)), 2)
         XCTAssertEqual(board.visible(limit: 6).count, 6)
-        XCTAssertEqual(board.overflowCount(limit: 6), 0)
+        XCTAssertEqual(board.waitingCount(besides: board.visible(limit: 6)), 0)
     }
 
     // MARK: - Where they sit
@@ -262,20 +264,30 @@ final class SessionToastTests: XCTestCase {
                 SessionToastStackWindow.Entry(item: .notice(id), frame: frame, cornerRadius: 14, content: AnyView(Color.clear))
             }
         }
-        window.show(entries(["a", "b", "c"]), growsDown: true)
-        settle()
-        window.show(entries(["a", "c"]), growsDown: true)
-        settle()
         let slots = SessionToastLayout.frames(count: 2, overflow: false, start: start, visible: visible).cards
+        window.show(entries(["a", "b", "c"]), growsDown: true)
+        settle { window.alphaValue == 1 }
+        window.show(entries(["a", "c"]), growsDown: true)
+        settle { window.frame == slots[0].union(slots[1]) }
         XCTAssertNil(window.stack.items[.notice("b")])
         XCTAssertEqual(window.screenFrame(of: .notice("a")), slots[0])
         XCTAssertEqual(window.screenFrame(of: .notice("c")), slots[1], "c moved up into b's place")
         XCTAssertEqual(window.frame, slots[0].union(slots[1]), "The window shrank to fit")
     }
 
-    /// Lets the window's animations finish.
-    private func settle() {
-        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+    /// Runs the window's animations until `done`, or for at most a few seconds on a slow machine.
+    private func settle(until done: () -> Bool) {
+        let deadline = Date().addingTimeInterval(5)
+        while !done(), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+
+    @MainActor
+    func testTheNoticesWindowCastsNoShadow() {
+        // A window shadow traces every notice with a dark line over light windows and a light
+        // one over dark windows; the glass draws its own edge, as on the floating indicator.
+        XCTAssertFalse(SessionToastStackWindow().hasShadow)
     }
 
     // MARK: - Which sessions get one
