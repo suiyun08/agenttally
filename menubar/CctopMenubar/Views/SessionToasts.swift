@@ -282,11 +282,10 @@ final class SessionToastController {
         }
         let total = board.toasts.count
         let pointerOn = window.isVisible && window.frame.contains(NSEvent.mouseLocation)
-        if expanded, total <= Self.limit { collapse() }
-        let count = expanded
-            ? total
-            : SessionToastLayout.shownCount(limit: Self.limit, of: total, start: start.start, visible: start.visible)
-        let shown = board.visible(limit: count, holding: pointerOn ? shownIDs : [])
+        let fitting = SessionToastLayout.shownCount(limit: Self.limit, of: total, start: start.start, visible: start.visible)
+        if expanded, total <= fitting { collapse() }
+        let held = pointerOn ? shownIDs : []
+        let shown = expanded ? board.all(holding: held) : board.visible(limit: fitting, holding: held)
         shownIDs = shown.map(\.id)
         let waiting = board.waitingCount(besides: shown)
         var frames = SessionToastLayout.frames(

@@ -198,6 +198,19 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["c", "d", "a", "b"], "Re-sorted once the pointer leaves")
     }
 
+    func testNMoreShowsEveryNoticeAtOnceUnderThePointer() {
+        var board = startedBoard()
+        board.update((1...6).map { toast("t\($0)", .working, ago: TimeInterval($0)) })
+        let showing = board.visible(limit: 4).map(\.id)
+        XCTAssertEqual(
+            board.all(holding: showing).map(\.id), ["t1", "t2", "t3", "t4", "t5", "t6"],
+            "Clicked with the pointer on them, the waiting notices show too, after those under it"
+        )
+        board.update((1...6).map { toast("t\($0)", .working, ago: TimeInterval(7 - $0)) })
+        XCTAssertEqual(board.all(holding: ["t1", "t2"]).map(\.id), ["t1", "t2", "t6", "t5", "t4", "t3"])
+        XCTAssertEqual(board.all().map(\.id), ["t6", "t5", "t4", "t3", "t2", "t1"])
+    }
+
     func testTheLimitCapsWhatShowsAndCountsTheRest() {
         var board = startedBoard()
         board.update((1...6).map { toast(String($0), .working, ago: TimeInterval($0)) })

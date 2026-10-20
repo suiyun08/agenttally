@@ -79,8 +79,6 @@ extension AppDelegate {
         panel.reveal(to: target, from: target.offsetBy(dx: 0, dy: opensAbove ? -8 : 8))
     }
 
-    /// What the panel opens against: the floating indicator when the click or hover came from
-    /// it, else the notch pill when it stands in for the menu bar icon, else the icon.
     /// The panel always opens against the menu bar's dots: the notch pill when it stands in.
     @MainActor private func anchorRect() -> NSRect? {
         notchController.pillFrame ?? menubarIconRect()

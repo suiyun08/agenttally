@@ -51,6 +51,13 @@ struct SessionToastBoard: Equatable {
         return Array(kept.prefix(limit))
     }
 
+    /// Every notice, as "N more" shows them: given `held`, those showing under the pointer keep
+    /// their places and the rest follow them.
+    func all(holding held: [String] = []) -> [SessionToast] {
+        let kept = visible(limit: toasts.count, holding: held)
+        return kept + toasts.filter { toast in !kept.contains { $0.id == toast.id } }
+    }
+
     /// How many notices wait behind the count while `shown` show.
     func waitingCount(besides shown: [SessionToast]) -> Int { toasts.count - shown.count }
 
