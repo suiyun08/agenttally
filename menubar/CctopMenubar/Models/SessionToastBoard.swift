@@ -95,31 +95,46 @@ struct SessionToastBoard: Equatable {
 
 /// When the floating notices show, as the panel shows for the menu bar dots: while the pointer
 /// rests on the floating indicator or on the notices, while pinned by a click on the indicator,
-/// and for a few seconds when a session newly needs the user or finishes. A click while pinned
-/// puts them away, and resting the pointer brings them back only after it has left once.
+/// while a session waits for the user's permission or answer, and for a few seconds when a
+/// session finishes. A click while they show for good puts them away, waiting sessions included
+/// until another starts waiting; resting the pointer brings them back only after it has left once.
 struct SessionToastVisibility: Equatable {
     static let alertDuration: TimeInterval = 5
 
     private(set) var pinned = false
     private(set) var peeking = false
     private(set) var alertUntil: Date?
+    /// Sessions waiting for the user's permission or answer, and those a click put away.
+    private(set) var waiting: Set<String> = []
+    private var dismissedWaiting: Set<String> = []
     /// Set by a click that put the notices away while the pointer was still on the indicator.
     private var peekWaitsForLeave = false
 
+    /// A session waits for the user that no click has put away.
+    var showsForWaiting: Bool { !waiting.subtracting(dismissedWaiting).isEmpty }
+
     func isVisible(now: Date) -> Bool {
-        pinned || peeking || (alertUntil.map { now < $0 } ?? false)
+        pinned || peeking || showsForWaiting || (alertUntil.map { now < $0 } ?? false)
     }
 
-    /// A click on the floating indicator: pins the notices, or puts pinned ones away.
+    /// A click on the floating indicator: pins the notices, or puts away notices that show for
+    /// good, pinned or held out by waiting sessions.
     mutating func toggle() {
-        if pinned {
+        if pinned || showsForWaiting {
             pinned = false
             peeking = false
             alertUntil = nil
+            dismissedWaiting = waiting
             peekWaitsForLeave = true
         } else {
             pinned = true
         }
+    }
+
+    /// The sessions waiting for the user now; one that starts waiting again shows them again.
+    mutating func setWaiting(_ ids: Set<String>) {
+        waiting = ids
+        dismissedWaiting.formIntersection(ids)
     }
 
     mutating func setPeeking(_ on: Bool) {

@@ -113,9 +113,10 @@ private struct ToastBackground: ViewModifier {
 }
 
 /// Shows the floating notices for the floating indicator, lined up with it: while the pointer
-/// rests on the indicator or on them, while pinned by a click on the indicator, and for a few
-/// seconds when a session newly needs the user or finishes. They step aside while the panel is
-/// open. "N more" shows them all, scrolling when they run past the screen.
+/// rests on the indicator or on them, while pinned by a click on the indicator, while a session
+/// waits for the user's permission or answer, and for a few seconds when a session newly needs
+/// the user or finishes. They step aside while the panel is open. "N more" shows them all,
+/// scrolling when they run past the screen.
 @MainActor
 final class SessionToastController {
     static let limitKey = "floatingNoticeLimit"
@@ -173,24 +174,35 @@ final class SessionToastController {
     }
 
     func update(_ candidates: [SessionToast]) {
-        if FloatingIndicatorController.isEnabled {
-            if board.update(candidates) { alert() }
-        } else if board != SessionToastBoard() {
+        guard FloatingIndicatorController.isEnabled else {
             // Turned off, the indicator forgets its notices; turned on again, it starts afresh.
-            board.reset()
-            visibility = SessionToastVisibility()
+            if board != SessionToastBoard() {
+                board.reset()
+                visibility = SessionToastVisibility()
+            }
+            return layout()
         }
-        layout()
+        let wasVisible = visibility.isVisible(now: Date())
+        if board.update(candidates) { alert() }
+        followWaiting(wasVisible: wasVisible)
     }
 
     func close(_ id: String) {
+        let wasVisible = visibility.isVisible(now: Date())
         board.close(id)
+        followWaiting(wasVisible: wasVisible)
+    }
+
+    /// Keeps the notices out while a notice waits for the user, and folds them back once none does.
+    private func followWaiting(wasVisible: Bool) {
+        visibility.setWaiting(Set(board.toasts.filter { $0.kind == .needsYou }.map(\.id)))
+        if wasVisible, !visibility.isVisible(now: Date()) { return reasonEnded() }
         layout()
     }
 
     // MARK: - When they show
 
-    /// A click on the floating indicator: pins the notices, or puts pinned ones away.
+    /// A click on the floating indicator: pins the notices, or puts away notices that show for good.
     func toggle() {
         visibility.toggle()
         if !visibility.isVisible(now: Date()) { collapse() }
@@ -214,11 +226,12 @@ final class SessionToastController {
         alertTimer?.invalidate()
         let duration = SessionToastVisibility.alertDuration + 0.05
         alertTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.alertEnded() }
+            MainActor.assumeIsolated { self?.reasonEnded() }
         }
     }
 
-    private func alertEnded() {
+    /// The alert ran out, or no notice waits for the user any more.
+    private func reasonEnded() {
         if pointerIsOn { return pointerCameOn() }
         if !visibility.isVisible(now: Date()) { collapse() }
         layout()

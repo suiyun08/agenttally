@@ -131,6 +131,29 @@ final class SessionToastTests: XCTestCase {
         XCTAssertTrue(visibility.isVisible(now: now), "Once the pointer left and came back, they show")
     }
 
+    func testTheyStayOutWhileASessionWaitsForTheUser() {
+        var visibility = SessionToastVisibility()
+        visibility.setWaiting(["a"])
+        XCTAssertTrue(visibility.isVisible(now: now.addingTimeInterval(3600)), "Waiting has no time limit")
+        visibility.setWaiting([])
+        XCTAssertFalse(visibility.isVisible(now: now), "Answered: they go")
+    }
+
+    func testAClickPutsWaitingSessionsAwayUntilAnotherStartsWaiting() {
+        var visibility = SessionToastVisibility()
+        visibility.setWaiting(["a"])
+        visibility.toggle()
+        XCTAssertFalse(visibility.isVisible(now: now), "A click puts them away")
+        visibility.setWaiting(["a"])
+        XCTAssertFalse(visibility.isVisible(now: now), "The same wait stays put away")
+        visibility.setWaiting(["a", "b"])
+        XCTAssertTrue(visibility.isVisible(now: now), "Another session starts waiting: they show")
+        visibility.toggle()
+        visibility.setWaiting([])
+        visibility.setWaiting(["a"])
+        XCTAssertTrue(visibility.isVisible(now: now), "a waits again after it was answered: they show")
+    }
+
     func testLeavingTheIndicatorAfterPuttingThemAwayLetsHoverShowThemAgain() {
         var visibility = SessionToastVisibility()
         visibility.toggle()
