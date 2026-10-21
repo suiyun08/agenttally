@@ -89,6 +89,91 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(board.toasts.map(\.id), ["a"])
     }
 
+    // MARK: - When they show
+
+    func testASessionThatNewlyNeedsTheUserOrFinishesAlerts() {
+        var board = SessionToastBoard()
+        XCTAssertFalse(board.update([toast("a", .needsYou), toast("b", .working)]), "Not at launch")
+        XCTAssertFalse(board.update([toast("a", .needsYou), toast("b", .working, title: "More")]), "Nothing new")
+        XCTAssertTrue(board.update([toast("a", .needsYou), toast("b", .done)]), "b finished")
+        XCTAssertTrue(board.update([toast("a", .needsYou), toast("b", .done), toast("c", .needsYou)]), "c is new and waits")
+        XCTAssertFalse(board.update([toast("a", .working), toast("b", .done), toast("c", .needsYou)]), "Back to work is no alert")
+        board.close("c")
+        XCTAssertFalse(board.update([toast("a", .working), toast("b", .done), toast("c", .needsYou)]), "Closed stays quiet")
+        XCTAssertTrue(board.update([toast("a", .working), toast("b", .done), toast("c", .done)]), "c finished: back, alerting")
+    }
+
+    func testTheNoticesShowWhilePeekedPinnedOrAlerting() {
+        var visibility = SessionToastVisibility()
+        XCTAssertFalse(visibility.isVisible(now: now))
+        visibility.setPeeking(true)
+        XCTAssertTrue(visibility.isVisible(now: now))
+        visibility.setPeeking(false)
+        XCTAssertFalse(visibility.isVisible(now: now))
+        visibility.alert(now: now)
+        XCTAssertTrue(visibility.isVisible(now: now.addingTimeInterval(4.9)))
+        XCTAssertFalse(visibility.isVisible(now: now.addingTimeInterval(5)), "An alert lasts five seconds")
+        visibility.toggle()
+        XCTAssertTrue(visibility.pinned)
+        XCTAssertTrue(visibility.isVisible(now: now.addingTimeInterval(3600)), "Pinned until clicked again")
+    }
+
+    func testAClickOnPinnedNoticesPutsThemAwayUntilThePointerLeaves() {
+        var visibility = SessionToastVisibility()
+        visibility.setPeeking(true)
+        visibility.toggle()
+        visibility.toggle()
+        XCTAssertFalse(visibility.isVisible(now: now), "Put away even with the pointer on the indicator")
+        visibility.setPeeking(true)
+        XCTAssertFalse(visibility.isVisible(now: now), "Resting there again does not bring them back")
+        visibility.setPeeking(false)
+        visibility.setPeeking(true)
+        XCTAssertTrue(visibility.isVisible(now: now), "Once the pointer left and came back, they show")
+    }
+
+    func testTheyStayOutWhileASessionWaitsForTheUser() {
+        var visibility = SessionToastVisibility()
+        visibility.setWaiting(["a"])
+        XCTAssertTrue(visibility.isVisible(now: now.addingTimeInterval(3600)), "Waiting has no time limit")
+        visibility.setWaiting([])
+        XCTAssertFalse(visibility.isVisible(now: now), "Answered: they go")
+    }
+
+    func testOnlyPermissionAndAnswerWaitForTheUser() {
+        func waits(_ status: SessionStatus) -> Bool {
+            SessionToast(
+                id: "a", kind: .needsYou, badge: .cc, title: "Session", status: status, message: nil, lastActivity: now
+            ).waitsForUser
+        }
+        XCTAssertTrue(waits(.waitingPermission))
+        XCTAssertTrue(waits(.waitingInput))
+        XCTAssertFalse(waits(.needsAttention), "An error shows for a moment, as a finished turn does")
+    }
+
+    func testAClickPutsWaitingSessionsAwayUntilAnotherStartsWaiting() {
+        var visibility = SessionToastVisibility()
+        visibility.setWaiting(["a"])
+        visibility.toggle()
+        XCTAssertFalse(visibility.isVisible(now: now), "A click puts them away")
+        visibility.setWaiting(["a"])
+        XCTAssertFalse(visibility.isVisible(now: now), "The same wait stays put away")
+        visibility.setWaiting(["a", "b"])
+        XCTAssertTrue(visibility.isVisible(now: now), "Another session starts waiting: they show")
+        visibility.toggle()
+        visibility.setWaiting([])
+        visibility.setWaiting(["a"])
+        XCTAssertTrue(visibility.isVisible(now: now), "a waits again after it was answered: they show")
+    }
+
+    func testLeavingTheIndicatorAfterPuttingThemAwayLetsHoverShowThemAgain() {
+        var visibility = SessionToastVisibility()
+        visibility.toggle()
+        visibility.toggle()
+        visibility.pointerLeftIndicator()
+        visibility.setPeeking(true)
+        XCTAssertTrue(visibility.isVisible(now: now), "Put away by a click with no hover showing, then left: hover works")
+    }
+
     func testEqualTimesKeepOneOrder() {
         var board = startedBoard()
         board.update([toast("b", .working), toast("a", .working)])
@@ -97,7 +182,7 @@ final class SessionToastTests: XCTestCase {
         XCTAssertEqual(board.toasts.map(\.id), ["a", "b"])
     }
 
-    func testUnderThePointerNoticesHoldTheirPlacesAndNewcomersGoLast() {
+    func testUnderThePointerNoticesHoldTheirPlacesAndNewcomersWaitBehindTheCount() {
         var board = startedBoard()
         board.update([toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 3)])
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["a", "b", "c"])
@@ -106,18 +191,33 @@ final class SessionToastTests: XCTestCase {
             toast("a", .working, ago: 1), toast("b", .working, ago: 2), toast("c", .working, ago: 0),
             toast("d", .needsYou, ago: 0),
         ])
-        XCTAssertEqual(board.visible(limit: 4, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c", "d"])
-        XCTAssertEqual(board.visible(limit: 3, holding: ["a", "b", "c"]).map(\.id), ["a", "b", "c"])
+        let held = board.visible(limit: 4, holding: ["a", "b", "c"])
+        XCTAssertEqual(held.map(\.id), ["a", "b", "c"], "d does not push the count down under the pointer")
+        XCTAssertEqual(board.waitingCount(besides: held), 1)
+        XCTAssertEqual(board.visible(limit: 2, holding: ["a", "b", "c"]).map(\.id), ["a", "b"])
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["c", "d", "a", "b"], "Re-sorted once the pointer leaves")
+    }
+
+    func testNMoreShowsEveryNoticeAtOnceUnderThePointer() {
+        var board = startedBoard()
+        board.update((1...6).map { toast("t\($0)", .working, ago: TimeInterval($0)) })
+        let showing = board.visible(limit: 4).map(\.id)
+        XCTAssertEqual(
+            board.all(holding: showing).map(\.id), ["t1", "t2", "t3", "t4", "t5", "t6"],
+            "Clicked with the pointer on them, the waiting notices show too, after those under it"
+        )
+        board.update((1...6).map { toast("t\($0)", .working, ago: TimeInterval(7 - $0)) })
+        XCTAssertEqual(board.all(holding: ["t1", "t2"]).map(\.id), ["t1", "t2", "t6", "t5", "t4", "t3"])
+        XCTAssertEqual(board.all().map(\.id), ["t6", "t5", "t4", "t3", "t2", "t1"])
     }
 
     func testTheLimitCapsWhatShowsAndCountsTheRest() {
         var board = startedBoard()
         board.update((1...6).map { toast(String($0), .working, ago: TimeInterval($0)) })
         XCTAssertEqual(board.visible(limit: 4).map(\.id), ["1", "2", "3", "4"])
-        XCTAssertEqual(board.overflowCount(limit: 4), 2)
+        XCTAssertEqual(board.waitingCount(besides: board.visible(limit: 4)), 2)
         XCTAssertEqual(board.visible(limit: 6).count, 6)
-        XCTAssertEqual(board.overflowCount(limit: 6), 0)
+        XCTAssertEqual(board.waitingCount(besides: board.visible(limit: 6)), 0)
     }
 
     // MARK: - Where they sit
@@ -144,14 +244,6 @@ final class SessionToastTests: XCTestCase {
         XCTAssertNil(frames.overflow)
     }
 
-    func testADraggedStackStartsWhereItsFirstNoticeWasLeft() {
-        let card = NSRect(x: 500, y: 600, width: SessionToastLayout.width, height: SessionToastLayout.height)
-        let start = SessionToastLayout.start(forFirstCard: card, visible: visible)
-        let frames = SessionToastLayout.frames(count: 2, overflow: false, start: start, visible: visible)
-        XCTAssertEqual(frames.cards[0], card)
-        XCTAssertEqual(frames.cards[1].maxY, card.minY - SessionToastLayout.gap)
-    }
-
     func testAllNoticesShowWhenTheyFit() {
         let start = SessionToastLayout.Start(point: NSPoint(x: 40, y: 820), growsDown: true)
         XCTAssertEqual(SessionToastLayout.shownCount(limit: 4, of: 3, start: start, visible: visible), 3)
@@ -170,6 +262,19 @@ final class SessionToastTests: XCTestCase {
         let upCount = SessionToastLayout.shownCount(limit: 10, of: 10, start: growingUp, visible: visible)
         let upFrames = SessionToastLayout.frames(count: upCount, overflow: true, start: growingUp, visible: visible)
         XCTAssertLessThanOrEqual(upFrames.overflow?.maxY ?? .infinity, visible.maxY)
+    }
+
+    func testAStackLongerThanTheScreenScrollsWithinIt() {
+        let start = SessionToastLayout.Start(point: NSPoint(x: 40, y: 400), growsDown: true)
+        let frames = SessionToastLayout.frames(count: 10, overflow: true, start: start, visible: visible)
+        let room = SessionToastLayout.room(from: start, visible: visible)
+        XCTAssertEqual(room, 400)
+        let length = SessionToastLayout.length(of: frames, start: start)
+        XCTAssertEqual(length, 10 * (SessionToastLayout.height + SessionToastLayout.gap) + SessionToastLayout.overflowSize.height)
+        let scrolled = SessionToastLayout.scrolled(frames, by: length - room, growsDown: true)
+        XCTAssertEqual(scrolled.overflow?.minY, visible.minY, "Scrolled to the end, the chip sits at the screen's edge")
+        let viewport = SessionToastLayout.viewport(start: start, visible: visible, minX: 40)
+        XCTAssertEqual(viewport, NSRect(x: 40, y: 0, width: SessionToastLayout.width, height: 400))
     }
 
     func testTheyStayOnScreenBesideAnIndicatorAtTheEdge() {
@@ -262,20 +367,47 @@ final class SessionToastTests: XCTestCase {
                 SessionToastStackWindow.Entry(item: .notice(id), frame: frame, cornerRadius: 14, content: AnyView(Color.clear))
             }
         }
-        window.show(entries(["a", "b", "c"]), growsDown: true)
-        settle()
-        window.show(entries(["a", "c"]), growsDown: true)
-        settle()
         let slots = SessionToastLayout.frames(count: 2, overflow: false, start: start, visible: visible).cards
+        window.show(entries(["a", "b", "c"]), growsDown: true)
+        settle { window.alphaValue == 1 }
+        window.show(entries(["a", "c"]), growsDown: true)
+        settle { window.frame == slots[0].union(slots[1]) }
         XCTAssertNil(window.stack.items[.notice("b")])
         XCTAssertEqual(window.screenFrame(of: .notice("a")), slots[0])
         XCTAssertEqual(window.screenFrame(of: .notice("c")), slots[1], "c moved up into b's place")
         XCTAssertEqual(window.frame, slots[0].union(slots[1]), "The window shrank to fit")
     }
 
-    /// Lets the window's animations finish.
-    private func settle() {
-        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+    /// Runs the window's animations until `done`, or for at most a few seconds on a slow machine.
+    private func settle(until done: () -> Bool) {
+        let deadline = Date().addingTimeInterval(5)
+        while !done(), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+
+    @MainActor
+    func testAScrolledStackShowsOnlyItsViewport() {
+        let window = SessionToastStackWindow()
+        defer { window.orderOut(nil) }
+        let start = SessionToastLayout.Start(point: NSPoint(x: 100, y: 400), growsDown: true)
+        let frames = SessionToastLayout.frames(count: 8, overflow: false, start: start, visible: visible)
+        let entries = zip(0..., frames.cards).map { index, frame in
+            SessionToastStackWindow.Entry(
+                item: .notice("n\(index)"), frame: frame, cornerRadius: 14, content: AnyView(Color.clear)
+            )
+        }
+        let viewport = SessionToastLayout.viewport(start: start, visible: visible, minX: 100)
+        window.show(entries, growsDown: true, viewport: viewport, animated: false)
+        XCTAssertEqual(window.frame, viewport)
+        XCTAssertEqual(window.screenFrame(of: .notice("n0")), frames.cards[0], "Each notice keeps its place on screen")
+    }
+
+    @MainActor
+    func testTheNoticesWindowCastsNoShadow() {
+        // A window shadow traces every notice with a dark line over light windows and a light
+        // one over dark windows; the glass draws its own edge, as on the floating indicator.
+        XCTAssertFalse(SessionToastStackWindow().hasShadow)
     }
 
     // MARK: - Which sessions get one

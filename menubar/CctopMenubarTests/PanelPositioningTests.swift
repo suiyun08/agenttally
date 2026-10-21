@@ -509,4 +509,12 @@ final class PanelPositioningTests: XCTestCase {
         XCTAssertNotNil(result)
         XCTAssertLessThanOrEqual(result!.maxX, primary.visibleFrame.maxX - margin)
     }
+
+    func testForgettingSavedPositionsOpensThePanelAgainstTheDotsAgain() {
+        let model = PanelGeometryModel(store: PanelPositioningMemoryStore())
+        model.saveUserDraggedPosition(originX: 300, topY: 800, panelSize: NSSize(width: 400, height: 300), screens: [primary])
+        XCTAssertFalse(model.savedPositions().isEmpty)
+        model.clearAllPositions()
+        XCTAssertTrue(model.savedPositions().isEmpty)
+    }
 }

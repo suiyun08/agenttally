@@ -9,10 +9,26 @@ extension AppDelegate {
     @MainActor func setupSessionToasts() {
         sessionToasts.anchor = { [weak self] in self?.floatingIndicator.visibleFrame }
         sessionToasts.onOpen = { [weak self] id in self?.openSessionToast(id) }
-        sessionToasts.onOverflow = { [weak self] in self?.openPanelAtFloatingIndicator() }
+        sessionToasts.watchLeave = { [weak self] in self?.noticeHover.watchLeave() }
         sessionManager.onSessionsUpdated = { [weak self] in self?.refreshSessionToasts() }
         // Shown, hidden, moved, or resized: the notices follow, and start afresh when turned on.
         floatingIndicator.onFrameChanged = { [weak self] in self?.refreshSessionToasts() }
+        // The floating indicator controls its notices, as the menu bar dots control the panel: a
+        // click pins them, and resting the pointer on it shows them until the pointer leaves both.
+        floatingIndicator.onClick = { [weak self] in self?.sessionToasts.toggle() }
+        floatingIndicator.onViewCreated = { [weak self] view in self?.noticeHover.track(view) }
+        noticeHover.restDelay = 0
+        noticeHover.anchors = { [weak self] in [self?.floatingIndicator.visibleFrame].compactMap { $0 } }
+        noticeHover.keepOpenZones = { [weak self] in
+            [self?.floatingIndicator.visibleFrame, self?.sessionToasts.visibleFrame].compactMap { $0 }
+        }
+        noticeHover.isPeeking = { [weak self] in self?.sessionToasts.visibility.peeking == true }
+        noticeHover.onRest = { [weak self] in
+            self?.sessionToasts.setPeeking(true)
+            self?.noticeHover.watchLeave()
+        }
+        noticeHover.onLeave = { [weak self] in self?.sessionToasts.setPeeking(false) }
+        noticeHover.onExit = { [weak self] in self?.sessionToasts.pointerLeftIndicator() }
     }
 
     @MainActor private func refreshSessionToasts() {
@@ -22,14 +38,5 @@ extension AppDelegate {
     @MainActor private func openSessionToast(_ id: String) {
         guard let target = sessionManager.focusTarget(forCctopSessionID: id) else { return }
         focusTerminal(session: target)
-    }
-
-    /// Opens the panel against the floating indicator and keeps it open.
-    @MainActor func openPanelAtFloatingIndicator() {
-        guard panelMode != .normal, let indicator = floatingIndicator.visibleFrame else { return }
-        focusLocation = NSPoint(x: indicator.midX, y: indicator.midY)
-        handleEvent(.menubarIconClicked(
-            appIsActive: NSApp.isActive, onDifferentScreen: false, panelVisibleInActiveSpace: panelVisibleInActiveSpace
-        ))
     }
 }

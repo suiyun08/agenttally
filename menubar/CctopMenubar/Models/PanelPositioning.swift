@@ -75,6 +75,11 @@ struct PanelGeometryModel {
         saveCustomPosition(originX: originX, topY: topY, forScreenKey: key)
     }
 
+    /// Forgets every saved position: the panel now opens against the menu bar's dots each time.
+    func clearAllPositions() {
+        store.positionsDict = [:]
+    }
+
     /// Clear the desired panel position for the screen the panel is currently assigned to.
     func clearUserPosition(forPanelFrame frame: NSRect, screens: [ScreenLayout]) {
         guard let key = PanelPositioning.screenKey(forPanelFrame: frame, in: screens) else { return }
