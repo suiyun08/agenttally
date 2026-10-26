@@ -56,9 +56,10 @@ enum ClientReadPolicy {
 }
 
 extension SessionData {
-    /// Codex Desktop threads carry no terminal metadata; CLI sessions record their terminal.
+    /// Codex Desktop threads carry no terminal metadata; CLI sessions record their terminal. A
+    /// Feishu bridge's `codex exec` has no terminal either, but Codex Desktop never lists it.
     var isCodexDesktopThread: Bool {
-        guard isCodex else { return false }
+        guard isCodex, larkChannelProfile == nil else { return false }
         let program = terminal?.program.trimmingCharacters(in: .whitespaces) ?? ""
         let tty = terminal?.tty?.trimmingCharacters(in: .whitespaces) ?? ""
         return program.isEmpty && tty.isEmpty

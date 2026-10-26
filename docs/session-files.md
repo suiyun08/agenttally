@@ -301,6 +301,9 @@ bridge's own session map (`~/.lark-channel/profiles/<profile>/sessions.json` and
 `sessions.json.catalog.json`). Without a known chat, Feishu (`com.electron.lark`) comes forward.
 Feishu offers no link to a topic inside a group, so a jump lands on the group.
 
+Codex Desktop's read state never lists a bridged Codex thread, so it does not mark one read; a
+bridged result stays unread until the user opens it from cctop or sends the bot the next message.
+
 ## Visibility
 
 ### `hidden`

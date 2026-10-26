@@ -223,6 +223,18 @@ final class LarkBridgeSessionTests: XCTestCase {
                                                       bridge: bridge, seen: seen), "The bot no longer holds it")
     }
 
+    func testCodexDesktopsReadStateLeavesABridgedThreadUnread() {
+        var codex = session(profile: "codex", id: "01a1717c", status: .done, codex: true)
+        codex.statusChangedAt = Date().addingTimeInterval(-60)
+        let desktopWroteAfterwards = ClientReadSnapshot(
+            codexUnread: ClientReadSnapshot.CodexUnread(threadIDs: [], writtenAt: Date())
+        )
+        XCTAssertFalse(ClientReadPolicy.seenInClient(codex, snapshot: desktopWroteAfterwards),
+                       "Codex Desktop never lists a bridge's thread, so its silence says nothing")
+        codex.larkChannelProfile = nil
+        XCTAssertTrue(ClientReadPolicy.seenInClient(codex, snapshot: desktopWroteAfterwards))
+    }
+
     // MARK: - Jump
 
     func testABridgeConversationOpensItsFeishuChat() {
