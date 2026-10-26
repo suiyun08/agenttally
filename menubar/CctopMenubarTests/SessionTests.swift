@@ -2311,6 +2311,7 @@ final class SessionTests: XCTestCase {
             desktopProjectName: "full-fixture-desktop",
             workspaceFile: "/Users/test/projects/full-fixture/full-fixture.code-workspace",
             source: "codex",
+            larkChannelProfile: "codex",
             endedAt: isoDate("2026-02-08T13:00:00.789Z"),
             disconnectedAt: isoDate("2026-02-08T12:30:00.012Z"),
             activeSubagents: [
@@ -2339,11 +2340,11 @@ final class SessionTests: XCTestCase {
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
-    // 32 persisted fields + the transient `lifecycle` and `isUnseenDone`. If this fails, a stored
+    // 33 persisted fields + the transient `lifecycle` and `isUnseenDone`. If this fails, a stored
     // property was added or removed: wire it through CodingKeys, init(from:), the memberwise init,
     // and makeFullyPopulatedSession() above, then update this count.
     func testStoredPropertyCountTripwire() {
-        XCTAssertEqual(Mirror(reflecting: makeFullyPopulatedSession()).children.count, 34)
+        XCTAssertEqual(Mirror(reflecting: makeFullyPopulatedSession()).children.count, 35)
     }
 
     // Catches asymmetry between CodingKeys, init(from:), and the synthesized encode: a field
