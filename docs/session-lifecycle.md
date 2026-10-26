@@ -143,6 +143,14 @@ Claude Desktop enters the desktop lifecycle through its trusted bundle ID:
 
 When Claude Desktop stops, cctop keeps its visible sessions dormant during the retention window. The slow GC removes finished records after a lock-held metadata check.
 
+A Feishu bridge conversation (`lark_channel_profile` set) is connected while its client process runs,
+within the active window after its last activity, and while its bot holds it with something for the
+user: a turn running, a question, or a result not yet seen. A bot holds a conversation when the
+bridge's process registry (`~/.lark-channel/registry/processes.json`) lists the bot's process as
+running, or listed it within the last 10 minutes, and the bot's session map still lists the
+conversation. Once seen and quiet, the conversation disconnects like any other: a bridged Claude
+Code conversation finishes and enters Recent, and a bridged Codex conversation goes dormant.
+
 Every `source: "codex"` record uses the same Codex lifecycle. The host can be Codex Desktop, CLI, VS Code, or another editor. Process or recent hook activity makes the session active. A disconnected session stays dormant until `last_activity` reaches 14 days. Bundle and app-server evidence do not change this lifecycle.
 
 The archive metadata source is client-specific:

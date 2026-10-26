@@ -276,6 +276,31 @@ app and activates it. Warp ignores a stale or unknown session UUID, but the
 window still comes forward. Sessions without a captured link keep plain app
 activation, like the other terminals.
 
+## Feishu Bridge
+
+### `lark_channel_profile`
+
+Type: `string`
+
+Default: `null` when omitted.
+
+The Feishu bridge (`lark-channel-bridge`) runs Claude Code (`claude -p`) and Codex (`codex exec`)
+for Feishu chats. It starts one short-lived client process per message and resumes the same
+conversation for the next one. Every client it starts carries `LARK_CHANNEL=1` and the bot's profile
+name in `LARK_CHANNEL_PROFILE`; the hook stores that name here on every event, and clears it when the
+same conversation continues in another host.
+
+A bridged Claude Code conversation is keyed `lark-<session_id>.json` instead of by PID, so every
+message updates one record. The hook ignores the `SessionEnd` that each message's process emits,
+and a new process for the same conversation keeps the record, as for Codex. Same-project cleanup on
+`SessionStart` leaves bridged records to the app's lifecycle.
+
+A jump opens the conversation's Feishu group chat with
+`lark://applink.feishu.cn/client/chat/open?openChatId=<oc_…>`. The app reads the chat from the
+bridge's own session map (`~/.lark-channel/profiles/<profile>/sessions.json` and
+`sessions.json.catalog.json`). Without a known chat, Feishu (`com.electron.lark`) comes forward.
+Feishu offers no link to a topic inside a group, so a jump lands on the group.
+
 ## Visibility
 
 ### `hidden`

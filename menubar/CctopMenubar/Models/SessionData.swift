@@ -55,6 +55,8 @@ extension JSONDecoder {
 enum HostAppBundleID {
     static let claudeDesktop = "com.anthropic.claudefordesktop"
     static let codexDesktop = "com.openai.codex"
+    /// Feishu (飞书) and Lark share this bundle ID.
+    static let feishu = "com.electron.lark"
 }
 
 struct SubagentInfo: Codable, Equatable {
@@ -122,6 +124,9 @@ struct SessionData: Codable, Identifiable, Equatable {
     var desktopProjectName: String?
     var workspaceFile: String?
     var source: String?
+    /// The Feishu bridge bot (`lark-channel-bridge` profile) that runs this conversation one
+    /// short-lived client process per message; nil for every other session.
+    var larkChannelProfile: String?
     var endedAt: Date?
     var disconnectedAt: Date?
     var activeSubagents: [SubagentInfo]?
@@ -207,6 +212,7 @@ struct SessionData: Codable, Identifiable, Equatable {
         case desktopProjectName = "desktop_project_name"
         case workspaceFile = "workspace_file"
         case source
+        case larkChannelProfile = "lark_channel_profile"
         case endedAt = "ended_at"
         case disconnectedAt = "disconnected_at"
         case activeSubagents = "active_subagents"
@@ -245,6 +251,7 @@ struct SessionData: Codable, Identifiable, Equatable {
         desktopProjectName = try container.decodeIfPresent(String.self, forKey: .desktopProjectName)
         workspaceFile = try container.decodeIfPresent(String.self, forKey: .workspaceFile)
         source = try container.decodeIfPresent(String.self, forKey: .source)
+        larkChannelProfile = try? container.decodeIfPresent(String.self, forKey: .larkChannelProfile)
         endedAt = try container.decodeIfPresent(Date.self, forKey: .endedAt)
         disconnectedAt = try container.decodeIfPresent(Date.self, forKey: .disconnectedAt)
         activeSubagents = try container.decodeIfPresent([SubagentInfo].self, forKey: .activeSubagents)
@@ -281,6 +288,7 @@ struct SessionData: Codable, Identifiable, Equatable {
         desktopProjectName: String? = nil,
         workspaceFile: String? = nil,
         source: String? = nil,
+        larkChannelProfile: String? = nil,
         endedAt: Date? = nil,
         disconnectedAt: Date? = nil,
         activeSubagents: [SubagentInfo]? = nil,
@@ -314,6 +322,7 @@ struct SessionData: Codable, Identifiable, Equatable {
         self.desktopProjectName = desktopProjectName
         self.workspaceFile = workspaceFile
         self.source = source
+        self.larkChannelProfile = larkChannelProfile
         self.endedAt = endedAt
         self.disconnectedAt = disconnectedAt
         self.activeSubagents = activeSubagents

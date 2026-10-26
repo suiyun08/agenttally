@@ -177,6 +177,7 @@
 		PLT000010000000000000001 /* PanelLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLT000020000000000000001 /* PanelLifecycleTests.swift */; };
 		PPT000010000000000000001 /* PanelPositioningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPT000020000000000000001 /* PanelPositioningTests.swift */; };
 		FST000010000000000000001 /* FocusStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FST000020000000000000001 /* FocusStrategyTests.swift */; };
+		LKT000010000000000000001 /* LarkBridgeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LKT000020000000000000001 /* LarkBridgeSessionTests.swift */; };
 		MFT000010000000000000001 /* MultiplexerFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = MFT000020000000000000001 /* MultiplexerFocusTests.swift */; };
 		TMT000010000000000000001 /* ThemeManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TMT000020000000000000001 /* ThemeManagerTests.swift */; };
 		WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = WCC000020000000000000001 /* WorktreeCleanupCandidate.swift */; };
@@ -199,6 +200,7 @@
 		CSI000010000000000000001 /* CctopSessionIdentityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CSI000030000000000000001 /* CctopSessionIdentityStore.swift */; };
 		CSI000020000000000000001 /* CctopSessionIdentityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CSI000030000000000000001 /* CctopSessionIdentityStore.swift */; };
 		DCL000010000000000000001 /* DesktopAppConnectionLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCL000020000000000000001 /* DesktopAppConnectionLookup.swift */; };
+		LKB000010000000000000001 /* LarkBridgeLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = LKB000020000000000000001 /* LarkBridgeLookup.swift */; };
 		CTA000010000000000000001 /* CodexThreadArchiveLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = CTA000020000000000000001 /* CodexThreadArchiveLookup.swift */; };
 		CTQ000010000000000000001 /* CodexThreadArchiveLookup+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = CTQ000020000000000000001 /* CodexThreadArchiveLookup+Query.swift */; };
 		CTP000010000000000000001 /* CodexThreadArchiveLookup+Placement.swift in Sources */ = {isa = PBXBuildFile; fileRef = CTP000020000000000000001 /* CodexThreadArchiveLookup+Placement.swift */; };
@@ -274,6 +276,7 @@
 		LGS000020000000000000001 /* UserSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSession.swift; sourceTree = "<group>"; };
 		CSI000030000000000000001 /* CctopSessionIdentityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CctopSessionIdentityStore.swift; sourceTree = "<group>"; };
 		DCL000020000000000000001 /* DesktopAppConnectionLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopAppConnectionLookup.swift; sourceTree = "<group>"; };
+		LKB000020000000000000001 /* LarkBridgeLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LarkBridgeLookup.swift; sourceTree = "<group>"; };
 		CTA000020000000000000001 /* CodexThreadArchiveLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexThreadArchiveLookup.swift; sourceTree = "<group>"; };
 		CTQ000020000000000000001 /* CodexThreadArchiveLookup+Query.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodexThreadArchiveLookup+Query.swift"; sourceTree = "<group>"; };
 		CTP000020000000000000001 /* CodexThreadArchiveLookup+Placement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodexThreadArchiveLookup+Placement.swift"; sourceTree = "<group>"; };
@@ -403,6 +406,7 @@
 		PLT000020000000000000001 /* PanelLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelLifecycleTests.swift; sourceTree = "<group>"; };
 		PPT000020000000000000001 /* PanelPositioningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPositioningTests.swift; sourceTree = "<group>"; };
 		FST000020000000000000001 /* FocusStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStrategyTests.swift; sourceTree = "<group>"; };
+		LKT000020000000000000001 /* LarkBridgeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LarkBridgeSessionTests.swift; sourceTree = "<group>"; };
 		MFT000020000000000000001 /* MultiplexerFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplexerFocusTests.swift; sourceTree = "<group>"; };
 		TMT000020000000000000001 /* ThemeManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManagerTests.swift; sourceTree = "<group>"; };
 		WCC000020000000000000001 /* WorktreeCleanupCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeCleanupCandidate.swift; sourceTree = "<group>"; };
@@ -467,6 +471,7 @@
 				LGS000020000000000000001 /* UserSession.swift */,
 				CSI000030000000000000001 /* CctopSessionIdentityStore.swift */,
 				DCL000020000000000000001 /* DesktopAppConnectionLookup.swift */,
+				LKB000020000000000000001 /* LarkBridgeLookup.swift */,
 				CTA000020000000000000001 /* CodexThreadArchiveLookup.swift */,
 				CTQ000020000000000000001 /* CodexThreadArchiveLookup+Query.swift */,
 				CTP000020000000000000001 /* CodexThreadArchiveLookup+Placement.swift */,
@@ -702,6 +707,7 @@
 				PLT000020000000000000001 /* PanelLifecycleTests.swift */,
 				PPT000020000000000000001 /* PanelPositioningTests.swift */,
 				FST000020000000000000001 /* FocusStrategyTests.swift */,
+				LKT000020000000000000001 /* LarkBridgeSessionTests.swift */,
 				MFT000020000000000000001 /* MultiplexerFocusTests.swift */,
 				TMT000020000000000000001 /* ThemeManagerTests.swift */,
 				WCT000020000000000000001 /* WorktreeCleanupTests.swift */,
@@ -849,6 +855,7 @@
 				LGS000010000000000000001 /* UserSession.swift in Sources */,
 				CSI000010000000000000001 /* CctopSessionIdentityStore.swift in Sources */,
 				DCL000010000000000000001 /* DesktopAppConnectionLookup.swift in Sources */,
+				LKB000010000000000000001 /* LarkBridgeLookup.swift in Sources */,
 				CTA000010000000000000001 /* CodexThreadArchiveLookup.swift in Sources */,
 				CTQ000010000000000000001 /* CodexThreadArchiveLookup+Query.swift in Sources */,
 				CTP000010000000000000001 /* CodexThreadArchiveLookup+Placement.swift in Sources */,
@@ -1042,6 +1049,7 @@
 				PLT000010000000000000001 /* PanelLifecycleTests.swift in Sources */,
 				PPT000010000000000000001 /* PanelPositioningTests.swift in Sources */,
 				FST000010000000000000001 /* FocusStrategyTests.swift in Sources */,
+				LKT000010000000000000001 /* LarkBridgeSessionTests.swift in Sources */,
 				MFT000010000000000000001 /* MultiplexerFocusTests.swift in Sources */,
 				TMT000010000000000000001 /* ThemeManagerTests.swift in Sources */,
 				WCT000010000000000000001 /* WorktreeCleanupTests.swift in Sources */,

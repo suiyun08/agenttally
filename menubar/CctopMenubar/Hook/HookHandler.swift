@@ -15,7 +15,17 @@ enum HookHandler {
             hasBackgroundWork: input.hasBackgroundWork
         )
 
+        let larkProfile = larkChannelProfile(environment: deps.environment())
         if event == .sessionEnd {
+            // A Feishu bridge ends its client process after every message; the conversation goes on.
+            guard larkProfile == nil else {
+                let safeId = SessionData.sanitizeSessionId(raw: input.sessionId)
+                deps.logger.appendHookLog(
+                    sessionId: safeId, event: hookName, label: HookLogger.sessionLabel(cwd: input.cwd, sessionId: safeId),
+                    transition: "turn ended (Feishu bridge), session kept"
+                )
+                return
+            }
             handleSessionEnd(hookName: hookName, input: input, deps: deps)
             return
         }
@@ -25,7 +35,9 @@ enum HookHandler {
         let pid = deps.process.parentPID()
         let source = input.resolvedHarnessName ?? SessionData.ccSource
         let label = HookLogger.sessionLabel(cwd: input.cwd, sessionId: safeId)
-        let sessionPath = (sessionsDir as NSString).appendingPathComponent(sessionFileName(input: input, pid: pid, safeSessionId: safeId))
+        let sessionPath = (sessionsDir as NSString).appendingPathComponent(
+            sessionFileName(input: input, pid: pid, safeSessionId: safeId, larkChannelProfile: larkProfile)
+        )
 
         if event == .sessionStart, input.hasCodexStartupDeferralEvidence,
            !FileManager.default.fileExists(atPath: sessionPath) {
@@ -53,6 +65,7 @@ enum HookHandler {
             freshData.source = source
             freshData.cctopSessionId = cctopSessionId
             freshData.harnessSessionId = input.sessionId
+            freshData.larkChannelProfile = larkProfile
             let loaded: (data: SessionData, isNewSessionFile: Bool)
             do {
                 loaded = try loadOrCreateSession(
@@ -67,6 +80,7 @@ enum HookHandler {
 
             data.pid = pid
             data.pidStartTime = startTime
+            data.larkChannelProfile = larkProfile
             stampSessionIdentity(
                 &data, cctopSessionId: cctopSessionId,
                 input: input, source: source, safeId: safeId
@@ -333,7 +347,10 @@ private func loadOrCreateSession(
        let storedStart = existing.pidStartTime,
        let currentStart = startTime,
        abs(storedStart - currentStart) > 1.0 {
-        if existing.isCodex, fresh.isCodex, sameConversation {
+        // Codex threads and Feishu bridge conversations outlive the process that ran one turn.
+        let survivesProcess = (existing.isCodex && fresh.isCodex)
+            || (existing.larkChannelProfile != nil && fresh.larkChannelProfile != nil)
+        if survivesProcess, sameConversation {
             return (existing, false)
         }
         guard canReplaceDecodedSessionFile(existing: existing, fresh: fresh, event: event) else {
@@ -425,12 +442,18 @@ private func canReplaceDecodedSessionFile(existing: SessionData, fresh: SessionD
 // MARK: - Session File Naming
 
 /// The single writer-side source of truth for session file naming. Files are keyed by
-/// PID, except Codex where one host process can emit hooks for multiple conversations.
-/// The `codex-` prefix also keeps Codex files out of the reader-side legacy UUID-file
-/// sweep (`SessionManager.isLegacyUUIDFilename`) — keep both sides in sync.
-func sessionFileName(input: HookInput, pid: UInt32, safeSessionId: String) -> String {
+/// PID, except Codex where one host process can emit hooks for multiple conversations, and a
+/// Feishu bridge conversation, which runs one short-lived process per message.
+/// The `codex-` and `lark-` prefixes also keep these files out of the reader-side legacy
+/// UUID-file sweep (`SessionManager.isLegacyUUIDFilename`) — keep both sides in sync.
+func sessionFileName(
+    input: HookInput, pid: UInt32, safeSessionId: String, larkChannelProfile: String? = nil
+) -> String {
     if input.resolvedHarnessName == SessionData.codexSource {
         return "codex-\(safeSessionId).json"
+    }
+    if larkChannelProfile != nil {
+        return "lark-\(safeSessionId).json"
     }
     return "\(pid).json"
 }

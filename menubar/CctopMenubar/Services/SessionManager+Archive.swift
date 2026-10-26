@@ -210,7 +210,8 @@ extension SessionManager {
         now: Date,
         desktopAppConnectionLookup: DesktopAppConnectionLookup = .live,
         claudeMetadata: ClaudeDesktopSessionMetadataSnapshot?,
-        processAlive: (SessionData) -> Bool = { $0.isAlive }
+        processAlive: (SessionData) -> Bool = { $0.isAlive },
+        bridgeKeepsLive: (SessionData) -> Bool = { _ in false }
     ) -> [SessionRecord] {
         let projectNames = claudeMetadata?.projectNamesBySessionID ?? [:]
         let desktopAppRunningByBundleID = desktopAppRunningByBundleID(
@@ -225,7 +226,8 @@ extension SessionManager {
             data.lifecycle = SessionLifecyclePolicy.lifecycle(
                 for: data, hostClass: data.hostClass, processAlive: processAlive(data),
                 now: now, windows: lifecycleWindows,
-                desktopAppRunning: desktopAppRunning(for: data, runningByBundleID: desktopAppRunningByBundleID)
+                desktopAppRunning: desktopAppRunning(for: data, runningByBundleID: desktopAppRunningByBundleID),
+                bridgeKeepsLive: bridgeKeepsLive(data)
             )
             let mtime = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
                 .contentModificationDate ?? .distantPast
