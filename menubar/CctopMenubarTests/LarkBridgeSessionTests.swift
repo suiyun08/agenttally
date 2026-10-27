@@ -192,7 +192,10 @@ final class LarkBridgeSessionTests: XCTestCase {
             LarkChat(scope: "oc_09f7")?.url?.absoluteString,
             "lark://applink.feishu.cn/client/chat/open?openChatId=oc_09f7"
         )
-        for scope in ["oc_x&y=1", "oc_09f7:omt_1&x=2", "oc_09f7:", "oc_09f7:oc_1", "omt_19bb", "oc_09f7:omt_1:omt_2"] {
+        for scope in ["oc_09f7:omt_1&x=2", "oc_09f7:", "oc_09f7:ou_1"] {
+            XCTAssertEqual(LarkChat(scope: scope), LarkChat(chatID: "oc_09f7"), "\(scope): no topic, still the chat")
+        }
+        for scope in ["oc_x&y=1", "omt_19bb", ""] {
             XCTAssertNil(LarkChat(scope: scope), scope)
         }
     }

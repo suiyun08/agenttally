@@ -118,10 +118,11 @@ struct LarkChat: Equatable {
         self.threadID = threadID
     }
 
+    /// A scope part that is not a topic leaves the jump on the chat.
     init?(scope: String) {
         let parts = scope.split(separator: ":", omittingEmptySubsequences: false).map(String.init)
-        guard (1...2).contains(parts.count) else { return nil }
-        self.init(chatID: parts[0], threadID: parts.count == 2 ? parts[1] : nil)
+        let topic = parts.dropFirst().first.flatMap { Self.isID($0, prefix: "omt_") ? $0 : nil }
+        self.init(chatID: parts[0], threadID: topic)
     }
 
     /// Opens the topic, or the chat when the conversation has none. Feishu documents only
