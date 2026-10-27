@@ -161,10 +161,11 @@ final class LarkReadReceipts: @unchecked Sendable {
         for _ in 0..<5 {
             var params: [String: Any] = ["user_id_type": "open_id", "page_size": 100]
             if let pageToken { params["page_token"] = pageToken }
-            guard let paramsJSON = try? JSONSerialization.data(withJSONObject: params),
+            guard let paramsData = try? JSONSerialization.data(withJSONObject: params),
+                  let paramsJSON = String(bytes: paramsData, encoding: .utf8),
                   let output = runLarkCLI(
                       ["--as", "bot", "api", "GET", "/open-apis/im/v1/messages/\(messageID)/read_users",
-                       "--params", String(decoding: paramsJSON, as: UTF8.self)],
+                       "--params", paramsJSON],
                       configDirectory: configDirectory
                   ),
                   let root = try? JSONSerialization.jsonObject(with: output) as? [String: Any],
