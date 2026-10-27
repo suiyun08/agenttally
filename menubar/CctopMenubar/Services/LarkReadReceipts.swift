@@ -21,7 +21,7 @@ final class LarkReadReceipts: @unchecked Sendable {
     /// Open IDs of the users who read a bot message, or nil when Feishu did not answer.
     typealias Readers = (_ configDirectory: URL, _ messageID: String) -> Set<String>?
 
-    private static let queue = DispatchQueue(label: "io.github.suiyun08.AgentTally.LarkReadReceipts", qos: .utility)
+    static let queue = DispatchQueue(label: "io.github.suiyun08.AgentTally.LarkReadReceipts", qos: .utility)
 
     private let home: URL
     private let readers: Readers

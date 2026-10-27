@@ -115,7 +115,7 @@ final class LarkReadReceiptsTests: XCTestCase {
         }
     }
 
-    private func receipts(_ readers: Readers) -> LarkReadReceipts {
+    private func makeReceipts(_ readers: Readers) -> LarkReadReceipts {
         LarkReadReceipts(home: home, readers: { readers($0, $1) }, schedule: { $0() })
     }
 
@@ -131,7 +131,7 @@ final class LarkReadReceiptsTests: XCTestCase {
         try writeLog(twoTurns())
         let readers = Readers()
         readers.answer = ["ou_someone_else", user]
-        let receipts = receipts(readers)
+        let receipts = makeReceipts(readers)
         receipts.request(result(), now: Date())
         XCTAssertEqual(readers.asked.map(\.1), ["om_reply"])
         XCTAssertEqual(readers.asked.first?.0.standardizedFileURL, config.standardizedFileURL)
@@ -142,7 +142,7 @@ final class LarkReadReceiptsTests: XCTestCase {
         try writeLog(twoTurns())
         let readers = Readers()
         readers.answer = ["ou_someone_else"]
-        let receipts = receipts(readers)
+        let receipts = makeReceipts(readers)
         let now = Date()
         receipts.request(result(), now: now)
         receipts.request(result(), now: now.addingTimeInterval(LarkReadReceipts.recheckInterval - 1))
@@ -164,7 +164,7 @@ final class LarkReadReceiptsTests: XCTestCase {
     func testOnlyAFinishedBridgeResultWithinFeishusReceiptWindowIsChecked() throws {
         try writeLog(twoTurns())
         let readers = Readers()
-        let receipts = receipts(readers)
+        let receipts = makeReceipts(readers)
         receipts.request(result(profile: nil), now: Date())
         receipts.request(result(status: .working), now: Date())
         receipts.request(result(profile: "../registry"), now: Date())
@@ -175,7 +175,7 @@ final class LarkReadReceiptsTests: XCTestCase {
     func testNoReplyYetMeansNoQuestionToFeishu() throws {
         try writeLog(twoTurns(latestReplies: false))
         let readers = Readers()
-        receipts(readers).request(result(), now: Date())
+        makeReceipts(readers).request(result(), now: Date())
         XCTAssertTrue(readers.asked.isEmpty)
     }
 
@@ -205,7 +205,7 @@ final class LarkReadReceiptsTests: XCTestCase {
         sources.seenSessions = SessionSeenStore(defaults: defaults)
         let readers = Readers()
         readers.answer = ["ou_someone_else"]
-        sources.larkReadReceipts = receipts(readers)
+        sources.larkReadReceipts = makeReceipts(readers)
         let manager = SessionManager(
             historyManager: HistoryManager(historyDir: sources.sessionsDir.appendingPathComponent("history")),
             dataSources: sources,
