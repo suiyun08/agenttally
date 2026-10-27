@@ -169,8 +169,10 @@ final class ClientReadStateLookup: ClientReadStateProviding {
             guard let focusedAt = record.lastFocusedAt else { continue }
             let cliIDs = Set([record.cliSessionId].compactMap { $0 } + (record.priorCliSessionIds ?? []))
             let date = Date(timeIntervalSince1970: focusedAt / 1_000)
-            for cliID in cliIDs where (focus.byCliSessionID[cliID] ?? .distantPast) < date && isLook(date) {
-                focus.byCliSessionID[cliID] = date
+            if isLook(date) {
+                for cliID in cliIDs where (focus.byCliSessionID[cliID] ?? .distantPast) < date {
+                    focus.byCliSessionID[cliID] = date
+                }
             }
             if focusedAt > (latest?.focusedAt ?? -1) {
                 latest = (focusedAt, cliIDs)
