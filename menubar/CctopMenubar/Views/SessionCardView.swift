@@ -138,6 +138,15 @@ struct SessionCardView: View {
                 .truncationMode(.tail)
                 .padding(.top, 4)
         }
+        // A finished turn can leave background work that will pick the session up again.
+        if session.status == .done, session.hasBackgroundWork {
+            Text(session.backgroundWorkLine)
+                .font(.system(size: 10.5))
+                .foregroundStyle(Color.textMuted)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .padding(.top, 2)
+        }
     }
 
     // MARK: - Status label

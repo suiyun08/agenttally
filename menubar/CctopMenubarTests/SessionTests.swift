@@ -2744,20 +2744,47 @@ final class SessionTurnEndStatusTests: XCTestCase {
         XCTAssertEqual(background.contextLine, "2 background tasks")
     }
 
-    func testIdleTimeoutSparesUnreadDoneAndBackground() {
-        let now = Date()
-        var done = doneSession(finishedAt: now.addingTimeInterval(-7_200))
-        done.lastActivity = now.addingTimeInterval(-7_200)
-        // A finished turn stays unread until the user looks; only an old question goes idle.
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(done, now: now).status, .done)
-
-        var background = done
+    func testATurnAnOlderHookRecordedAsBackgroundShowsAsDone() {
+        var background = doneSession(finishedAt: Date())
         background.status = .background
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(background, now: now).status, .background)
+        XCTAssertEqual(SessionManager.adjustLegacyBackground(background).status, .done)
+        for status: SessionStatus in [.idle, .working, .waitingInput, .waitingPermission, .needsAttention, .done] {
+            var other = background
+            other.status = status
+            XCTAssertEqual(SessionManager.adjustLegacyBackground(other).status, status)
+        }
+    }
 
-        var question = done
-        question.status = .waitingInput
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(question, now: now).status, .idle)
+    /// Overnight: eight hours after the turn, a question and an unread result both still wait.
+    @MainActor
+    func testNeitherAQuestionNorAnUnreadResultTimesOut() throws {
+        let now = Date()
+        var sources = try isolatedSessionDataSources(prefix: "cctop-no-timeout")
+        var asking = SessionData.mock(id: "asking", status: .waitingInput, pid: 33_333)
+        asking.notificationMessage = "Publish the compatible release v22?"
+        var finished = SessionData.mock(id: "finished", status: .done, pid: 44_444)
+        finished.lastAssistantMessage = "All tests pass."
+        for var session in [asking, finished] {
+            session.lastActivity = now.addingTimeInterval(-8 * 3_600)
+            session.statusChangedAt = session.lastActivity
+            try session.writeToFile(path: sources.sessionsDir.appendingPathComponent("\(session.pid!).json").path)
+        }
+        sources.processAlive = { _ in true }
+        sources.seenSessions = try makeSeenStore()
+        sources.now = { now }
+
+        let manager = SessionManager(
+            historyManager: HistoryManager(historyDir: sources.sessionsDir.appendingPathComponent("history")),
+            dataSources: sources,
+            startMonitoring: false
+        )
+        let shown = Dictionary(uniqueKeysWithValues: manager.userSessions.map {
+            ($0.displayRecord.data.sessionId, $0.displayRecord.data)
+        })
+        XCTAssertEqual(shown["asking"]?.status, .waitingInput)
+        XCTAssertEqual(shown["asking"]?.contextLine, "Publish the compatible release v22?")
+        XCTAssertEqual(shown["finished"]?.status, .done)
+        XCTAssertEqual(shown["finished"]?.isUnseenDone, true)
     }
 
     func testRecentListsDisconnectedSessionsFromTheLastSevenDays() {
@@ -2878,6 +2905,39 @@ final class ClientReadStateTests: XCTestCase {
         let json = #"{"electron-thread-read-state-v1":{"version":1,"unreadByIdentity":{"acct-a":{"local:1":["t1","t2"]},"acct-b":{"local:1":[],"remote:2":["t3"]}}}}"#
         XCTAssertEqual(ClientReadStateLookup.parseCodexUnreadThreadIDs(Data(json.utf8)), ["t1", "t2", "t3"])
         XCTAssertNil(ClientReadStateLookup.parseCodexUnreadThreadIDs(Data(#"{"other":1}"#.utf8)))
+    }
+
+    /// Claude Desktop stamps the conversation its window shows when the window comes into view
+    /// behind another app. Replays the case where a jump to Codex, over Brave, did that.
+    func testClaudeFocusCountsOnlyWhileClaudeWasInFront() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let history = FrontmostAppHistory(frontmost: "com.brave.Browser", now: start, center: nil)
+        history.record("com.openai.codex", at: start.addingTimeInterval(100))
+        history.record(HostAppBundleID.claudeDesktop, at: start.addingTimeInterval(200))
+        history.record("com.openai.codex", at: start.addingTimeInterval(300))
+        let isLook = { history.wasFrontmost(HostAppBundleID.claudeDesktop, around: $0) }
+
+        let stampedBehindCodex = ClientReadStateLookup.focus(from: [
+            ClaudeDesktopSessionLinkMetadata(sessionId: "local_a", cliSessionId: "cli-a", lastFocusedAt: 1_100_400),
+        ], isLook: isLook)
+        XCTAssertNil(stampedBehindCodex.byCliSessionID["cli-a"], "Codex was in front; nobody looked")
+        XCTAssertEqual(stampedBehindCodex.current, ["cli-a"], "It is still what Claude shows")
+
+        for stamp in [1_200_300.0, 1_250_000, 1_300_500] {
+            let looked = ClientReadStateLookup.focus(from: [
+                ClaudeDesktopSessionLinkMetadata(sessionId: "local_a", cliSessionId: "cli-a", lastFocusedAt: stamp),
+            ], isLook: isLook)
+            XCTAssertEqual(looked.byCliSessionID["cli-a"], Date(timeIntervalSince1970: stamp / 1_000), "\(stamp)")
+        }
+    }
+
+    func testFrontmostHistoryKnowsNothingBeforeItStarted() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let history = FrontmostAppHistory(frontmost: HostAppBundleID.claudeDesktop, now: start, center: nil)
+        XCTAssertFalse(history.wasFrontmost(HostAppBundleID.claudeDesktop, around: start.addingTimeInterval(-30)))
+        XCTAssertFalse(history.wasFrontmost(HostAppBundleID.claudeDesktop, around: start.addingTimeInterval(0.5)))
+        XCTAssertTrue(history.wasFrontmost(HostAppBundleID.claudeDesktop, around: start.addingTimeInterval(5)))
+        XCTAssertFalse(history.wasFrontmost("com.openai.codex", around: start.addingTimeInterval(5)))
     }
 
     func testClaudeFocusMapsPriorIDsAndPicksTheLatestConversation() {

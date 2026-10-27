@@ -190,15 +190,19 @@ and other persisted preferences keep their separate contracts.
 | --- | --- | --- |
 | `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact` |
 | `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest` |
-| `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications |
+| `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications; `Stop` right after a wrap-up card that asks something |
 | `needs_attention` | The turn ended on an error | `StopFailure`; `SessionError` |
-| `background` | The turn ended, but background tasks or scheduled wakeups will resume the session | `Stop` with a non-empty `background_tasks` or `session_crons` |
-| `done` | The turn ended with nothing in flight | `Stop`; `idle_prompt` only when a turn never sent `Stop` |
+| `background` | Written by hooks before 1.0.7 for a turn that ended with background work. The app shows it as `done` | No longer written |
+| `done` | The turn ended | `Stop`, with or without background work; `idle_prompt` only when a turn never sent `Stop` |
 | `idle` | No turn has run since start or compaction | `SessionStart`, `PostCompact` |
 
-`status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Like `waiting_input`, a `done` session displays as `idle` after 60 minutes without activity.
+`status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Nothing times out: a question keeps waiting for its answer and an unread `done` turn stays unread, however long ago it ended.
 
-`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them.
+A turn the user already read in Claude Desktop or Codex Desktop counts as seen too. Claude Desktop's `lastFocusedAt` counts only for a moment when Claude Desktop was the frontmost app, as the app records from activations while it runs: Claude also stamps the conversation its window shows whenever that window comes into view behind another app, for example when another app comes to the front over a third.
+
+Claude Desktop ends a turn with a wrap-up card, the tool `mcp__ccd_turn__wrap_up`, whose `ask` holds any question for the user. The hook records that question as the tool's detail, and a `Stop` that directly follows the card writes `waiting_input` with the question in `notification_message`. Claude Code's `idle_prompt` reminder a minute later leaves the question in place. Any other tool between the card and `Stop` means the turn went on, so the turn ends `done`.
+
+`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them. A finished turn's card shows that summary under Claude's reply.
 
 ## Terminal Focus Metadata
 

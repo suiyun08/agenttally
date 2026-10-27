@@ -72,20 +72,29 @@ final class ClientReadStateLookup: ClientReadStateProviding {
     private let codexStatePath: String
     private let claudeSessionsDirectory: String
     private let frontmostBundleID: () -> String?
+    /// Whether Claude Desktop was in front around a moment, so its focus stamp means a look.
+    private let claudeWasFrontmost: (Date) -> Bool
 
     private var codexCache: (signature: FileSignature, unread: ClientReadSnapshot.CodexUnread?)?
-    private var claudeCache: (signature: [FileSignature], focus: ClaudeFocus)?
+    private var claudeCache: (signature: [FileSignature], records: [ClaudeDesktopSessionLinkMetadata])?
 
     init(
         codexStatePath: String = Config.codexGlobalStatePath(),
         claudeSessionsDirectory: String = Config.claudeCodeSessionsDir(),
         frontmostBundleID: @escaping () -> String? = {
             NSWorkspace.shared.frontmostApplication?.bundleIdentifier
-        }
+        },
+        claudeWasFrontmost: ((Date) -> Bool)? = nil
     ) {
         self.codexStatePath = codexStatePath
         self.claudeSessionsDirectory = claudeSessionsDirectory
         self.frontmostBundleID = frontmostBundleID
+        if let claudeWasFrontmost {
+            self.claudeWasFrontmost = claudeWasFrontmost
+        } else {
+            let history = FrontmostAppHistory(frontmost: frontmostBundleID())
+            self.claudeWasFrontmost = { history.wasFrontmost(HostAppBundleID.claudeDesktop, around: $0) }
+        }
     }
 
     func snapshot() -> ClientReadSnapshot {
@@ -134,24 +143,33 @@ final class ClientReadStateLookup: ClientReadStateProviding {
     private func claudeFocus() -> ClaudeFocus {
         let urls = Self.metadataURLs(in: claudeSessionsDirectory)
         let signature = urls.compactMap { FileSignature(path: $0.path) }
-        if let claudeCache, claudeCache.signature == signature { return claudeCache.focus }
-        let records: [ClaudeDesktopSessionLinkMetadata] = urls.compactMap { url in
-            guard let data = try? Data(contentsOf: url) else { return nil }
-            return try? JSONDecoder().decode(ClaudeDesktopSessionLinkMetadata.self, from: data)
+        let records: [ClaudeDesktopSessionLinkMetadata]
+        if let claudeCache, claudeCache.signature == signature {
+            records = claudeCache.records
+        } else {
+            records = urls.compactMap { url in
+                guard let data = try? Data(contentsOf: url) else { return nil }
+                return try? JSONDecoder().decode(ClaudeDesktopSessionLinkMetadata.self, from: data)
+            }
+            claudeCache = (signature, records)
         }
-        let focus = Self.focus(from: records)
-        claudeCache = (signature, focus)
-        return focus
+        return Self.focus(from: records, isLook: claudeWasFrontmost)
     }
 
-    static func focus(from records: [ClaudeDesktopSessionLinkMetadata]) -> ClaudeFocus {
+    /// Claude Desktop stamps `lastFocusedAt` on the conversation its window shows whenever the
+    /// window comes into view, including behind another app (seen when another app came to the
+    /// front over a third). A stamp counts as a look only when `isLook` confirms Claude was in
+    /// front then; any stamp still names the conversation Claude shows.
+    static func focus(
+        from records: [ClaudeDesktopSessionLinkMetadata], isLook: (Date) -> Bool = { _ in true }
+    ) -> ClaudeFocus {
         var focus = ClaudeFocus()
         var latest: (focusedAt: Double, cliIDs: Set<String>)?
         for record in records where record.isArchived != true {
             guard let focusedAt = record.lastFocusedAt else { continue }
             let cliIDs = Set([record.cliSessionId].compactMap { $0 } + (record.priorCliSessionIds ?? []))
             let date = Date(timeIntervalSince1970: focusedAt / 1_000)
-            for cliID in cliIDs where (focus.byCliSessionID[cliID] ?? .distantPast) < date {
+            for cliID in cliIDs where (focus.byCliSessionID[cliID] ?? .distantPast) < date && isLook(date) {
                 focus.byCliSessionID[cliID] = date
             }
             if focusedAt > (latest?.focusedAt ?? -1) {
@@ -174,6 +192,55 @@ final class ClientReadStateLookup: ClientReadStateProviding {
             return url
         }
         .sorted { $0.path < $1.path }
+    }
+}
+
+/// Which app was in front when, recorded from app activations while AgentTally runs.
+final class FrontmostAppHistory {
+    /// A focus stamp lands within this long of the activation it belongs to.
+    static let tolerance: TimeInterval = 1
+    private static let maxChanges = 2_000
+
+    private var changes: [(at: Date, bundleID: String?)]
+    /// Nothing is known before this moment.
+    private var start: Date
+    private var observer: NSObjectProtocol?
+    private let center: NotificationCenter?
+
+    init(frontmost: String?, now: Date = Date(), center: NotificationCenter? = NSWorkspace.shared.notificationCenter) {
+        changes = [(now, frontmost)]
+        start = now
+        self.center = center
+        observer = center?.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            self?.record(app?.bundleIdentifier, at: Date())
+        }
+    }
+
+    deinit {
+        if let observer { center?.removeObserver(observer) }
+    }
+
+    func record(_ bundleID: String?, at date: Date) {
+        changes.append((date, bundleID))
+        guard changes.count > Self.maxChanges else { return }
+        changes.removeFirst(changes.count - Self.maxChanges)
+        start = changes[0].at
+    }
+
+    /// Whether the app was in front at some moment within the tolerance of `date`. A moment the
+    /// history does not cover answers false.
+    func wasFrontmost(_ bundleID: String, around date: Date) -> Bool {
+        let from = date.addingTimeInterval(-Self.tolerance)
+        let until = date.addingTimeInterval(Self.tolerance)
+        guard from >= start else { return false }
+        for (index, change) in changes.enumerated() where change.bundleID == bundleID {
+            let end = index + 1 < changes.count ? changes[index + 1].at : .distantFuture
+            if change.at <= until && end >= from { return true }
+        }
+        return false
     }
 }
 

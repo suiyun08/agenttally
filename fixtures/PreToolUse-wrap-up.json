@@ -1,0 +1,12 @@
+{
+  "session_id": "test-session-001",
+  "cwd": "/tmp/test-project",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "mcp__ccd_turn__wrap_up",
+  "tool_input": {
+    "recap": "Built the compatible release and ran the replay checks; all passed.",
+    "ask": "Publish the compatible release v22?",
+    "blocked": true,
+    "actions": [{ "label": "Publish", "message": "Publish the compatible release v22." }]
+  }
+}

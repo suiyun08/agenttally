@@ -682,23 +682,25 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertNil(session.lastToolDetail)
     }
 
-    func testStopWithBackgroundTasksSetsBackgroundAndSummary() throws {
+    func testStopWithBackgroundTasksEndsTheTurnAndKeepsTheSummary() throws {
         try handleFixture("SessionStart")
         try handleFixture("UserPromptSubmit")
         try handleFixture("Stop-background")
         let session = try loadSession()
-        XCTAssertEqual(session.status, .background)
+        XCTAssertEqual(session.status, .done, "The turn ended; the background work comes on top")
         XCTAssertEqual(session.backgroundTaskCount, 1)
         XCTAssertNil(session.scheduledWakeupCount)
         XCTAssertEqual(session.backgroundTaskDetail, "Run the integration tests")
-        XCTAssertEqual(session.contextLine, "1 background task: Run the integration tests")
+        XCTAssertTrue(session.hasBackgroundWork)
+        XCTAssertEqual(session.backgroundWorkLine, "1 background task: Run the integration tests")
+        XCTAssertEqual(session.contextLine, "Started the test run in the background. I'll report back when it finishes.")
         XCTAssertEqual(
             session.lastAssistantMessage,
             "Started the test run in the background. I'll report back when it finishes."
         )
     }
 
-    func testStopWithOnlyScheduledWakeupsSetsBackground() throws {
+    func testStopWithOnlyScheduledWakeupsEndsTheTurn() throws {
         try handleFixture("SessionStart")
         try handleHook("""
         {
@@ -710,9 +712,9 @@ final class HookHandlerTests: XCTestCase {
         }
         """, hookName: "Stop")
         let session = try loadSession()
-        XCTAssertEqual(session.status, .background)
+        XCTAssertEqual(session.status, .done)
         XCTAssertEqual(session.scheduledWakeupCount, 1)
-        XCTAssertEqual(session.contextLine, "1 scheduled wakeup")
+        XCTAssertEqual(session.backgroundWorkLine, "1 scheduled wakeup")
     }
 
     func testPlainStopAfterBackgroundClearsSummaryAndFinishes() throws {
@@ -752,6 +754,74 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(session.notificationMessage, "API Error: Rate limit reached")
         XCTAssertNil(session.lastAssistantMessage)
         XCTAssertEqual(session.notificationContent.body, "API Error: Rate limit reached")
+    }
+
+    // MARK: - Claude Desktop's wrap-up card
+
+    private func wrapUpCard(ask: String?) -> String {
+        let askField = ask.map { #", "ask": "\#($0)""# } ?? ""
+        return """
+        {"session_id": "test-session-001", "cwd": "/tmp/test-project", "hook_event_name": "PreToolUse",
+         "tool_name": "mcp__ccd_turn__wrap_up",
+         "tool_input": {"recap": "Done.", "blocked": false, "actions": []\(askField)}}
+        """
+    }
+
+    func testAWrapUpCardWithAQuestionEndsTheTurnWaitingForTheAnswer() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("PreToolUse-wrap-up")
+        XCTAssertEqual(try loadSession().status, .working, "Still the turn's last step")
+        try handleFixture("PostToolUse", hookName: "PostToolUse")
+        try handleFixture("Stop")
+        var session = try loadSession()
+        XCTAssertEqual(session.status, .waitingInput)
+        XCTAssertEqual(session.notificationMessage, "Publish the compatible release v22?")
+        XCTAssertEqual(session.contextLine, "Publish the compatible release v22?")
+        XCTAssertNil(session.lastTool)
+        XCTAssertNotNil(session.statusChangedAt)
+
+        try handleFixture("Notification-idle", hookName: "Notification")
+        session = try loadSession()
+        XCTAssertEqual(session.status, .waitingInput, "The idle reminder does not end the question")
+        XCTAssertEqual(session.notificationMessage, "Publish the compatible release v22?", "Nor erase it")
+
+        try handleFixture("UserPromptSubmit")
+        session = try loadSession()
+        XCTAssertEqual(session.status, .working)
+        XCTAssertNil(session.notificationMessage)
+    }
+
+    func testAWrapUpCardWithAQuestionOutranksBackgroundWork() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("PreToolUse-wrap-up")
+        try handleFixture("Stop-background")
+        let session = try loadSession()
+        XCTAssertEqual(session.status, .waitingInput)
+        XCTAssertEqual(session.backgroundTaskCount, 1)
+    }
+
+    func testAWrapUpCardWithoutAQuestionEndsTheTurnDone() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleHook(wrapUpCard(ask: nil), hookName: "PreToolUse")
+        try handleFixture("Stop")
+        XCTAssertEqual(try loadSession().status, .done)
+
+        try handleFixture("UserPromptSubmit")
+        try handleHook(wrapUpCard(ask: "  "), hookName: "PreToolUse")
+        try handleFixture("Stop")
+        XCTAssertEqual(try loadSession().status, .done, "A blank question asks nothing")
+    }
+
+    func testWorkAfterTheWrapUpCardDropsItsQuestion() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("UserPromptSubmit")
+        try handleFixture("PreToolUse-wrap-up")
+        try handleFixture("PreToolUse")
+        try handleFixture("Stop")
+        XCTAssertEqual(try loadSession().status, .done)
     }
 
     func testAskUserQuestionWaitsForInputUntilAnswered() throws {
