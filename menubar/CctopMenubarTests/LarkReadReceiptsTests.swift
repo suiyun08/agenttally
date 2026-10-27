@@ -161,6 +161,20 @@ final class LarkReadReceiptsTests: XCTestCase {
         XCTAssertEqual(readers.asked.count, 3, "A read result is not asked about again")
     }
 
+    func testAStuckCheckIsNotQueuedAgain() throws {
+        try writeLog(twoTurns())
+        let readers = Readers()
+        var pending: [() -> Void] = []
+        let receipts = LarkReadReceipts(home: home, readers: { readers($0, $1) }, schedule: { pending.append($0) })
+        let now = Date()
+        receipts.request(result(), now: now)
+        receipts.request(result(), now: now.addingTimeInterval(5 * LarkReadReceipts.recheckInterval))
+        XCTAssertEqual(pending.count, 1, "The first check has not come back")
+        pending.removeFirst()()
+        receipts.request(result(), now: now.addingTimeInterval(6 * LarkReadReceipts.recheckInterval))
+        XCTAssertEqual(pending.count, 1)
+    }
+
     func testOnlyAFinishedBridgeResultWithinFeishusReceiptWindowIsChecked() throws {
         try writeLog(twoTurns())
         let readers = Readers()

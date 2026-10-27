@@ -30,6 +30,8 @@ final class LarkReadReceipts: @unchecked Sendable {
     /// Conversation ID → finish time of its latest turn read in Feishu.
     private var readTurns: [String: Date] = [:]
     private var askedAt: [String: Date] = [:]
+    /// Conversations with a check still running; a stuck check holds back only its own.
+    private var checking: Set<String> = []
 
     init(
         home: URL,
@@ -58,15 +60,20 @@ final class LarkReadReceipts: @unchecked Sendable {
 
         lock.lock()
         let due = (readTurns[conversationID] ?? .distantPast) < finishedAt
+            && !checking.contains(conversationID)
             && now.timeIntervalSince(askedAt[conversationID] ?? .distantPast) >= Self.recheckInterval
-        if due { askedAt[conversationID] = now }
+        if due {
+            askedAt[conversationID] = now
+            checking.insert(conversationID)
+        }
         lock.unlock()
         guard due else { return }
 
         schedule { [self] in
-            guard self.isRead(profile: profile, conversationID: conversationID, finishedAt: finishedAt) else { return }
+            let read = self.isRead(profile: profile, conversationID: conversationID, finishedAt: finishedAt)
             self.lock.lock()
-            self.readTurns[conversationID] = max(self.readTurns[conversationID] ?? .distantPast, finishedAt)
+            if read { self.readTurns[conversationID] = max(self.readTurns[conversationID] ?? .distantPast, finishedAt) }
+            self.checking.remove(conversationID)
             self.lock.unlock()
         }
     }
@@ -181,7 +188,7 @@ final class LarkReadReceipts: @unchecked Sendable {
         return readers
     }
 
-    /// Runs lark-cli against one bot's config directory; its output on success.
+    /// Runs lark-cli against one bot's config directory; its output on success within 20 seconds.
     private static func runLarkCLI(_ arguments: [String], configDirectory: URL) -> Data? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -202,11 +209,24 @@ final class LarkReadReceipts: @unchecked Sendable {
         } catch {
             return nil
         }
-        let timeout = DispatchWorkItem { if process.isRunning { process.terminate() } }
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 20, execute: timeout)
-        let data = output.fileHandleForReading.readDataToEndOfFile()
+        // The launcher runs the real binary as its child, which keeps the pipe open even after the
+        // launcher is stopped, so the wait has its own deadline.
+        let result = PipeResult()
+        DispatchQueue.global(qos: .utility).async {
+            result.data = output.fileHandleForReading.readDataToEndOfFile()
+            result.done.signal()
+        }
+        guard result.done.wait(timeout: .now() + 20) == .success else {
+            process.terminate()
+            return nil
+        }
         process.waitUntilExit()
-        timeout.cancel()
-        return process.terminationStatus == 0 ? data : nil
+        return process.terminationStatus == 0 ? result.data : nil
     }
+}
+
+/// lark-cli's output, handed over from the thread that reads it.
+private final class PipeResult: @unchecked Sendable {
+    let done = DispatchSemaphore(value: 0)
+    var data = Data()
 }
