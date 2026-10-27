@@ -75,7 +75,6 @@ class SessionManager: ObservableObject {
     // swiftlint:disable:next function_body_length
     func loadSessions() {
         clientReadSnapshot = dataSources.clientReadState.snapshot()
-        clientReadSnapshot.larkReadTurns = dataSources.larkReadReceipts?.readTurnsSnapshot() ?? [:]
         let hasStoredHideEvidence = dataSources.manualSessionVisibility.hasStoredHideEvidence
         guard let files = try? FileManager.default.contentsOfDirectory(
             at: sessionsDir,
@@ -357,16 +356,13 @@ class SessionManager: ObservableObject {
         }
         var result = adjustPermissionStatus(session)
         result = Self.adjustIdleTimeout(result, now: dataSources.now())
-        // A turn the user already read in Claude Desktop, Codex Desktop, or Feishu counts as seen here too.
+        // A turn the user already read in Claude Desktop or Codex Desktop counts as seen here too.
         if dataSources.seenSessions.isUnseen(result),
            let cctopSessionID = result.cctopSessionId,
            ClientReadPolicy.seenInClient(result, snapshot: clientReadSnapshot) {
             dataSources.seenSessions.markSeen(cctopSessionID: cctopSessionID, at: dataSources.now())
         }
         result.isUnseenDone = dataSources.seenSessions.isUnseen(result)
-        if result.isUnseenDone {
-            dataSources.larkReadReceipts?.request(result, now: dataSources.now())
-        }
         return result
     }
 

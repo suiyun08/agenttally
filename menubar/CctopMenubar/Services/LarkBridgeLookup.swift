@@ -40,7 +40,7 @@ final class LarkBridgeLookup {
     }
 
     /// Session files are user-writable, so a profile name only reaches a path as a plain token.
-    static func isProfileName(_ value: String) -> Bool {
+    private static func isProfileName(_ value: String) -> Bool {
         (1...64).contains(value.count)
             && value.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }
     }
