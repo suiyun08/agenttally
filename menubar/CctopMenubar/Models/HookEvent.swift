@@ -13,6 +13,9 @@ enum HookEvent: Equatable {
     case stop
     /// Stop while background tasks or scheduled wakeups will resume the session.
     case stopWithBackgroundWork
+    /// Stop right after the turn's wrap-up card asked the user something: Claude Desktop's
+    /// `mcp__ccd_turn__wrap_up` with a non-empty `ask`, recorded as the last tool's detail.
+    case stopAskingUser
     /// The turn ended on an API error (rate limit, authentication, billing, ...).
     case stopFailure
     case notificationIdle
@@ -42,6 +45,9 @@ enum HookEvent: Equatable {
     /// Tools whose PreToolUse means Claude is now waiting on the user's answer.
     static let awaitingUserToolNames: Set<String> = ["AskUserQuestion", "ExitPlanMode"]
 
+    /// Claude Desktop's end-of-turn card. Its `ask` is the question the turn leaves for the user.
+    static let wrapUpToolName = "mcp__ccd_turn__wrap_up"
+
     static func parse(
         hookName: String,
         notificationType: String?,
@@ -70,7 +76,17 @@ enum HookEvent: Equatable {
     /// Events that close a model turn, so they restart the "finished at" clock even when the
     /// status value itself does not change.
     var endsTurn: Bool {
-        self == .stop || self == .stopWithBackgroundWork || self == .stopFailure
+        self == .stop || self == .stopWithBackgroundWork || self == .stopAskingUser || self == .stopFailure
+    }
+
+    /// A turn that ends right after a wrap-up card with a question ends asking the user. Any
+    /// other tool after the card means the turn went on, so its question no longer stands.
+    func endingTurn(lastTool: String?, lastToolDetail: String?) -> HookEvent {
+        guard self == .stop || self == .stopWithBackgroundWork,
+              lastTool == Self.wrapUpToolName,
+              let question = lastToolDetail, !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return self }
+        return .stopAskingUser
     }
 }
 
@@ -79,8 +95,9 @@ enum Transition {
     static func forEvent(_ current: SessionStatus, event: HookEvent) -> SessionStatus? {
         switch event {
         case .sessionStart, .postCompact: return .idle
-        case .stop: return .done
-        case .stopWithBackgroundWork: return .background
+        // Background work that will wake the session later does not change that the turn ended.
+        case .stop, .stopWithBackgroundWork: return .done
+        case .stopAskingUser: return .waitingInput
         case .stopFailure, .sessionError: return .needsAttention
         case .userPromptSubmit, .preToolUse, .postToolUse, .postToolUseFailure: return .working
         case .awaitingUserAnswer, .notificationElicitation: return .waitingInput
@@ -101,7 +118,7 @@ enum Transition {
     static func clearsInactiveMarkers(event: HookEvent) -> Bool {
         switch event {
         case .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
-             .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopFailure, .notificationIdle,
+             .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopAskingUser, .stopFailure, .notificationIdle,
              .notificationElicitation, .permissionRequest, .preCompact, .postCompact, .sessionError:
             return true
         case .notificationPermission, .notificationOther, .subagentStart, .subagentStop,

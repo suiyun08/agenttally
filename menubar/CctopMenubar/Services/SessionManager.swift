@@ -354,8 +354,7 @@ class SessionManager: ObservableObject {
             result.status = .idle
             return result
         }
-        var result = adjustPermissionStatus(session)
-        result = Self.adjustIdleTimeout(result, now: dataSources.now())
+        var result = adjustPermissionStatus(Self.adjustLegacyBackground(session))
         // A turn the user already read in Claude Desktop or Codex Desktop counts as seen here too.
         if dataSources.seenSessions.isUnseen(result),
            let cctopSessionID = result.cctopSessionId,
@@ -372,17 +371,13 @@ class SessionManager: ObservableObject {
         loadSessions()
     }
 
-    private static let idleTimeoutSeconds: TimeInterval = 3600 // 60 minutes
-
-    /// If a session has been in `waitingInput` for over 60 minutes, treat it as `idle` for
-    /// display. A `done` turn is exempt: it stays unread until the user looks at it.
-    nonisolated static func adjustIdleTimeout(_ session: SessionData, now: Date) -> SessionData {
-        guard session.status == .waitingInput,
-              now.timeIntervalSince(session.lastActivity) > Self.idleTimeoutSeconds else {
-            return session
-        }
+    /// Hooks before 1.0.7 recorded a turn that ended with background work as `background`. That
+    /// turn ended like any other, so it shows as `done`, unread until the user looks. Nothing here
+    /// times out: a question waits for its answer and an unread result for the user, however long.
+    nonisolated static func adjustLegacyBackground(_ session: SessionData) -> SessionData {
+        guard session.status == .background else { return session }
         var adjusted = session
-        adjusted.status = .idle
+        adjusted.status = .done
         return adjusted
     }
 

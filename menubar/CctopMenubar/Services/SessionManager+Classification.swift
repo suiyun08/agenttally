@@ -138,12 +138,17 @@ extension SessionManager {
             in: classifiableSessions,
             claudeDesktopSessions: dataSources.claudeDesktopSessions
         )
+        let bridge = repaired.contains { $0.session.larkChannelProfile != nil }
+            ? dataSources.larkBridge?.snapshot(now: now) ?? .empty
+            : .empty
+        let seen = dataSources.seenSessions
         let candidates = Self.buildCandidates(
             repaired,
             now: now,
             desktopAppConnectionLookup: dataSources.desktopAppConnection,
             claudeMetadata: claudeMetadata,
-            processAlive: dataSources.processAlive
+            processAlive: dataSources.processAlive,
+            bridgeKeepsLive: { Self.bridgeKeepsLive($0, bridge: bridge, seen: seen) }
         )
         return Self.sessionClassificationSnapshot(
             in: candidates,
@@ -152,6 +157,18 @@ extension SessionManager {
             codexThreads: codexThreads,
             now: now
         )
+    }
+
+    /// A Feishu bridge conversation stays live between messages while its bot holds it and it
+    /// has something for the user: a turn running, a question, or a result not yet seen. Once
+    /// seen and quiet, it leaves like any other conversation whose process is gone.
+    nonisolated static func bridgeKeepsLive(
+        _ session: SessionData, bridge: LarkBridgeSnapshot, seen: SessionSeenStore
+    ) -> Bool {
+        guard bridge.holds(session) else { return false }
+        var shown = session
+        shown.isUnseenDone = seen.isUnseen(session)
+        return SessionDisplayPolicy.needsLook(shown)
     }
 
     private func repairStickyCodexDelegationState(

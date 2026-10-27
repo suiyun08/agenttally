@@ -136,10 +136,29 @@ final class HookEventTests: XCTestCase {
         }
     }
 
-    func testStopWithBackgroundWorkTransitionsToBackground() {
+    func testStopWithBackgroundWorkStillEndsTheTurn() {
         for status in allStatuses {
-            XCTAssertEqual(Transition.forEvent(status, event: .stopWithBackgroundWork), .background)
+            XCTAssertEqual(Transition.forEvent(status, event: .stopWithBackgroundWork), .done)
         }
+    }
+
+    func testStopAskingUserWaitsForTheAnswer() {
+        for status in allStatuses {
+            XCTAssertEqual(Transition.forEvent(status, event: .stopAskingUser), .waitingInput)
+        }
+        XCTAssertTrue(HookEvent.stopAskingUser.endsTurn)
+        XCTAssertTrue(Transition.clearsInactiveMarkers(event: .stopAskingUser))
+    }
+
+    func testOnlyATurnEndRightAfterAWrapUpQuestionAsksTheUser() {
+        let card = HookEvent.wrapUpToolName
+        XCTAssertEqual(HookEvent.stop.endingTurn(lastTool: card, lastToolDetail: "Publish?"), .stopAskingUser)
+        XCTAssertEqual(HookEvent.stopWithBackgroundWork.endingTurn(lastTool: card, lastToolDetail: "Publish?"), .stopAskingUser)
+        XCTAssertEqual(HookEvent.stop.endingTurn(lastTool: card, lastToolDetail: nil), .stop)
+        XCTAssertEqual(HookEvent.stop.endingTurn(lastTool: card, lastToolDetail: " \n"), .stop)
+        XCTAssertEqual(HookEvent.stop.endingTurn(lastTool: "Bash", lastToolDetail: "Publish?"), .stop)
+        XCTAssertEqual(HookEvent.stopFailure.endingTurn(lastTool: card, lastToolDetail: "Publish?"), .stopFailure)
+        XCTAssertEqual(HookEvent.preToolUse.endingTurn(lastTool: card, lastToolDetail: "Publish?"), .preToolUse)
     }
 
     func testStopFailureTransitionsToNeedsAttention() {

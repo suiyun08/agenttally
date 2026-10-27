@@ -27,12 +27,19 @@ enum SessionConnectionState: Equatable {
 
 enum SessionLifecyclePolicy {
     /// Pure connection derivation. Codex uses one source-level policy across every surface;
-    /// other sessions retain their existing host-specific connection evidence.
+    /// other sessions retain their existing host-specific connection evidence. A Feishu bridge
+    /// conversation, whose process ends after every message, stays connected for a while after
+    /// its last activity, and for as long as `bridgeKeepsLive` says its bot holds it with
+    /// something for the user.
     static func connectionState(
         for session: SessionData, hostClass: SessionHostClass, processAlive: Bool,
-        now: Date, windows: LifecycleWindows, desktopAppRunning: Bool? = nil
+        now: Date, windows: LifecycleWindows, desktopAppRunning: Bool? = nil, bridgeKeepsLive: Bool = false
     ) -> SessionConnectionState {
         if session.endedAt != nil { return .disconnected }
+        if session.larkChannelProfile != nil {
+            let recentlyActive = now.timeIntervalSince(session.lastActivity) < windows.active
+            return processAlive || recentlyActive || bridgeKeepsLive ? .connected : .disconnected
+        }
         if session.isCodex {
             let recentlyActive = now.timeIntervalSince(session.lastActivity) < windows.active
             return processAlive || recentlyActive ? .connected : .disconnected
@@ -47,7 +54,7 @@ enum SessionLifecyclePolicy {
     /// decides what disconnected means for desktop versus non-desktop sessions.
     static func lifecycle(
         for session: SessionData, hostClass: SessionHostClass, processAlive: Bool,
-        now: Date, windows: LifecycleWindows, desktopAppRunning: Bool? = nil
+        now: Date, windows: LifecycleWindows, desktopAppRunning: Bool? = nil, bridgeKeepsLive: Bool = false
     ) -> SessionLifecycle {
         // Codex has one absolute inactivity cap across every surface. Bundle, PID,
         // desktop-app, and app-server evidence cannot keep a 14-day-old record alive.
@@ -67,7 +74,8 @@ enum SessionLifecyclePolicy {
             processAlive: processAlive,
             now: now,
             windows: windows,
-            desktopAppRunning: desktopAppRunning
+            desktopAppRunning: desktopAppRunning,
+            bridgeKeepsLive: bridgeKeepsLive
         )
         if connection == .connected { return .active }
         if session.isCodex { return .dormant }

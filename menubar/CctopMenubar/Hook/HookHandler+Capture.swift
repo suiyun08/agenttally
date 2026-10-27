@@ -22,6 +22,17 @@ extension HookHandler {
         SessionData.processInfo(pid: UInt32(pid))?.kp_eproc.e_ppid ?? 0
     }
 
+    /// The Feishu bridge bot that started this hook's client, from the markers
+    /// `lark-channel-bridge` sets on every client it runs: `LARK_CHANNEL=1` and the bot's
+    /// profile name. Nil for every other client, and for a profile name that is not a plain token.
+    static func larkChannelProfile(environment env: [String: String]) -> String? {
+        guard env["LARK_CHANNEL"] == "1", let profile = env["LARK_CHANNEL_PROFILE"],
+              (1...64).contains(profile.count),
+              profile.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") })
+        else { return nil }
+        return profile
+    }
+
     static func captureTerminalInfo(env: [String: String], process: any ProcessProbing) -> TerminalInfo {
         let program = env["TERM_PROGRAM"] ?? ""
         let sessionId = sanitizeTerminalSessionId(

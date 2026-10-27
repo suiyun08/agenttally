@@ -106,6 +106,11 @@ extension SessionData {
         return line.map { String($0.prefix(80)) }
     }
 
+    /// The finished turn left background tasks or scheduled wakeups that will resume the session.
+    var hasBackgroundWork: Bool {
+        (backgroundTaskCount ?? 0) > 0 || (scheduledWakeupCount ?? 0) > 0
+    }
+
     var backgroundWorkLine: String {
         var parts: [String] = []
         let tasks = backgroundTaskCount ?? 0

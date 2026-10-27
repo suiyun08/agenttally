@@ -190,15 +190,19 @@ and other persisted preferences keep their separate contracts.
 | --- | --- | --- |
 | `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact` |
 | `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest` |
-| `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications |
+| `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications; `Stop` right after a wrap-up card that asks something |
 | `needs_attention` | The turn ended on an error | `StopFailure`; `SessionError` |
-| `background` | The turn ended, but background tasks or scheduled wakeups will resume the session | `Stop` with a non-empty `background_tasks` or `session_crons` |
-| `done` | The turn ended with nothing in flight | `Stop`; `idle_prompt` only when a turn never sent `Stop` |
+| `background` | Written by hooks before 1.0.7 for a turn that ended with background work. The app shows it as `done` | No longer written |
+| `done` | The turn ended | `Stop`, with or without background work; `idle_prompt` only when a turn never sent `Stop` |
 | `idle` | No turn has run since start or compaction | `SessionStart`, `PostCompact` |
 
-`status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Like `waiting_input`, a `done` session displays as `idle` after 60 minutes without activity.
+`status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Nothing times out: a question keeps waiting for its answer and an unread `done` turn stays unread, however long ago it ended.
 
-`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them.
+A turn the user already read in Claude Desktop or Codex Desktop counts as seen too. Claude Desktop's `lastFocusedAt` counts only for a moment when Claude Desktop was the frontmost app, as the app records from activations while it runs: Claude also stamps the conversation its window shows whenever that window comes into view behind another app, for example when another app comes to the front over a third.
+
+Claude Desktop ends a turn with a wrap-up card, the tool `mcp__ccd_turn__wrap_up`, whose `ask` holds any question for the user. The hook records that question as the tool's detail, and a `Stop` that directly follows the card writes `waiting_input` with the question in `notification_message`. Claude Code's `idle_prompt` reminder a minute later leaves the question in place. Any other tool between the card and `Stop` means the turn went on, so the turn ends `done`.
+
+`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them. A finished turn's card shows that summary under Claude's reply.
 
 ## Terminal Focus Metadata
 
@@ -275,6 +279,40 @@ The URL scheme names the Warp release channel: `warp`, `warppreview`,
 app and activates it. Warp ignores a stale or unknown session UUID, but the
 window still comes forward. Sessions without a captured link keep plain app
 activation, like the other terminals.
+
+## Feishu Bridge
+
+### `lark_channel_profile`
+
+Type: `string`
+
+Default: `null` when omitted.
+
+The Feishu bridge (`lark-channel-bridge`) runs Claude Code (`claude -p`) and Codex (`codex exec`)
+for Feishu chats. It starts one short-lived client process per message and resumes the same
+conversation for the next one. Every client it starts carries `LARK_CHANNEL=1` and the bot's profile
+name in `LARK_CHANNEL_PROFILE`; the hook stores that name here on every event, and clears it when the
+same conversation continues in another host.
+
+A bridged Claude Code conversation is keyed `lark-<session_id>.json` instead of by PID, so every
+message updates one record. The hook ignores the `SessionEnd` that each message's process emits,
+and a new process for the same conversation keeps the record, as for Codex. Same-project cleanup on
+`SessionStart` leaves bridged records to the app's lifecycle.
+
+A jump opens the conversation's topic when the bot answers in one, with
+`lark://applink.feishu.cn/client/thread/open?open_chat_id=<oc_…>&open_thread_id=<omt_…>`, and
+otherwise its group chat with `lark://applink.feishu.cn/client/chat/open?openChatId=<oc_…>`. Feishu
+documents only the chat link; the topic link is the one Feishu's desktop client registers for
+opening a topic, so a Feishu update may drop it. The app reads the chat and topic from the bridge's
+own session map (`~/.lark-channel/profiles/<profile>/sessions.json` and
+`sessions.json.catalog.json`), whose scopes are `oc_…` or `oc_…:omt_…`. Without a known chat,
+Feishu (`com.electron.lark`) comes forward.
+
+A bridged result stays unread until the user opens it from cctop or sends the bot the next message.
+Feishu's read receipts (`GET /open-apis/im/v1/messages/<om_…>/read_users`) cannot stand in for
+reading it: Feishu can list the user as a reader of a bot's reply the moment it arrives, before they
+open the topic, stamped with the time of their own earlier post there. Codex Desktop's read state
+never lists a bridged Codex thread, so it does not mark one read either.
 
 ## Visibility
 

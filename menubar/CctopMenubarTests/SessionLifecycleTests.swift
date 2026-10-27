@@ -1381,25 +1381,6 @@ final class SessionLifecycleTests: XCTestCase {
         XCTAssertEqual(ProcessChildPIDProbe.bufferSize(forCapacity: 1), Int32(MemoryLayout<pid_t>.size))
         XCTAssertEqual(ProcessChildPIDProbe.returnedCount(1, capacity: 1), 1)
     }
-
-    // MARK: - Idle timeout with an injected clock
-
-    func testAdjustIdleTimeoutUsesInjectedNow() {
-        var session = SessionData(sessionId: "s", projectPath: "/tmp/p", branch: "main", terminal: TerminalInfo())
-        session.status = .waitingInput
-        session.lastActivity = Date(timeIntervalSince1970: 1_000_000)
-
-        let justUnderTimeout = session.lastActivity.addingTimeInterval(3_599)
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(session, now: justUnderTimeout).status, .waitingInput)
-
-        let pastTimeout = session.lastActivity.addingTimeInterval(3_601)
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(session, now: pastTimeout).status, .idle)
-
-        // Only waitingInput times out; other statuses pass through untouched.
-        var working = session
-        working.status = .working
-        XCTAssertEqual(SessionManager.adjustIdleTimeout(working, now: pastTimeout).status, .working)
-    }
 }
 
 private final class SequencedCodexClassificationState: CodexThreadStateProviding {

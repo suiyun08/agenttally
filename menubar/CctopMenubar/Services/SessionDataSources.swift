@@ -16,6 +16,8 @@ struct SessionDataSources {
     var notificationClient: SessionNotificationClient = .live
     var manualSessionVisibility: ManualSessionVisibilityStore = .live
     var seenSessions: SessionSeenStore = .live
+    /// What the Feishu bridge knows about its conversations. Only `.live()` reads its files.
+    var larkBridge: LarkBridgeLookup?
     /// Read state the clients keep themselves. Only `.live()` reads real client files.
     var clientReadState: any ClientReadStateProviding = NoClientReadState()
     /// Rings a session event's sound. Only `.live()` makes noise.
@@ -37,6 +39,7 @@ struct SessionDataSources {
                 UserDefaults.standard.bool(forKey: "notificationsEnabled")
                     && !UserDefaults.standard.bool(forKey: FloatingIndicatorController.enabledKey)
             },
+            larkBridge: .live,
             clientReadState: ClientReadStateLookup(),
             playAlertSound: { $0.ring() },
             now: Date.init

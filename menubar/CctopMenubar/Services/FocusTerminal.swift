@@ -45,7 +45,23 @@ func resolveFocusStrategy(
     session: SessionData,
     multiplexerOverride: MultiplexerInfo?,
     verifiedHostApp: HostApp? = nil,
-    claudeDesktopSessionID: String? = nil
+    claudeDesktopSessionID: String? = nil,
+    larkChat: LarkChat? = nil
+) -> FocusStrategy {
+    // A Feishu bridge conversation lives in a Feishu chat or topic, not in a terminal or desktop window.
+    if session.larkChannelProfile != nil {
+        if let url = larkChat?.url {
+            return .openURL(url, restoreBundleID: HostAppBundleID.feishu)
+        }
+        return .activateByBundleID(HostAppBundleID.feishu)
+    }
+    return resolveHostFocusStrategy(session: session, multiplexerOverride: multiplexerOverride,
+                                    verifiedHostApp: verifiedHostApp, claudeDesktopSessionID: claudeDesktopSessionID)
+}
+
+/// The jump for a session hosted by a terminal, an editor, or a desktop app.
+private func resolveHostFocusStrategy(
+    session: SessionData, multiplexerOverride: MultiplexerInfo?, verifiedHostApp: HostApp?, claudeDesktopSessionID: String?
 ) -> FocusStrategy {
     let terminal = session.terminal
     let multiplexer = multiplexerOverride ?? terminal?.multiplexer
@@ -129,11 +145,15 @@ func focusTerminal(session: SessionData) {
         let claudeDesktopSessionID = session.isClaudeDesktopHost
             ? ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: session.sessionId)
             : nil
+        let larkChat = session.larkChannelProfile.flatMap {
+            LarkBridgeLookup.chat(profile: $0, conversationID: session.harnessSessionId ?? session.sessionId)
+        }
         let strategy = resolveFocusStrategy(
             session: session,
             multiplexerOverride: multiplexerOverride,
             verifiedHostApp: verifiedHostApp,
-            claudeDesktopSessionID: claudeDesktopSessionID
+            claudeDesktopSessionID: claudeDesktopSessionID,
+            larkChat: larkChat
         )
         let muxStrategy = resolveMultiplexerFocus(session: session, multiplexerOverride: multiplexerOverride,
                                                   primaryStrategy: strategy)

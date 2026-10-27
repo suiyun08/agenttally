@@ -207,8 +207,9 @@ extension HookHandler {
             guard data.projectPath == projectPath, data.pid != currentPid else { return }
 
             // Retained conversations are reaped by the menubar's lock-held lifecycle GC. The hook
-            // must not delete a recent Codex thread or Claude Desktop sibling on a new process start.
-            guard !data.isCodex, !hasTrustedClaudeDesktopBundle(data) else { return }
+            // must not delete a recent Codex thread, Claude Desktop sibling, or Feishu bridge
+            // conversation (whose process ends after every message) on a new process start.
+            guard !data.isCodex, !hasTrustedClaudeDesktopBundle(data), data.larkChannelProfile == nil else { return }
 
             guard !data.hidden, !data.shouldAutoHide else { return }
             // A record without a PID cannot be liveness-checked here; the app's legacy-file sweep owns it.
