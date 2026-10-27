@@ -108,7 +108,7 @@ All supported agent integrations call `cctop-hook`. Do not add a second session-
 | Agent or host | Source and file key | Design rule |
 | --- | --- | --- |
 | Claude Code | `source: "cc"`, PID-keyed file | Process generation controls CLI liveness. Finished sessions enter Recent Projects before removal. |
-| Claude Desktop | `source: "cc"`, PID-keyed file | Trust `com.anthropic.claudefordesktop` only with `cc`. Use desktop archive and retention evidence. |
+| Claude Desktop | `source: "cc"`, PID-keyed file | Trust `com.anthropic.claudefordesktop` only with `cc`. Use desktop archive and retention evidence. A wrap-up card (`mcp__ccd_turn__wrap_up`) with an `ask` ends the turn waiting for input. `lastFocusedAt` counts as read only while Claude Desktop is frontmost. |
 | Codex CLI and Desktop | `source: "codex"`, session-ID-keyed file | Use the shared Codex lifecycle. Persisted desktop bundle metadata is not host evidence. |
 | opencode | `source: "opencode"`, PID-keyed file | Explicit source wins over inherited desktop bundle metadata. Process liveness controls lifecycle. |
 | pi | `source: "pi"`, PID-keyed file | Skip non-interactive sessions. Explicit source wins over inherited desktop bundle metadata. |
