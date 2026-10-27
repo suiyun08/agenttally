@@ -46,11 +46,11 @@ func resolveFocusStrategy(
     multiplexerOverride: MultiplexerInfo?,
     verifiedHostApp: HostApp? = nil,
     claudeDesktopSessionID: String? = nil,
-    larkChatID: String? = nil
+    larkChat: LarkChat? = nil
 ) -> FocusStrategy {
-    // A Feishu bridge conversation lives in a Feishu chat, not in a terminal or desktop window.
+    // A Feishu bridge conversation lives in a Feishu chat or topic, not in a terminal or desktop window.
     if session.larkChannelProfile != nil {
-        if let larkChatID, let url = LarkBridgeLookup.chatURL(chatID: larkChatID) {
+        if let url = larkChat?.url {
             return .openURL(url, restoreBundleID: HostAppBundleID.feishu)
         }
         return .activateByBundleID(HostAppBundleID.feishu)
@@ -145,15 +145,15 @@ func focusTerminal(session: SessionData) {
         let claudeDesktopSessionID = session.isClaudeDesktopHost
             ? ClaudeDesktopSessionLinkLookup.localSessionID(forCliSessionID: session.sessionId)
             : nil
-        let larkChatID = session.larkChannelProfile.flatMap {
-            LarkBridgeLookup.chatID(profile: $0, conversationID: session.harnessSessionId ?? session.sessionId)
+        let larkChat = session.larkChannelProfile.flatMap {
+            LarkBridgeLookup.chat(profile: $0, conversationID: session.harnessSessionId ?? session.sessionId)
         }
         let strategy = resolveFocusStrategy(
             session: session,
             multiplexerOverride: multiplexerOverride,
             verifiedHostApp: verifiedHostApp,
             claudeDesktopSessionID: claudeDesktopSessionID,
-            larkChatID: larkChatID
+            larkChat: larkChat
         )
         let muxStrategy = resolveMultiplexerFocus(session: session, multiplexerOverride: multiplexerOverride,
                                                   primaryStrategy: strategy)

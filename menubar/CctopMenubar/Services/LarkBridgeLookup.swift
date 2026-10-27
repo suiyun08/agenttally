@@ -34,26 +34,13 @@ final class LarkBridgeLookup {
         }))
     }
 
-    /// The Feishu group chat (`oc_…`) holding a conversation, read afresh for a jump.
-    static func chatID(profile: String, conversationID: String, home: URL = defaultHome) -> String? {
-        guard let scope = scopes(home: home, profile: profile)[conversationID],
-              let chat = scope.split(separator: ":").first.map(String.init),
-              isChatID(chat) else { return nil }
-        return chat
-    }
-
-    /// Opens a Feishu chat in the Feishu app.
-    static func chatURL(chatID: String) -> URL? {
-        guard isChatID(chatID) else { return nil }
-        return URL(string: "lark://applink.feishu.cn/client/chat/open?openChatId=\(chatID)")
-    }
-
-    private static func isChatID(_ value: String) -> Bool {
-        value.hasPrefix("oc_") && value.count > 3 && value.dropFirst(3).allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber) }
+    /// The Feishu chat and topic holding a conversation, read afresh for a jump.
+    static func chat(profile: String, conversationID: String, home: URL = defaultHome) -> LarkChat? {
+        scopes(home: home, profile: profile)[conversationID].flatMap(LarkChat.init(scope:))
     }
 
     /// Session files are user-writable, so a profile name only reaches a path as a plain token.
-    private static func isProfileName(_ value: String) -> Bool {
+    static func isProfileName(_ value: String) -> Bool {
         (1...64).contains(value.count)
             && value.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }
     }
@@ -116,5 +103,36 @@ struct LarkBridgeSnapshot {
     func holds(_ session: SessionData) -> Bool {
         guard let profile = session.larkChannelProfile, let held = scopes[profile] else { return false }
         return held[session.harnessSessionId ?? session.sessionId] != nil
+    }
+}
+
+/// Where a bridge conversation lives in Feishu: a group chat (`oc_…`), and the topic in it
+/// (`omt_…`) when the bot answers in one. The bridge's scope is `oc_…` or `oc_…:omt_…`.
+struct LarkChat: Equatable {
+    let chatID: String
+    let threadID: String?
+
+    init?(chatID: String, threadID: String? = nil) {
+        guard Self.isID(chatID, prefix: "oc_"), threadID.map({ Self.isID($0, prefix: "omt_") }) ?? true else { return nil }
+        self.chatID = chatID
+        self.threadID = threadID
+    }
+
+    init?(scope: String) {
+        let parts = scope.split(separator: ":", omittingEmptySubsequences: false).map(String.init)
+        guard (1...2).contains(parts.count) else { return nil }
+        self.init(chatID: parts[0], threadID: parts.count == 2 ? parts[1] : nil)
+    }
+
+    /// Opens the topic, or the chat when the conversation has none. Feishu documents only
+    /// `chat/open`; `thread/open` is the link Feishu's own clients register for opening a topic.
+    var url: URL? {
+        guard let threadID else { return URL(string: "lark://applink.feishu.cn/client/chat/open?openChatId=\(chatID)") }
+        return URL(string: "lark://applink.feishu.cn/client/thread/open?open_chat_id=\(chatID)&open_thread_id=\(threadID)")
+    }
+
+    private static func isID(_ value: String, prefix: String) -> Bool {
+        value.hasPrefix(prefix) && value.count > prefix.count
+            && value.dropFirst(prefix.count).allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber) }
     }
 }

@@ -18,6 +18,8 @@ struct SessionDataSources {
     var seenSessions: SessionSeenStore = .live
     /// What the Feishu bridge knows about its conversations. Only `.live()` reads its files.
     var larkBridge: LarkBridgeLookup?
+    /// Feishu's read receipts for the bridge's replies. Only `.live()` asks Feishu.
+    var larkReadReceipts: LarkReadReceipts?
     /// Read state the clients keep themselves. Only `.live()` reads real client files.
     var clientReadState: any ClientReadStateProviding = NoClientReadState()
     /// Rings a session event's sound. Only `.live()` makes noise.
@@ -40,6 +42,7 @@ struct SessionDataSources {
                     && !UserDefaults.standard.bool(forKey: FloatingIndicatorController.enabledKey)
             },
             larkBridge: .live,
+            larkReadReceipts: .live,
             clientReadState: ClientReadStateLookup(),
             playAlertSound: { $0.ring() },
             now: Date.init

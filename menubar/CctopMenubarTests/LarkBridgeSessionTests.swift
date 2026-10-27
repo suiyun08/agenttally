@@ -168,23 +168,33 @@ final class LarkBridgeSessionTests: XCTestCase {
         XCTAssertFalse(lookup.snapshot(now: Date()).holds(session(profile: "claude", id: conversation, status: .done)))
     }
 
-    func testFindsTheChatHoldingAConversation() throws {
+    func testFindsTheChatAndTopicHoldingAConversation() throws {
         try writeBridge()
         XCTAssertEqual(
-            LarkBridgeLookup.chatID(profile: "claude", conversationID: conversation, home: bridgeHome),
-            "oc_09f77c72fe3f72891d4913c3209db3a2"
+            LarkBridgeLookup.chat(profile: "claude", conversationID: conversation, home: bridgeHome),
+            LarkChat(chatID: "oc_09f77c72fe3f72891d4913c3209db3a2", threadID: "omt_19bb4236868e9a77")
         )
         XCTAssertEqual(
-            LarkBridgeLookup.chatID(profile: "codex", conversationID: "01a1717c", home: bridgeHome),
-            "oc_9b6b8a3da4983bd595222d0206a07356"
+            LarkBridgeLookup.chat(profile: "codex", conversationID: "01a1717c", home: bridgeHome),
+            LarkChat(chatID: "oc_9b6b8a3da4983bd595222d0206a07356"),
+            "A conversation outside a topic"
         )
-        XCTAssertNil(LarkBridgeLookup.chatID(profile: "claude", conversationID: "unknown", home: bridgeHome))
-        XCTAssertNil(LarkBridgeLookup.chatID(profile: "../registry", conversationID: conversation, home: bridgeHome))
+        XCTAssertNil(LarkBridgeLookup.chat(profile: "claude", conversationID: "unknown", home: bridgeHome))
+        XCTAssertNil(LarkBridgeLookup.chat(profile: "../registry", conversationID: conversation, home: bridgeHome))
+    }
+
+    func testOpensTheTopicOrTheChat() {
         XCTAssertEqual(
-            LarkBridgeLookup.chatURL(chatID: "oc_09f7")?.absoluteString,
+            LarkChat(scope: "oc_09f7:omt_19bb")?.url?.absoluteString,
+            "lark://applink.feishu.cn/client/thread/open?open_chat_id=oc_09f7&open_thread_id=omt_19bb"
+        )
+        XCTAssertEqual(
+            LarkChat(scope: "oc_09f7")?.url?.absoluteString,
             "lark://applink.feishu.cn/client/chat/open?openChatId=oc_09f7"
         )
-        XCTAssertNil(LarkBridgeLookup.chatURL(chatID: "oc_x&y=1"))
+        for scope in ["oc_x&y=1", "oc_09f7:omt_1&x=2", "oc_09f7:", "oc_09f7:oc_1", "omt_19bb", "oc_09f7:omt_1:omt_2"] {
+            XCTAssertNil(LarkChat(scope: scope), scope)
+        }
     }
 
     // MARK: - Lifecycle
@@ -237,10 +247,17 @@ final class LarkBridgeSessionTests: XCTestCase {
 
     // MARK: - Jump
 
-    func testABridgeConversationOpensItsFeishuChat() {
+    func testABridgeConversationOpensItsFeishuTopicOrChat() {
         let bridged = session(profile: "claude", id: conversation, status: .done)
         XCTAssertEqual(
-            resolveFocusStrategy(session: bridged, multiplexerOverride: nil, larkChatID: "oc_09f7"),
+            resolveFocusStrategy(session: bridged, multiplexerOverride: nil, larkChat: LarkChat(scope: "oc_09f7:omt_19bb")),
+            .openURL(
+                URL(string: "lark://applink.feishu.cn/client/thread/open?open_chat_id=oc_09f7&open_thread_id=omt_19bb")!,
+                restoreBundleID: "com.electron.lark"
+            )
+        )
+        XCTAssertEqual(
+            resolveFocusStrategy(session: bridged, multiplexerOverride: nil, larkChat: LarkChat(scope: "oc_09f7")),
             .openURL(URL(string: "lark://applink.feishu.cn/client/chat/open?openChatId=oc_09f7")!, restoreBundleID: "com.electron.lark")
         )
         XCTAssertEqual(

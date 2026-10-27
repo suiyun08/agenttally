@@ -62,7 +62,7 @@ developed on its own.
   to the exact terminal pane, editor window, or desktop conversation.
 - **Feishu bridge conversations.** Claude Code and Codex sessions that the Feishu bridge
   (`lark-channel-bridge`) runs for a Feishu chat stay listed between messages, keep an unread result
-  until you open it, and open their Feishu group chat when clicked.
+  until you read the bot's reply in Feishu or open it here, and open their Feishu topic when clicked.
 - **Alerts you choose.** A notification when a session finishes (a floating notice while the
   floating indicator is on), and two separate sounds, one for "done" and one for "needs you". Each
   sound has its own setting, separate from notifications.

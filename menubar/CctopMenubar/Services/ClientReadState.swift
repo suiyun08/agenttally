@@ -1,7 +1,7 @@
 import AppKit
 
 /// What the agent clients themselves know about reading, sampled once per load pass so a
-/// finished turn the user already read in Claude Desktop or Codex Desktop loses its unread dot.
+/// finished turn the user already read in Claude Desktop, Codex Desktop, or Feishu loses its unread dot.
 struct ClientReadSnapshot: Equatable {
     /// Codex Desktop's unread thread IDs and when it last wrote them. Nil when the state file is
     /// missing or unreadable, which leaves Codex unread dots to cctop's own rule.
@@ -11,6 +11,8 @@ struct ClientReadSnapshot: Equatable {
     /// Claude Code `session_id`s of the conversation focused most recently in Claude Desktop.
     var claudeCurrentCliSessionIDs: Set<String> = []
     var claudeIsFrontmost = false
+    /// Feishu bridge conversation ID → finish time of the latest turn the user read in Feishu.
+    var larkReadTurns: [String: Date] = [:]
 
     struct CodexUnread: Equatable {
         let threadIDs: Set<String>
@@ -36,6 +38,11 @@ enum ClientReadPolicy {
         guard session.status == .done else { return false }
         let finishedAt = session.statusChangedAt ?? session.lastActivity
         let clientSessionID = session.harnessSessionId ?? session.sessionId
+
+        if session.larkChannelProfile != nil {
+            // The user read the bot's reply to this turn in Feishu.
+            return (snapshot.larkReadTurns[clientSessionID] ?? .distantPast) >= finishedAt
+        }
 
         if session.isCodex {
             // Codex Desktop marks a thread unread when a turn finishes off screen. Trust its

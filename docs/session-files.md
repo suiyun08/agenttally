@@ -295,14 +295,30 @@ message updates one record. The hook ignores the `SessionEnd` that each message'
 and a new process for the same conversation keeps the record, as for Codex. Same-project cleanup on
 `SessionStart` leaves bridged records to the app's lifecycle.
 
-A jump opens the conversation's Feishu group chat with
-`lark://applink.feishu.cn/client/chat/open?openChatId=<oc_…>`. The app reads the chat from the
-bridge's own session map (`~/.lark-channel/profiles/<profile>/sessions.json` and
-`sessions.json.catalog.json`). Without a known chat, Feishu (`com.electron.lark`) comes forward.
-Feishu offers no link to a topic inside a group, so a jump lands on the group.
+A jump opens the conversation's topic when the bot answers in one, with
+`lark://applink.feishu.cn/client/thread/open?open_chat_id=<oc_…>&open_thread_id=<omt_…>`, and
+otherwise its group chat with `lark://applink.feishu.cn/client/chat/open?openChatId=<oc_…>`. Feishu
+documents only the chat link; the topic link is the one Feishu's desktop client registers for
+opening a topic, so a Feishu update may drop it. The app reads the chat and topic from the bridge's
+own session map (`~/.lark-channel/profiles/<profile>/sessions.json` and
+`sessions.json.catalog.json`), whose scopes are `oc_…` or `oc_…:omt_…`. Without a known chat,
+Feishu (`com.electron.lark`) comes forward.
 
-Codex Desktop's read state never lists a bridged Codex thread, so it does not mark one read; a
-bridged result stays unread until the user opens it from cctop or sends the bot the next message.
+A bridged result also counts as read once the user read the bot's reply in Feishu. For an unread
+result the app finds the bot's last reply to that turn in the bridge's daily log
+(`~/.lark-channel/profiles/<profile>/logs/bridge-YYYYMMDD.jsonl`): the latest trace whose `session`
+event (`set`, `resume`, or Codex's `set-thread`) names the conversation, and that trace's last
+`outbound` `sent` message, sent after the turn finished. It then asks Feishu who read that message
+(`GET /open-apis/im/v1/messages/<om_…>/read_users`) through lark-cli as the bot, with the bridge's
+own binding for it (`LARKSUITE_CLI_CONFIG_DIR=~/.lark-channel/profiles/<profile>/lark-cli/lark-channel`).
+The result is read when the bound user (`apps[0].users[0].userOpenId` in that directory's
+`config.json`) is among the readers. Feishu's read times are ignored: for a reply that arrives while
+its topic is open they can predate the reply. The check runs off the main thread, at most once a
+minute for each unread result, and only within Feishu's 7-day receipt window. When lark-cli, the
+log, or Feishu gives no answer, the result stays unread until the user opens it from cctop or sends
+the bot the next message.
+
+Codex Desktop's read state never lists a bridged Codex thread, so it does not mark one read.
 
 ## Visibility
 
