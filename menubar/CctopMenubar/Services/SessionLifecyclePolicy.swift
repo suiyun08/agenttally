@@ -26,6 +26,14 @@ enum SessionConnectionState: Equatable {
 }
 
 enum SessionLifecyclePolicy {
+    /// A Feishu bridge runs one client process per message, so a turn still marked running after
+    /// that process is gone was stopped (the chat's stop button, for one) and never sent Stop.
+    /// It shows as idle: nothing runs and nothing waits for the user.
+    static func isStoppedBridgeTurn(_ session: SessionData, processAlive: Bool) -> Bool {
+        guard session.larkChannelProfile != nil, !processAlive else { return false }
+        return session.status == .working || session.status == .compacting
+    }
+
     /// Pure connection derivation. Codex uses one source-level policy across every surface;
     /// other sessions retain their existing host-specific connection evidence. A Feishu bridge
     /// conversation, whose process ends after every message, stays connected for a while after

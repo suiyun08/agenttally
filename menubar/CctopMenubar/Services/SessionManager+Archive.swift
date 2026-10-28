@@ -223,8 +223,10 @@ extension SessionManager {
             if let projectName = projectNames[data.sessionId] {
                 data.desktopProjectName = projectName
             }
+            let alive = processAlive(data)
+            if SessionLifecyclePolicy.isStoppedBridgeTurn(data, processAlive: alive) { data.status = .idle }
             data.lifecycle = SessionLifecyclePolicy.lifecycle(
-                for: data, hostClass: data.hostClass, processAlive: processAlive(data),
+                for: data, hostClass: data.hostClass, processAlive: alive,
                 now: now, windows: lifecycleWindows,
                 desktopAppRunning: desktopAppRunning(for: data, runningByBundleID: desktopAppRunningByBundleID),
                 bridgeKeepsLive: bridgeKeepsLive(data)
