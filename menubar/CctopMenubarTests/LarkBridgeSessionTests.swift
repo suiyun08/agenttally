@@ -236,6 +236,55 @@ final class LarkBridgeSessionTests: XCTestCase {
                                                       bridge: bridge, seen: seen), "The bot no longer holds it")
     }
 
+    func testOnlyARunningTurnWhoseProcessIsGoneCountsAsStopped() {
+        let bridged = session(profile: "codex", id: "01a17cf1", status: .working, codex: true)
+        XCTAssertTrue(SessionLifecyclePolicy.isStoppedBridgeTurn(bridged, processAlive: false))
+        XCTAssertFalse(SessionLifecyclePolicy.isStoppedBridgeTurn(bridged, processAlive: true), "Still running")
+        XCTAssertTrue(SessionLifecyclePolicy.isStoppedBridgeTurn(
+            session(profile: "claude", id: conversation, status: .compacting), processAlive: false))
+        for status in [SessionStatus.done, .needsAttention, .waitingInput, .waitingPermission, .idle] {
+            XCTAssertFalse(SessionLifecyclePolicy.isStoppedBridgeTurn(
+                session(profile: "claude", id: conversation, status: status), processAlive: false), "\(status)")
+        }
+        var direct = bridged
+        direct.larkChannelProfile = nil
+        XCTAssertFalse(SessionLifecyclePolicy.isStoppedBridgeTurn(direct, processAlive: false), "Not a bridge run")
+    }
+
+    /// Stopping a run from Feishu ends its process without a Stop hook. The turn stops showing as
+    /// running at once, leaves Active, and goes to Recent like any quiet conversation.
+    func testATurnStoppedFromFeishuNoLongerShowsAsRunning() throws {
+        try writeBridge()
+        let bridge = LarkBridgeLookup(home: bridgeHome, processStartTime: { _ in self.bridgeStart }).snapshot(now: Date())
+        let seen = SessionSeenStore(defaults: UserDefaults(suiteName: defaultsSuite)!)
+        func shown(_ session: SessionData, alive: Bool) -> SessionData {
+            SessionManager.buildCandidates(
+                [(url: URL(fileURLWithPath: "/nonexistent/\(session.sessionId).json"), session: session)],
+                now: Date(), desktopAppConnectionLookup: DesktopAppConnectionLookup { _ in false },
+                claudeMetadata: nil, processAlive: { _ in alive },
+                bridgeKeepsLive: { SessionManager.bridgeKeepsLive($0, bridge: bridge, seen: seen) }
+            )[0].data
+        }
+        var turn = session(profile: "claude", id: conversation, status: .working)
+
+        let running = shown(turn, alive: true)
+        XCTAssertEqual(running.status, .working)
+        XCTAssertEqual(running.lifecycle, .active)
+
+        turn.lastActivity = Date().addingTimeInterval(-60)
+        let justStopped = shown(turn, alive: false)
+        XCTAssertEqual(justStopped.status, .idle, "Stopped, not done: nothing new to read")
+        XCTAssertEqual(justStopped.lifecycle, .active, "Still in the conversation's quiet window")
+        XCTAssertFalse(SessionDisplayPolicy.needsLook(justStopped), "Leaves Active and the floating notices")
+
+        turn.lastActivity = Date().addingTimeInterval(-3600)
+        XCTAssertEqual(shown(turn, alive: false).lifecycle, .finished, "The bot's hold no longer keeps it")
+
+        let unread = shown(session(profile: "claude", id: conversation, status: .done), alive: false)
+        XCTAssertEqual(unread.status, .done)
+        XCTAssertEqual(unread.lifecycle, .active, "An unread result still waits for the user")
+    }
+
     func testCodexDesktopsReadStateLeavesABridgedThreadUnread() {
         var codex = session(profile: "codex", id: "01a1717c", status: .done, codex: true)
         codex.statusChangedAt = Date().addingTimeInterval(-60)

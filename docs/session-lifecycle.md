@@ -151,6 +151,11 @@ running, or listed it within the last 10 minutes, and the bot's session map stil
 conversation. Once seen and quiet, the conversation disconnects like any other: a bridged Claude
 Code conversation finishes and enters Recent, and a bridged Codex conversation goes dormant.
 
+A bridge turn runs in its own client process, so a turn still marked `working` or `compacting` after
+that process is gone was stopped, for example with the stop button in Feishu, which ends the process
+without a `Stop` hook. cctop shows that turn as `idle`: it leaves Active and the floating notices at
+once, posts no notice, and the conversation disconnects once the active window passes.
+
 Every `source: "codex"` record uses the same Codex lifecycle. The host can be Codex Desktop, CLI, VS Code, or another editor. Process or recent hook activity makes the session active. A disconnected session stays dormant until `last_activity` reaches 14 days. Bundle and app-server evidence do not change this lifecycle.
 
 The archive metadata source is client-specific:
