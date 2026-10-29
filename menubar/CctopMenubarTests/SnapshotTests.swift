@@ -173,6 +173,34 @@ final class SnapshotTests: XCTestCase {
         try renderScreenshot(view: view, colorScheme: .dark, filename: "menubar-dark.png")
     }
 
+    /// A result that left background tasks, unread, and a turn like it once read: Background, still
+    /// in Active after the unread result, with the reply and its tasks on the card.
+    func testGenerateBackgroundAfterReadScreenshot() throws {
+        var unread = SessionData.mock(
+            id: "unread", project: "cs-kb", sessionName: "Hand off the knowledge base session",
+            status: .done, source: "cc"
+        )
+        unread.lastAssistantMessage = "Five slicing jobs are still running; I'll report when they finish."
+        unread.backgroundTaskCount = 5
+        unread.backgroundTaskDetail = "Wait for the sample slicing to finish"
+        unread.isUnseenDone = true
+        unread.lastActivity = Date().addingTimeInterval(-60)
+        var read = SessionData.mock(
+            id: "read", project: "dirtyfilter", sessionName: "Review the annotation results",
+            status: .background, source: "cc"
+        )
+        read.lastAssistantMessage = "The review page is up at localhost:8080."
+        read.backgroundTaskCount = 1
+        read.backgroundTaskDetail = "Start local annotation server for review page"
+        read.lastActivity = Date().addingTimeInterval(-600)
+        let view = PopupView(
+            userSessions: userSessions(fromDataFixtures: [unread, read]),
+            updater: DisabledUpdater(),
+            pluginManager: inertPluginManager()
+        )
+        try renderScreenshot(view: view, colorScheme: .dark, filename: "background-after-read.png")
+    }
+
     func testGenerateNavigateScreenshot() throws {
         let sessions = userSessions(fromDataFixtures: Array(SessionData.qaShowcase.prefix(4)))
         let rc = NavigateController()

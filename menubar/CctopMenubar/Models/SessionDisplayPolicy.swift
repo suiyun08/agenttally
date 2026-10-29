@@ -89,8 +89,9 @@ enum SessionDisplayPolicy {
             < (rightData.lifecycle.rawValue, right.status.sortOrder, leftData.lastActivity)
     }
 
-    /// Active means "worth a look now": running, waiting on the user, or a finished turn the
-    /// user has not seen. A connected session with nothing to do is Idle; a disconnected
+    /// Active means "worth a look now": running, waiting on the user, a finished turn the user
+    /// has not seen, or a read one with background tasks still out. A connected session with
+    /// nothing to do is Idle; a disconnected
     /// (dormant) one belongs to Recent.
     static func needsLook(_ session: SessionData) -> Bool {
         switch session.status {

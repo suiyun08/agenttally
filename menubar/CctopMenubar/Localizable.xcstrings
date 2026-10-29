@@ -426,7 +426,17 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "后台运行"
+            "value": "后台"
+          }
+        }
+      }
+    },
+    "background tasks running": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后台任务运行中"
           }
         }
       }
@@ -2734,16 +2744,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作中"
-          }
-        }
-      }
-    },
-    "working in background": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "后台运行中"
           }
         }
       }

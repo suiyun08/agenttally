@@ -139,7 +139,7 @@ struct SessionCardView: View {
                 .padding(.top, 4)
         }
         // A finished turn can leave background work that will pick the session up again.
-        if session.status == .done, session.hasBackgroundWork {
+        if session.status == .done || session.status == .background, session.hasBackgroundWork {
             Text(session.backgroundWorkLine)
                 .font(.system(size: 10.5))
                 .foregroundStyle(Color.textMuted)
@@ -162,7 +162,7 @@ struct SessionCardView: View {
             case .working:
                 statusDotLabel("Working", dotColor: Color.statusGreen, textColor: Color.statusWorkingText)
             case .background:
-                statusDotLabel("Background", dotColor: Color.statusGreen.opacity(0.55), textColor: Color.statusWorkingText)
+                statusDotLabel("Background", dotColor: Color.statusIdle, textColor: Color.textSecondary)
             case .compacting:
                 statusDotLabel("Compacting", dotColor: Color.agentBadge)
             case .waitingPermission:
@@ -240,7 +240,7 @@ struct SessionCardView: View {
     /// Reuses `SessionData.contextLine` formatting (Reading X.swift, Running: foo, etc.).
     private var workingCommandText: String? {
         switch session.status {
-        case .working, .compacting, .background: return session.contextLine
+        case .working, .compacting: return session.contextLine
         default: return nil
         }
     }
@@ -252,7 +252,7 @@ struct SessionCardView: View {
             return session.notificationMessage ?? String(localized: "Permission needed")
         case .waitingInput, .needsAttention:
             return session.contextLine ?? String(localized: "Waiting for input")
-        case .done:
+        case .done, .background:
             return session.contextLine
         default:
             return nil

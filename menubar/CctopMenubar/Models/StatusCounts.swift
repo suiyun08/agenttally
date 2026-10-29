@@ -37,8 +37,8 @@ struct StatusCounts: Equatable {
         // cards are retained for reachability, not live work, so they never inflate counts.
         for userSession in SessionDisplayPolicy.activeSessions(from: userSessions, now: now) {
             switch userSession.status {
-            case .idle, .done: idleCount += 1
-            case .working, .compacting, .background: work += 1
+            case .idle, .done, .background: idleCount += 1
+            case .working, .compacting: work += 1
             case .waitingPermission: perm += 1
             case .waitingInput, .needsAttention: attn += 1
             }
@@ -187,14 +187,15 @@ struct StatusDotGroup: Equatable {
     enum Dot: Int, Equatable, Comparable {
         case permission, attention, working, unreadDone
 
-        /// `done` reaches the dots only when unread: the active list holds no read results.
+        /// `done` reaches the dots only when unread: a read result is Idle, or `background` when
+        /// its background tasks are still out, which shows only in the panel.
         init?(status: SessionStatus) {
             switch status {
             case .waitingPermission: self = .permission
             case .waitingInput, .needsAttention: self = .attention
-            case .working, .compacting, .background: self = .working
+            case .working, .compacting: self = .working
             case .done: self = .unreadDone
-            case .idle: return nil
+            case .idle, .background: return nil
             }
         }
 

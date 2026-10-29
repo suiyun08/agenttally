@@ -2735,13 +2735,95 @@ final class SessionTurnEndStatusTests: XCTestCase {
         )
     }
 
-    func testBackgroundWorkNeverNotifies() {
-        var background = SessionData.mock(
-            id: "bg-record", cctopSessionId: cctopSessionID, status: .background, pid: 33_333
+    func testOnlyAReadTurnWithBackgroundTasksShowsAsBackground() {
+        var read = doneSession(finishedAt: Date(), unseen: false)
+        read.backgroundTaskCount = 2
+        XCTAssertEqual(SessionManager.adjustReadBackgroundWork(read).status, .background)
+
+        var unread = read
+        unread.isUnseenDone = true
+        XCTAssertEqual(SessionManager.adjustReadBackgroundWork(unread).status, .done)
+
+        let nothingLeft = doneSession(finishedAt: Date(), unseen: false)
+        XCTAssertEqual(SessionManager.adjustReadBackgroundWork(nothingLeft).status, .done)
+
+        // A scheduled wakeup alone runs nothing until it fires.
+        var wakeupOnly = nothingLeft
+        wakeupOnly.scheduledWakeupCount = 1
+        XCTAssertEqual(SessionManager.adjustReadBackgroundWork(wakeupOnly).status, .done)
+
+        for status: SessionStatus in [.idle, .working, .compacting, .waitingInput, .waitingPermission, .needsAttention] {
+            var other = read
+            other.status = status
+            XCTAssertEqual(SessionManager.adjustReadBackgroundWork(other).status, status, "\(status)")
+        }
+    }
+
+    /// Reading it moves nothing out of sight: the reply and the background tasks stay on the card,
+    /// while the notice, notification, dot, and sound that asked for the read go away.
+    func testReadingATurnWithBackgroundTasksCallsForNothingMore() {
+        var unread = doneSession(finishedAt: Date())
+        unread.backgroundTaskCount = 2
+        var read = unread
+        read.isUnseenDone = false
+        read = SessionManager.adjustReadBackgroundWork(read)
+
+        XCTAssertEqual(read.status, .background)
+        XCTAssertEqual(read.contextLine, unread.contextLine)
+        XCTAssertEqual(read.backgroundWorkLine, "2 background tasks")
+        XCTAssertFalse(read.shouldPostAttentionNotification)
+        XCTAssertNil(SessionManager.toastKind(for: read))
+        XCTAssertNil(StatusDotGroup.Dot(status: read.status))
+        XCTAssertEqual(
+            SessionManager.notificationActions(
+                newUserSessions: userSessions(fromDataFixtures: [read]),
+                oldUserSessions: userSessions(fromDataFixtures: [unread]),
+                notificationsEnabled: true
+            ),
+            [.remove(cctopSessionID: cctopSessionID)]
         )
-        background.backgroundTaskCount = 2
-        XCTAssertFalse(background.shouldPostAttentionNotification)
-        XCTAssertEqual(background.contextLine, "2 background tasks")
+        XCTAssertEqual(
+            AlertSoundEvent.events(
+                newUserSessions: userSessions(fromDataFixtures: [read]),
+                oldUserSessions: userSessions(fromDataFixtures: [unread])
+            ),
+            []
+        )
+    }
+
+    /// End to end through the manager: the read turn stays Active as Background, after the unread
+    /// result, and only the unread result has a floating notice and a menu bar dot.
+    @MainActor
+    func testAReadTurnWithBackgroundTasksStaysActiveAfterUnreadResults() throws {
+        let now = Date()
+        var sources = try isolatedSessionDataSources(prefix: "cctop-background-read")
+        let readID = "44444444-4444-4444-8444-444444444444"
+        let unreadID = "55555555-5555-4555-8555-555555555555"
+        let read = SessionData.mock(id: "read", cctopSessionId: readID, status: .done, pid: 33_333)
+        let unread = SessionData.mock(id: "unread", cctopSessionId: unreadID, status: .done, pid: 44_444)
+        for var session in [read, unread] {
+            session.backgroundTaskCount = 1
+            session.lastAssistantMessage = "Started the server."
+            session.lastActivity = now.addingTimeInterval(-60)
+            session.statusChangedAt = session.lastActivity
+            try session.writeToFile(path: sources.sessionsDir.appendingPathComponent("\(session.pid!).json").path)
+        }
+        sources.processAlive = { _ in true }
+        let seen = try makeSeenStore()
+        seen.markSeen(cctopSessionID: readID, at: now)
+        sources.seenSessions = seen
+        sources.now = { now }
+
+        let manager = SessionManager(
+            historyManager: HistoryManager(historyDir: sources.sessionsDir.appendingPathComponent("history")),
+            dataSources: sources,
+            startMonitoring: false
+        )
+        let active = SessionDisplayPolicy.activeSessions(from: manager.userSessions)
+        XCTAssertEqual(active.map(\.displayRecord.data.sessionId), ["unread", "read"])
+        XCTAssertEqual(active.map(\.displayRecord.data.status), [.done, .background])
+        XCTAssertEqual(manager.sessionToastCandidates().map(\.id), [unreadID])
+        XCTAssertEqual(StatusCounts(userSessions: manager.userSessions).dotGroups.flatMap(\.dots), [.unreadDone])
     }
 
     func testATurnAnOlderHookRecordedAsBackgroundShowsAsDone() {
@@ -2810,14 +2892,14 @@ final class SessionTurnEndStatusTests: XCTestCase {
         XCTAssertEqual(resolveRecentResumeTargetOpenStrategy(target: .session(recent)), resolveFocusStrategy(session: recent))
     }
 
-    func testCountsTreatDoneAsIdleAndBackgroundAsWorking() {
+    func testCountsTreatDoneAndBackgroundAsIdle() {
         var background = SessionData.mock(id: "bg", status: .background, pid: 44_444)
         background.lastActivity = Date()
         let counts = StatusCounts(userSessions: userSessions(fromDataFixtures: [
             doneSession(finishedAt: Date()), background,
         ]))
-        XCTAssertEqual(counts.idle, 1)
-        XCTAssertEqual(counts.working, 1)
+        XCTAssertEqual(counts.idle, 2)
+        XCTAssertEqual(counts.working, 0)
         XCTAssertEqual(counts.needsAction, 0)
     }
 }

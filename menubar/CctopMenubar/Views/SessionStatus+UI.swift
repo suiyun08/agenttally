@@ -5,12 +5,12 @@ extension SessionStatus {
         switch self {
         case .waitingPermission: return Color.statusPermission
         case .waitingInput, .needsAttention: return Color.statusAttention
-        case .working, .background: return Color.statusGreen
+        case .working: return Color.statusGreen
         case .compacting:
             return Color(nsColor: NSColor(name: nil) { appearance in
                 ThemeManager.shared.current.agentBadge.resolve(appearance)
             })
-        case .idle, .done:
+        case .idle, .done, .background:
             return Color(nsColor: NSColor(name: nil) { appearance in
                 ThemeManager.shared.current.statusIdle.resolve(appearance)
             })
@@ -36,7 +36,7 @@ extension SessionStatus {
         case .waitingInput: return String(localized: "waiting for input")
         case .needsAttention: return String(localized: "needs attention")
         case .working: return String(localized: "working")
-        case .background: return String(localized: "working in background")
+        case .background: return String(localized: "background tasks running")
         case .compacting: return String(localized: "compacting context")
         case .done: return String(localized: "done")
         case .idle: return String(localized: "idle")

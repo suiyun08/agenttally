@@ -106,7 +106,7 @@ final class StatusCountsUserSessionInitTests: XCTestCase {
     func testDotsGroupByAgentFamilyWithUrgentDotsFirst() {
         var codexDone = SessionData.mock(id: "codex-done", status: .done, source: SessionData.codexSource)
         codexDone.isUnseenDone = true
-        let codexWorking = SessionData.mock(id: "codex-working", status: .background, source: SessionData.codexSource)
+        let codexWorking = SessionData.mock(id: "codex-working", status: .working, source: SessionData.codexSource)
         let claudeWorking = SessionData.mock(id: "cc-working", status: .working, pid: 1)
         let claudePermission = SessionData.mock(id: "cc-permission", status: .waitingPermission, pid: 2)
         let opencode = SessionData.mock(id: "oc", status: .needsAttention, pid: 3, source: SessionData.opencodeSource)
