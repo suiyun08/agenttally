@@ -560,4 +560,36 @@ final class CodexThreadArchiveLookupTests: XCTestCase {
 
         XCTAssertEqual(lookup.archivedThreadIDs(matching: ["sidecar-thread"]), ["sidecar-thread"])
     }
+
+    // MARK: - Turn history
+
+    /// Codex records a turn the user stopped as interrupted. Only a thread whose latest turn
+    /// ended that way counts; a later turn, finished or still running, supersedes it.
+    func testTurnHistoryReportsOnlyAnInterruptedLatestTurn() throws {
+        let root = NSTemporaryDirectory() + "cctop-turn-history-\(UUID().uuidString)"
+        try FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(atPath: root) }
+        try executeSQLite("""
+            CREATE TABLE thread_turns (
+                thread_id TEXT NOT NULL, turn_id TEXT NOT NULL, rollout_ordinal INTEGER NOT NULL,
+                status TEXT NOT NULL, completed_at INTEGER, PRIMARY KEY (thread_id, turn_id)
+            );
+            INSERT INTO thread_turns VALUES
+                ('stopped', 't1', 1, 'completed', 100), ('stopped', 't2', 9, 'interrupted', 200),
+                ('resumed', 't1', 1, 'interrupted', 100), ('resumed', 't2', 5, 'inProgress', NULL),
+                ('finished', 't1', 3, 'completed', 300),
+                ('not-asked', 't1', 1, 'interrupted', 400);
+            """, path: (root as NSString).appendingPathComponent(CodexTurnHistoryLookup.databaseFilename))
+        let lookup = CodexTurnHistoryLookup(stateDatabasePaths: { [(root as NSString).appendingPathComponent("state_5.sqlite")] })
+
+        XCTAssertEqual(
+            lookup.latestInterruptedTurns(threadIDs: ["stopped", "resumed", "finished", "unknown"]),
+            ["stopped": Date(timeIntervalSince1970: 200)]
+        )
+        XCTAssertEqual(
+            CodexTurnHistoryLookup(stateDatabasePaths: { ["/nonexistent/state_5.sqlite"] })
+                .latestInterruptedTurns(threadIDs: ["stopped"]),
+            [:], "No history: no record"
+        )
+    }
 }

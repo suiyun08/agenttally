@@ -40,6 +40,7 @@
 		307918FD1C8B47C79A1E8356 /* SessionClassification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7407E2CADC40E1AE6CC64A /* SessionClassification.swift */; };
 		455650383669416F98D65C67 /* SessionDataSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */; };
 		CRS000010000000000000001 /* ClientReadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CRS000020000000000000001 /* ClientReadState.swift */; };
+		CTH000010000000000000001 /* CodexTurnHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CTH000020000000000000001 /* CodexTurnHistory.swift */; };
 		9C7FB5862F422A830090B18A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 9C7FB52D2F3A0CEA0090B18A /* KeyboardShortcuts */; };
 		9C7FB58D2F422D1E0090B18A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 9C7FB58C2F422D1E0090B18A /* Sparkle */; };
 		TOMLDEC0100000000000001 /* TOMLDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = TOMLDEC0300000000000001 /* TOMLDecoder */; };
@@ -262,6 +263,7 @@
 		2A7407E2CADC40E1AE6CC64A /* SessionClassification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClassification.swift; sourceTree = "<group>"; };
 		D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDataSources.swift; sourceTree = "<group>"; };
 		CRS000020000000000000001 /* ClientReadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientReadState.swift; sourceTree = "<group>"; };
+		CTH000020000000000000001 /* CodexTurnHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTurnHistory.swift; sourceTree = "<group>"; };
 		A10000020000000000000001 /* CctopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CctopApp.swift; sourceTree = "<group>"; };
 		A10000030000000000000001 /* CctopMenubar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CctopMenubar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC0000020000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -507,6 +509,7 @@
 				WRS000020000000000000001 /* WorktreeRemovalService.swift */,
 				D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */,
 				CRS000020000000000000001 /* ClientReadState.swift */,
+				CTH000020000000000000001 /* CodexTurnHistory.swift */,
 				BGC000020000000000000001 /* BackgroundCursor.swift */,
 				DSH000020000000000000001 /* DSHPluginInstaller.swift */,
 				LSM000020000000000000001 /* LegacySettingsMigration.swift */,
@@ -961,6 +964,7 @@
 				WTV000010000000000000001 /* WorktreeCleanupTabView.swift in Sources */,
 				455650383669416F98D65C67 /* SessionDataSources.swift in Sources */,
 				CRS000010000000000000001 /* ClientReadState.swift in Sources */,
+				CTH000010000000000000001 /* CodexTurnHistory.swift in Sources */,
 				BGC000010000000000000001 /* BackgroundCursor.swift in Sources */,
 				DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */,
 				LSM000010000000000000001 /* LegacySettingsMigration.swift in Sources */,
@@ -1140,7 +1144,7 @@
 				CODE_SIGN_ENTITLEMENTS = CctopMenubar/CctopMenubar.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
@@ -1150,7 +1154,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1167,7 +1171,7 @@
 				CODE_SIGN_ENTITLEMENTS = CctopMenubar/CctopMenubar.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CctopMenubar/Info.plist;
@@ -1177,7 +1181,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "AgentTally by suiyun08, based on cctop by Stan Lo. MIT License.";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTally;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1191,9 +1195,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_NAME = "cctop-hook";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1203,9 +1207,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_NAME = "cctop-hook";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1216,10 +1220,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1233,10 +1237,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10008;
+				CURRENT_PROJECT_VERSION = 10009;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.suiyun08.AgentTallyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

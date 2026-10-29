@@ -20,6 +20,8 @@ struct SessionDataSources {
     var larkBridge: LarkBridgeLookup?
     /// Read state the clients keep themselves. Only `.live()` reads real client files.
     var clientReadState: any ClientReadStateProviding = NoClientReadState()
+    /// How Codex says each thread's latest turn ended. Only `.live()` reads Codex's files.
+    var codexTurnHistory: any CodexTurnHistoryProviding = NoCodexTurnHistory()
     /// Rings a session event's sound. Only `.live()` makes noise.
     var playAlertSound: @MainActor (AlertSoundEvent) -> Void = { _ in }
     var now: () -> Date
@@ -28,9 +30,10 @@ struct SessionDataSources {
     /// when the caller constructs its sources. The live metadata stores resolve their
     /// own paths as needed, with short internal caches for repeated reads in one pass.
     static func live() -> SessionDataSources {
-        SessionDataSources(
+        let codexThreads = CodexThreadArchiveLookup()
+        return SessionDataSources(
             sessionsDir: URL(fileURLWithPath: Config.sessionsDir()),
-            codexThreads: CodexThreadArchiveLookup(),
+            codexThreads: codexThreads,
             claudeDesktopSessions: ClaudeDesktopSessionArchiveLookup(),
             desktopAppConnection: .live,
             processAlive: { $0.isAlive },
@@ -41,6 +44,7 @@ struct SessionDataSources {
             },
             larkBridge: .live,
             clientReadState: ClientReadStateLookup(),
+            codexTurnHistory: CodexTurnHistoryLookup(stateDatabasePaths: codexThreads.resolvedStateDatabasePaths),
             playAlertSound: { $0.ring() },
             now: Date.init
         )

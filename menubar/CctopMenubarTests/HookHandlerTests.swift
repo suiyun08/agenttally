@@ -985,6 +985,23 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(session.status, .compacting)
     }
 
+    /// A summary Claude Code prepares on its own after a turn reports no end until the next
+    /// prompt; the finished turn stays done and unread instead of showing compacting meanwhile.
+    func testAutomaticCompactionAfterATurnKeepsItsResult() throws {
+        try handleFixture("SessionStart")
+        try handleFixture("Stop")
+        let finished = try loadSession()
+        let preCompact = #"{"session_id":"test-session-001","cwd":"/tmp/test-project","hook_event_name":"PreCompact","trigger":"#
+
+        try handleHook(preCompact + #""auto"}"#, hookName: "PreCompact")
+        let waiting = try loadSession()
+        XCTAssertEqual(waiting.status, .done)
+        XCTAssertEqual(waiting.statusChangedAt, finished.statusChangedAt, "Still unread")
+
+        try handleHook(preCompact + #""manual"}"#, hookName: "PreCompact")
+        XCTAssertEqual(try loadSession().status, .compacting, "The user asked for it")
+    }
+
     // MARK: - PostCompact transitions to idle
 
     func testPostCompactSetsIdle() throws {

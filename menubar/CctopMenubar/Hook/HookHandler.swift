@@ -12,7 +12,8 @@ enum HookHandler {
             hookName: hookName,
             notificationType: input.notificationType,
             toolName: input.toolName,
-            hasBackgroundWork: input.hasBackgroundWork
+            hasBackgroundWork: input.hasBackgroundWork,
+            compactTrigger: input.trigger
         )
 
         let larkProfile = larkChannelProfile(environment: deps.environment())
@@ -251,7 +252,7 @@ enum HookHandler {
             data.notificationMessage = input.error ?? input.message
 
         // notificationPermission: PermissionRequest already handles side effects; Notification fires ~6s later.
-        case .notificationPermission, .postCompact, .preCompact, .postToolUse, .sessionEnd, .unknown:
+        case .notificationPermission, .postCompact, .preCompact, .autoPreCompact, .postToolUse, .sessionEnd, .unknown:
             break
         }
     }

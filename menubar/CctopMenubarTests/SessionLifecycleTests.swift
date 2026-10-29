@@ -1376,6 +1376,67 @@ final class SessionLifecycleTests: XCTestCase {
         XCTAssertEqual(alive.map(\.data.lifecycle), [.active])
     }
 
+    // MARK: - Codex turn the user stopped
+
+    /// Codex sends no hook when the user stops a turn, and Codex Desktop's app-server outlives it,
+    /// so only Codex's own turn history shows that the turn is over.
+    @MainActor
+    func testACodexTurnTheUserStoppedShowsAsIdle() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("codex-stopped-\(UUID().uuidString)")
+        let sessionsDir = root.appendingPathComponent("sessions")
+        let historyDir = root.appendingPathComponent("history")
+        try FileManager.default.createDirectory(at: sessionsDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: historyDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let thread = "01a18178-2be7-7863-88f9-0abce55651c3"
+        let turnStarted = Date(timeIntervalSince1970: floor(Date().timeIntervalSince1970) - 600)
+        // Its process (the app-server) stays alive, as in Codex Desktop.
+        var turn = codexSession(sessionId: thread, projectPath: "/tmp/p")
+        turn.status = .working
+        turn.statusChangedAt = turnStarted.addingTimeInterval(0.8)
+        turn.lastActivity = turnStarted.addingTimeInterval(0.8)
+        try turn.writeToFile(path: sessionsDir.appendingPathComponent("codex-\(thread).json").path)
+
+        func shown(interrupted: [String: Date]) -> SessionData? {
+            var sources = isolatedSessionDataSources(sessionsDir: sessionsDir, visibilityPrefix: "codex-stopped")
+            sources.codexTurnHistory = StubCodexTurnHistory(interrupted: interrupted)
+            let manager = SessionManager(
+                historyManager: HistoryManager(historyDir: historyDir), dataSources: sources, startMonitoring: false
+            )
+            return manager.userSessions.first?.displayRecord.data
+        }
+
+        let stopped = try XCTUnwrap(shown(interrupted: [thread: turnStarted.addingTimeInterval(10)]))
+        XCTAssertEqual(stopped.status, .idle, "Stopped, not done: nothing new to read")
+        XCTAssertEqual(stopped.lifecycle, .active)
+        XCTAssertFalse(SessionDisplayPolicy.needsLook(stopped), "Leaves the floating notices")
+
+        XCTAssertEqual(shown(interrupted: [thread: turnStarted])?.status, .idle, "Stopped within the second it began")
+        XCTAssertEqual(shown(interrupted: [thread: turnStarted.addingTimeInterval(-60)])?.status, .working,
+                       "An earlier stop does not end the turn that began after it")
+        XCTAssertEqual(shown(interrupted: [:])?.status, .working, "No record: the hooks' status stands")
+    }
+
+    /// A turn that went on to report its end (a late Stop after the stop) keeps that status, so an
+    /// unread result stays unread; and only Codex sessions read Codex's record.
+    func testOnlyARunningCodexTurnEndsByCodexsRecord() {
+        var session = codexSession(sessionId: "01a182dd", projectPath: "/tmp/p")
+        session.statusChangedAt = Date(timeIntervalSince1970: 100)
+        let stoppedAt = Date(timeIntervalSince1970: 110)
+        for status in [SessionStatus.working, .compacting] {
+            session.status = status
+            XCTAssertTrue(SessionLifecyclePolicy.isInterruptedCodexTurn(session, interruptedAt: stoppedAt), "\(status)")
+        }
+        for status in [SessionStatus.done, .waitingInput, .waitingPermission, .needsAttention, .idle] {
+            session.status = status
+            XCTAssertFalse(SessionLifecyclePolicy.isInterruptedCodexTurn(session, interruptedAt: stoppedAt), "\(status)")
+        }
+        session.status = .working
+        session.source = "cc"
+        XCTAssertFalse(SessionLifecyclePolicy.isInterruptedCodexTurn(session, interruptedAt: stoppedAt), "Not Codex")
+    }
+
     func testChildProcessProbeTreatsProcListChildPidsResultAsPIDCount() {
         XCTAssertEqual(ProcessChildPIDProbe.capacity(fromReportedCount: 1), 1)
         XCTAssertEqual(ProcessChildPIDProbe.bufferSize(forCapacity: 1), Int32(MemoryLayout<pid_t>.size))

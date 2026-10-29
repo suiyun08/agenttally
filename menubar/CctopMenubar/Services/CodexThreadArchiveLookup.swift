@@ -35,6 +35,25 @@ final class CodexThreadArchiveLookup {
         Config.codexStateDatabaseCandidates(desktopSQLiteHome: CodexDesktopRuntimeProbe().currentDesktopSQLiteHome())
     }
 
+    /// Codex's thread state databases, re-resolved at most every few seconds. Codex keeps its turn
+    /// history beside them.
+    func resolvedStateDatabasePaths() -> [String] {
+        let now = Date()
+        cacheLock.lock()
+        if let cache = stateDatabasePathCache,
+           now.timeIntervalSince(cache.loadedAt) < Self.stateDatabasePathCacheDuration {
+            cacheLock.unlock()
+            return cache.paths
+        }
+        cacheLock.unlock()
+
+        let paths = stateDatabasePaths()
+        cacheLock.lock()
+        stateDatabasePathCache = (loadedAt: now, paths: paths)
+        cacheLock.unlock()
+        return paths
+    }
+
     /// Returns all Codex thread metadata cctop needs for `threadIDs` using one database pass.
     /// `.missing` means no configured database exists, `.available` may identify per-ID unknowns
     /// from a partial read, and `.unreadable` means no authoritative state could be loaded.
@@ -261,23 +280,6 @@ private extension CodexThreadArchiveLookup {
         }
 
         return foundReadableDatabase ? .available(mergedIndex) : .missing
-    }
-
-    func resolvedStateDatabasePaths() -> [String] {
-        let now = Date()
-        cacheLock.lock()
-        if let cache = stateDatabasePathCache,
-           now.timeIntervalSince(cache.loadedAt) < Self.stateDatabasePathCacheDuration {
-            cacheLock.unlock()
-            return cache.paths
-        }
-        cacheLock.unlock()
-
-        let paths = stateDatabasePaths()
-        cacheLock.lock()
-        stateDatabasePathCache = (loadedAt: now, paths: paths)
-        cacheLock.unlock()
-        return paths
     }
 
     func stateSnapshot(at path: String, matching threadIDs: Set<String>) -> CodexThreadStateSnapshot? {

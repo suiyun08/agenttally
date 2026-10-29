@@ -142,13 +142,17 @@ extension SessionManager {
             ? dataSources.larkBridge?.snapshot(now: now) ?? .empty
             : .empty
         let seen = dataSources.seenSessions
+        let interruptedCodexTurns = Self.interruptedCodexTurns(
+            in: repaired.map(\.session), history: dataSources.codexTurnHistory
+        )
         let candidates = Self.buildCandidates(
             repaired,
             now: now,
             desktopAppConnectionLookup: dataSources.desktopAppConnection,
             claudeMetadata: claudeMetadata,
             processAlive: dataSources.processAlive,
-            bridgeKeepsLive: { Self.bridgeKeepsLive($0, bridge: bridge, seen: seen) }
+            bridgeKeepsLive: { Self.bridgeKeepsLive($0, bridge: bridge, seen: seen) },
+            codexTurnInterruptedAt: { interruptedCodexTurns[$0.sessionId] }
         )
         return Self.sessionClassificationSnapshot(
             in: candidates,
@@ -157,6 +161,15 @@ extension SessionManager {
             codexThreads: codexThreads,
             now: now
         )
+    }
+
+    /// Codex's record of interrupted latest turns, read only for Codex sessions still shown as running.
+    nonisolated static func interruptedCodexTurns(
+        in sessions: [SessionData], history: any CodexTurnHistoryProviding
+    ) -> [String: Date] {
+        let running = Set(sessions.filter { $0.isCodex && ($0.status == .working || $0.status == .compacting) }
+            .map(\.sessionId))
+        return running.isEmpty ? [:] : history.latestInterruptedTurns(threadIDs: running)
     }
 
     /// A Feishu bridge conversation stays live between messages while its bot holds it and it

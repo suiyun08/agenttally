@@ -188,13 +188,15 @@ and other persisted preferences keep their separate contracts.
 
 | Value | Meaning | Written on |
 | --- | --- | --- |
-| `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact` |
+| `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact`, except an automatic one outside a turn |
 | `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest` |
 | `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications; `Stop` right after a wrap-up card that asks something |
 | `needs_attention` | The turn ended on an error | `StopFailure`; `SessionError` |
 | `background` | Written by hooks before 1.0.7 for a turn that ended with background work. The app shows it as `done` | No longer written |
 | `done` | The turn ended | `Stop`, with or without background work; `idle_prompt` only when a turn never sent `Stop` |
 | `idle` | No turn has run since start or compaction | `SessionStart`, `PostCompact` |
+
+Claude Code also compacts on its own (`PreCompact` with `trigger: "auto"`) while a session waits: it prepares the summary in the background and uses it only with the next prompt, so no `PostCompact` or `SessionStart` follows until then. Such a `PreCompact` outside a running turn keeps the current status.
 
 `status_changed_at` changes only when the status changes or a turn ends, so trailing events such as `SubagentStop` and `idle_prompt` do not move it. The app compares it with its own per-session "seen" time (kept in app preferences, never in session files) to show an unread dot and one notification for a `done` turn. Nothing times out: a question keeps waiting for its answer and an unread `done` turn stays unread, however long ago it ended.
 
