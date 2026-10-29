@@ -9,7 +9,8 @@ enum SessionStatus: String, Codable {
     case needsAttention = "needs_attention"
     /// The turn ended and nothing is in flight: the session is ready for the next prompt.
     case done
-    /// The turn ended, but background tasks or scheduled wakeups will resume the session.
+    /// Shown only: the user has read the finished turn, and background tasks it left will resume
+    /// the session. Hooks record such a turn as `done`.
     case background
 
     init(from decoder: Decoder) throws {
@@ -30,8 +31,8 @@ enum SessionStatus: String, Codable {
         case .waitingInput, .needsAttention: return 1
         case .working: return 2
         case .compacting: return 3
-        case .background: return 4
-        case .done: return 5
+        case .done: return 4
+        case .background: return 5
         case .idle: return 6
         }
     }

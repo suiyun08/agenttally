@@ -452,10 +452,8 @@ extension SessionData {
             return notificationMessage ?? String(localized: "Permission needed")
         case .waitingInput:
             return notificationMessage ?? awaitingUserToolLine ?? promptSnippet
-        case .done:
+        case .done, .background:
             return assistantSnippet ?? promptSnippet
-        case .background:
-            return backgroundWorkLine
         case .needsAttention:
             return notificationMessage ?? promptSnippet ?? String(localized: "Needs attention")
         case .working:

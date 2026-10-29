@@ -362,7 +362,19 @@ class SessionManager: ObservableObject {
             dataSources.seenSessions.markSeen(cctopSessionID: cctopSessionID, at: dataSources.now())
         }
         result.isUnseenDone = dataSources.seenSessions.isUnseen(result)
-        return result
+        return Self.adjustReadBackgroundWork(result)
+    }
+
+    /// A turn the user has read but whose background tasks will resume the session stays Active
+    /// as `background`, so the panel shows that work is still out. Scheduled wakeups alone don't
+    /// count: nothing is running until they fire.
+    nonisolated static func adjustReadBackgroundWork(_ session: SessionData) -> SessionData {
+        guard session.status == .done, !session.isUnseenDone, (session.backgroundTaskCount ?? 0) > 0 else {
+            return session
+        }
+        var adjusted = session
+        adjusted.status = .background
+        return adjusted
     }
 
     /// Marks a session seen after the user jumps to it, clearing its unread dot and notification.
@@ -372,7 +384,8 @@ class SessionManager: ObservableObject {
     }
 
     /// Hooks before 1.0.7 recorded a turn that ended with background work as `background`. That
-    /// turn ended like any other, so it shows as `done`, unread until the user looks. Nothing here
+    /// turn ended like any other, so it shows as `done`, unread until the user looks, then as
+    /// `background` while its tasks are out (`adjustReadBackgroundWork`). Nothing here
     /// times out: a question waits for its answer and an unread result for the user, however long.
     nonisolated static func adjustLegacyBackground(_ session: SessionData) -> SessionData {
         guard session.status == .background else { return session }

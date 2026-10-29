@@ -233,11 +233,14 @@ extension SessionManager {
         }
     }
 
-    /// Working sessions, sessions that need the user, and unread results get a notice.
+    /// Working sessions, sessions that need the user, and unread results get a notice. A read
+    /// result whose background tasks are still out shows only in the panel.
     nonisolated static func toastKind(for data: SessionData) -> SessionToast.Kind? {
         switch data.status {
-        case .working, .compacting, .background:
+        case .working, .compacting:
             return .working
+        case .background:
+            return nil
         default:
             guard data.shouldPostAttentionNotification else { return nil }
             return data.status == .done ? .done : .needsYou
