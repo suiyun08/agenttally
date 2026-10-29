@@ -193,11 +193,11 @@ final class SnapshotTests: XCTestCase {
         read.backgroundTaskCount = 1
         read.backgroundTaskDetail = "Start local annotation server for review page"
         read.lastActivity = Date().addingTimeInterval(-600)
-        let view = PopupView(
-            userSessions: userSessions(fromDataFixtures: [unread, read]),
-            updater: DisabledUpdater(),
-            pluginManager: inertPluginManager()
+        // In the order the app lists them.
+        let ordered = SessionDisplayPolicy.reconcilingOrder(
+            in: userSessions(fromDataFixtures: [unread, read]), preserving: []
         )
+        let view = PopupView(userSessions: ordered, updater: DisabledUpdater(), pluginManager: inertPluginManager())
         try renderScreenshot(view: view, colorScheme: .dark, filename: "background-after-read.png")
     }
 
