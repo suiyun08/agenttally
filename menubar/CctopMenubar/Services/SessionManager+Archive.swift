@@ -211,7 +211,8 @@ extension SessionManager {
         desktopAppConnectionLookup: DesktopAppConnectionLookup = .live,
         claudeMetadata: ClaudeDesktopSessionMetadataSnapshot?,
         processAlive: (SessionData) -> Bool = { $0.isAlive },
-        bridgeKeepsLive: (SessionData) -> Bool = { _ in false }
+        bridgeKeepsLive: (SessionData) -> Bool = { _ in false },
+        codexTurnInterruptedAt: (SessionData) -> Date? = { _ in nil }
     ) -> [SessionRecord] {
         let projectNames = claudeMetadata?.projectNamesBySessionID ?? [:]
         let desktopAppRunningByBundleID = desktopAppRunningByBundleID(
@@ -224,7 +225,10 @@ extension SessionManager {
                 data.desktopProjectName = projectName
             }
             let alive = processAlive(data)
-            if SessionLifecyclePolicy.isStoppedBridgeTurn(data, processAlive: alive) { data.status = .idle }
+            if SessionLifecyclePolicy.isStoppedBridgeTurn(data, processAlive: alive)
+                || SessionLifecyclePolicy.isInterruptedCodexTurn(data, interruptedAt: codexTurnInterruptedAt(data)) {
+                data.status = .idle
+            }
             data.lifecycle = SessionLifecyclePolicy.lifecycle(
                 for: data, hostClass: data.hostClass, processAlive: alive,
                 now: now, windows: lifecycleWindows,

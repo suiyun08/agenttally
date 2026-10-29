@@ -34,6 +34,16 @@ enum SessionLifecyclePolicy {
         return session.status == .working || session.status == .compacting
     }
 
+    /// Codex sends no hook when the user stops a turn, and Codex Desktop's app-server outlives the
+    /// turn, so a turn still marked running after Codex recorded it interrupted was stopped. It
+    /// shows as idle, like a stopped bridge turn. `interruptedAt` is in whole seconds.
+    static func isInterruptedCodexTurn(_ session: SessionData, interruptedAt: Date?) -> Bool {
+        guard session.isCodex, session.status == .working || session.status == .compacting,
+              let interruptedAt else { return false }
+        let runningSince = (session.statusChangedAt ?? session.lastActivity).timeIntervalSince1970.rounded(.down)
+        return interruptedAt.timeIntervalSince1970 >= runningSince
+    }
+
     /// Pure connection derivation. Codex uses one source-level policy across every surface;
     /// other sessions retain their existing host-specific connection evidence. A Feishu bridge
     /// conversation, whose process ends after every message, stays connected for a while after

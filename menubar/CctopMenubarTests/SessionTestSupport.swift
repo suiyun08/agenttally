@@ -372,6 +372,15 @@ extension XCTestCase {
     }
 }
 
+/// In-memory stand-in for Codex's turn history: thread ID → when its latest turn was interrupted.
+struct StubCodexTurnHistory: CodexTurnHistoryProviding {
+    var interrupted: [String: Date] = [:]
+
+    func latestInterruptedTurns(threadIDs: Set<String>) -> [String: Date] {
+        interrupted.filter { threadIDs.contains($0.key) }
+    }
+}
+
 /// In-memory stand-in for Codex's thread state database, so visibility and archive logic can be
 /// exercised without SQLite fixtures on disk. Set a field to `nil` to simulate an unreadable store.
 struct StubCodexThreadState: CodexThreadStateProviding {
