@@ -224,6 +224,21 @@ final class HookEventTests: XCTestCase {
         XCTAssertEqual(Transition.forEvent(.idle, event: .permissionRequest), .waitingPermission)
     }
 
+    func testParsePreCompactKeepsWhoStartedIt() {
+        XCTAssertEqual(HookEvent.parse(hookName: "PreCompact", notificationType: nil, compactTrigger: "auto"), .autoPreCompact)
+        XCTAssertEqual(HookEvent.parse(hookName: "PreCompact", notificationType: nil, compactTrigger: "manual"), .preCompact)
+        XCTAssertEqual(HookEvent.parse(hookName: "PreCompact", notificationType: nil), .preCompact, "No trigger (opencode, pi)")
+    }
+
+    /// Claude Code also prepares a summary on its own while the session waits, and reports
+    /// nothing more until the next prompt, so only a compaction inside a turn shows.
+    func testAutomaticCompactionShowsOnlyInsideATurn() {
+        XCTAssertEqual(Transition.forEvent(.working, event: .autoPreCompact), .compacting)
+        for status in allStatuses where status != .working {
+            XCTAssertNil(Transition.forEvent(status, event: .autoPreCompact), "\(status)")
+        }
+    }
+
     func testPreCompactTransitionsToCompacting() {
         XCTAssertEqual(Transition.forEvent(.working, event: .preCompact), .compacting)
     }
@@ -269,7 +284,7 @@ final class HookEventTests: XCTestCase {
             .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
             .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopFailure, .notificationIdle,
             .notificationElicitation, .notificationPermission, .notificationOther,
-            .permissionRequest, .subagentStart, .subagentStop, .preCompact, .postCompact,
+            .permissionRequest, .subagentStart, .subagentStop, .preCompact, .autoPreCompact, .postCompact,
             .sessionError, .sessionEnd, .unknown
         ]
 

@@ -27,6 +27,10 @@ enum HookEvent: Equatable {
     case subagentStart
     case subagentStop
     case preCompact
+    /// PreCompact that Claude Code started on its own (`trigger: auto`). Besides compacting
+    /// inside a turn, it prepares a summary in the background while the session waits, and uses
+    /// it only with the next prompt, so nothing reports the end of that one until then.
+    case autoPreCompact
     case postCompact
     case sessionError
     case sessionEnd
@@ -52,7 +56,8 @@ enum HookEvent: Equatable {
         hookName: String,
         notificationType: String?,
         toolName: String? = nil,
-        hasBackgroundWork: Bool = false
+        hasBackgroundWork: Bool = false,
+        compactTrigger: String? = nil
     ) -> HookEvent {
         if hookName == "Notification" {
             switch notificationType {
@@ -69,6 +74,9 @@ enum HookEvent: Equatable {
         }
         if event == .stop, hasBackgroundWork {
             return .stopWithBackgroundWork
+        }
+        if event == .preCompact, compactTrigger == "auto" {
+            return .autoPreCompact
         }
         return event
     }
@@ -107,6 +115,8 @@ enum Transition {
             return current == .working || current == .compacting ? .done : nil
         case .permissionRequest: return .waitingPermission
         case .preCompact: return .compacting
+        // Outside a turn the summary is only prepared; the session keeps waiting as it was.
+        case .autoPreCompact: return current == .working ? .compacting : nil
         // notificationPermission: PermissionRequest already sets waitingPermission immediately.
         // The Notification fires ~6s later and would race with PostToolUse if the user allows quickly.
         case .subagentStart, .subagentStop, .notificationPermission, .notificationOther, .sessionEnd, .unknown:
@@ -119,7 +129,7 @@ enum Transition {
         switch event {
         case .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
              .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopAskingUser, .stopFailure, .notificationIdle,
-             .notificationElicitation, .permissionRequest, .preCompact, .postCompact, .sessionError:
+             .notificationElicitation, .permissionRequest, .preCompact, .autoPreCompact, .postCompact, .sessionError:
             return true
         case .notificationPermission, .notificationOther, .subagentStart, .subagentStop,
              .sessionEnd, .unknown:
