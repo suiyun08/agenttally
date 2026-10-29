@@ -163,7 +163,9 @@ Desktop's app-server keeps running, so the record stays `working`. For a Codex s
 still marked `working` or `compacting`, cctop reads Codex's turn history (`thread_turns` in
 `thread_history_1.sqlite`, beside the thread state database). When the thread's latest turn is
 `interrupted` and ended no earlier than the session's current status began, cctop shows it as
-`idle` and posts no notice. Missing or unreadable history leaves the hook's status in place.
+`idle` and posts no notice. Codex deletes the history's write-ahead log whenever it closes the
+database; cctop then reads the database file as it stands, without creating files beside it.
+Missing or unreadable history leaves the hook's status in place.
 
 The archive metadata source is client-specific:
 
