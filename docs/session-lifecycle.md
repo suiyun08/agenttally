@@ -158,8 +158,8 @@ once, posts no notice, and the conversation disconnects once the active window p
 
 Every `source: "codex"` record uses the same Codex lifecycle. The host can be Codex Desktop, CLI, VS Code, or another editor. Process or recent hook activity makes the session active. A disconnected session stays dormant until `last_activity` reaches 14 days. Bundle and app-server evidence do not change this lifecycle.
 
-Codex sends no hook when the user stops a turn (the stop button in Codex Desktop, Esc in the CLI),
-and Codex Desktop's app-server keeps running, so the record stays `working`. For a Codex session
+Codex sends no hook when the user stops a turn with the stop button in Codex Desktop, and Codex
+Desktop's app-server keeps running, so the record stays `working`. For a Codex session
 still marked `working` or `compacting`, cctop reads Codex's turn history (`thread_turns` in
 `thread_history_1.sqlite`, beside the thread state database). When the thread's latest turn is
 `interrupted` and ended no earlier than the session's current status began, cctop shows it as
