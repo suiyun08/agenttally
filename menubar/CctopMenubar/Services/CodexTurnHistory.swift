@@ -35,11 +35,36 @@ struct CodexTurnHistoryLookup: CodexTurnHistoryProviding {
     }
 
     static func latestInterruptedTurns(at path: String, threadIDs: Set<String>) -> [String: Date] {
+        if let turns = latestInterruptedTurns(at: path, immutable: false, threadIDs: threadIDs) {
+            return turns
+        }
+        // Codex deletes the write-ahead log when it closes the database, after writing every turn back
+        // to the database file. macOS's SQLite can't open a WAL database read-only without that log, so
+        // read the database file as it stands.
+        guard !FileManager.default.fileExists(atPath: path + "-wal") else { return [:] }
+        return latestInterruptedTurns(at: path, immutable: true, threadIDs: threadIDs) ?? [:]
+    }
+
+    /// nil when the database can't be opened or queried. `immutable` reads the file without locks or
+    /// a write-ahead log and creates no files beside it.
+    private static func latestInterruptedTurns(
+        at path: String, immutable: Bool, threadIDs: Set<String>
+    ) -> [String: Date]? {
+        var location = path
+        var flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
+        if immutable {
+            var uri = URLComponents()
+            uri.scheme = "file"
+            uri.path = path
+            uri.queryItems = [URLQueryItem(name: "immutable", value: "1")]
+            guard let uriString = uri.string else { return nil }
+            location = uriString
+            flags |= SQLITE_OPEN_URI
+        }
         var database: OpaquePointer?
-        guard sqlite3_open_v2(path, &database, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK,
-              let database else {
+        guard sqlite3_open_v2(location, &database, flags, nil) == SQLITE_OK, let database else {
             if database != nil { sqlite3_close(database) }
-            return [:]
+            return nil
         }
         defer { sqlite3_close(database) }
         sqlite3_busy_timeout(database, 50)
@@ -53,9 +78,9 @@ struct CodexTurnHistoryLookup: CodexTurnHistoryProviding {
               AND rollout_ordinal = (SELECT MAX(rollout_ordinal) FROM thread_turns WHERE thread_id = turn.thread_id)
             """
         var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK, let statement else { return [:] }
+        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK, let statement else { return nil }
         defer { sqlite3_finalize(statement) }
-        guard CodexThreadArchiveLookup.bind(ids, to: statement) else { return [:] }
+        guard CodexThreadArchiveLookup.bind(ids, to: statement) else { return nil }
 
         var result: [String: Date] = [:]
         while sqlite3_step(statement) == SQLITE_ROW {

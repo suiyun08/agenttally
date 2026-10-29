@@ -592,4 +592,33 @@ final class CodexThreadArchiveLookupTests: XCTestCase {
             [:], "No history: no record"
         )
     }
+
+    func testTurnHistoryStillReadsWhileCodexHasItClosed() throws {
+        let root = NSTemporaryDirectory() + "cctop-turn-history-\(UUID().uuidString)"
+        try FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(atPath: root) }
+        let path = (root as NSString).appendingPathComponent(CodexTurnHistoryLookup.databaseFilename)
+        try executeSQLite("""
+            PRAGMA journal_mode = WAL;
+            CREATE TABLE thread_turns (
+                thread_id TEXT NOT NULL, turn_id TEXT NOT NULL, rollout_ordinal INTEGER NOT NULL,
+                status TEXT NOT NULL, completed_at INTEGER, PRIMARY KEY (thread_id, turn_id)
+            );
+            INSERT INTO thread_turns VALUES ('stopped', 't1', 1, 'interrupted', 200);
+            PRAGMA wal_checkpoint(TRUNCATE);
+            """, path: path)
+        // Codex removes the write-ahead log and shared-memory files when it closes the database.
+        for suffix in ["-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: path + suffix)
+        }
+        let lookup = CodexTurnHistoryLookup(stateDatabasePaths: { [(root as NSString).appendingPathComponent("state_5.sqlite")] })
+
+        XCTAssertEqual(
+            lookup.latestInterruptedTurns(threadIDs: ["stopped"]),
+            ["stopped": Date(timeIntervalSince1970: 200)],
+            "A stopped turn still reads as stopped while Codex is idle"
+        )
+        XCTAssertFalse(FileManager.default.fileExists(atPath: path + "-wal"), "Reading creates nothing in Codex's folder")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: path + "-shm"), "Reading creates nothing in Codex's folder")
+    }
 }
