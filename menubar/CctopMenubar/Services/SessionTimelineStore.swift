@@ -53,7 +53,10 @@ final class SessionTimelineStore: ObservableObject {
 
     /// Re-reads the given sessions' transcripts. Calls that land mid-read run once it ends.
     func refresh(_ sessions: [SessionData]) {
-        let sources = sessions.compactMap(TimelineSource.init(session:))
+        read(sessions.compactMap(TimelineSource.init(session:)))
+    }
+
+    private func read(_ sources: [TimelineSource]) {
         guard !isReading else {
             queuedSources = sources
             return
@@ -72,7 +75,7 @@ final class SessionTimelineStore: ObservableObject {
         isReading = false
         if let next = queuedSources {
             queuedSources = nil
-            refresh(next)
+            read(next)
         }
     }
 }
