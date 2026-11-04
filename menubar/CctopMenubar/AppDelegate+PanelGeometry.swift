@@ -45,6 +45,9 @@ extension AppDelegate {
         resolve: (NSSize) -> NSRect?
     ) -> NSRect? {
         guard let frame = resolve(size) else { return nil }
+        if let maxWidth = PanelPositioning.maxPanelWidth(forPanelFrame: frame, in: screens) {
+            updatePanelWidthLimit(maxWidth)
+        }
         guard let maxHeight = PanelPositioning.maxPanelHeight(forPanelFrame: frame, in: screens) else {
             return frame
         }
@@ -59,6 +62,13 @@ extension AppDelegate {
         panelHeightLimit.maxHeight = PanelPositioning.maxPanelHeight(
             belowTopY: screen.visibleFrame.maxY, on: ScreenLayout(screen)
         )
+        panelHeightLimit.maxWidth = screen.visibleFrame.width - 2 * PanelPositioning.margin
+    }
+
+    /// A changed limit re-sizes the board, which reports its new width and resizes the panel.
+    @MainActor private func updatePanelWidthLimit(_ maxWidth: CGFloat) {
+        guard abs(panelHeightLimit.maxWidth - maxWidth) > 0.5 else { return }
+        panelHeightLimit.maxWidth = maxWidth
     }
 
     /// The content re-measures against a changed limit on its next pass, so resize again then.
@@ -149,6 +159,9 @@ extension AppDelegate {
         )
         if let screenMaxHeight {
             updatePanelHeightLimit(screenMaxHeight)
+        }
+        if panel.isVisible, let maxWidth = PanelPositioning.maxPanelWidth(forPanelFrame: panel.frame, in: screenLayouts) {
+            updatePanelWidthLimit(maxWidth)
         }
         setPanelFrame(panel.isVisible ? keptOnScreen(newFrame) : newFrame, animate: animate)
     }

@@ -28,6 +28,8 @@ class FloatingPanel: NSPanel {
     /// Frames of the top bar's buttons, top-left origin. Clicks there go to the buttons;
     /// the rest of the bar drags the panel.
     var headerControlRects: [CGRect] = []
+    /// Off while the board shows: it sets its own width.
+    var allowsWidthDrag = true
     /// On every desktop, full-screen ones included, so a pinned panel stays in view as the user
     /// switches desktops.
     static let defaultCollectionBehavior: NSWindow.CollectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -195,7 +197,7 @@ class FloatingPanel: NSPanel {
     // MARK: - Header drag via tight event-tracking loop
 
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown,
+        if event.type == .leftMouseDown, allowsWidthDrag,
            let edge = PanelWidthDrag.edge(atX: event.locationInWindow.x, panelWidth: frame.width) {
             handleWidthDrag(holding: edge)
             return
@@ -320,7 +322,7 @@ class FloatingPanel: NSPanel {
 
     private func updateHoveredEdge(at location: NSPoint?) {
         let edge = location.flatMap { point -> PanelResizeEdge? in
-            guard point.y >= 0, point.y <= frame.height else { return nil }
+            guard allowsWidthDrag, point.y >= 0, point.y <= frame.height else { return nil }
             return PanelWidthDrag.edge(atX: point.x, panelWidth: frame.width)
         }
         if edge != nil {

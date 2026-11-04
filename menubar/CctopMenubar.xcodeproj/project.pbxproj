@@ -41,6 +41,8 @@
 		455650383669416F98D65C67 /* SessionDataSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */; };
 		CRS000010000000000000001 /* ClientReadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CRS000020000000000000001 /* ClientReadState.swift */; };
 		CTH000010000000000000001 /* CodexTurnHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CTH000020000000000000001 /* CodexTurnHistory.swift */; };
+		STLB10000000000000000001 /* SessionTimelineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = STLB20000000000000000001 /* SessionTimelineStore.swift */; };
+		STLA10000000000000000001 /* SessionTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = STLA20000000000000000001 /* SessionTimeline.swift */; };
 		9C7FB5862F422A830090B18A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 9C7FB52D2F3A0CEA0090B18A /* KeyboardShortcuts */; };
 		9C7FB58D2F422D1E0090B18A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 9C7FB58C2F422D1E0090B18A /* Sparkle */; };
 		TOMLDEC0100000000000001 /* TOMLDecoder in Frameworks */ = {isa = PBXBuildFile; productRef = TOMLDEC0300000000000001 /* TOMLDecoder */; };
@@ -54,6 +56,7 @@
 		B10000030000000000000001 /* SessionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000040000000000000001 /* SessionStatus.swift */; };
 		C10000010000000000000001 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000001 /* SessionManager.swift */; };
 		D10000050000000000000001 /* SessionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000060000000000000001 /* SessionCardView.swift */; };
+		SBDV10000000000000000001 /* SessionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBDV20000000000000000001 /* SessionBoardView.swift */; };
 		SBV000010000000000000001 /* SourceBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBV000020000000000000001 /* SourceBadgeView.swift */; };
 		D10000070000000000000001 /* PopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000080000000000000001 /* PopupView.swift */; };
 		PVS000010000000000000001 /* PopupView+Sessions.swift in Sources */ = {isa = PBXBuildFile; fileRef = PVS000020000000000000001 /* PopupView+Sessions.swift */; };
@@ -179,6 +182,7 @@
 		PPT000010000000000000001 /* PanelPositioningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPT000020000000000000001 /* PanelPositioningTests.swift */; };
 		FST000010000000000000001 /* FocusStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FST000020000000000000001 /* FocusStrategyTests.swift */; };
 		LKT000010000000000000001 /* LarkBridgeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LKT000020000000000000001 /* LarkBridgeSessionTests.swift */; };
+		STLT10000000000000000001 /* SessionTimelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = STLT20000000000000000001 /* SessionTimelineTests.swift */; };
 		MFT000010000000000000001 /* MultiplexerFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = MFT000020000000000000001 /* MultiplexerFocusTests.swift */; };
 		TMT000010000000000000001 /* ThemeManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TMT000020000000000000001 /* ThemeManagerTests.swift */; };
 		WCC000010000000000000001 /* WorktreeCleanupCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = WCC000020000000000000001 /* WorktreeCleanupCandidate.swift */; };
@@ -264,6 +268,8 @@
 		D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDataSources.swift; sourceTree = "<group>"; };
 		CRS000020000000000000001 /* ClientReadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientReadState.swift; sourceTree = "<group>"; };
 		CTH000020000000000000001 /* CodexTurnHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTurnHistory.swift; sourceTree = "<group>"; };
+		STLB20000000000000000001 /* SessionTimelineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimelineStore.swift; sourceTree = "<group>"; };
+		STLA20000000000000000001 /* SessionTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimeline.swift; sourceTree = "<group>"; };
 		A10000020000000000000001 /* CctopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CctopApp.swift; sourceTree = "<group>"; };
 		A10000030000000000000001 /* CctopMenubar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CctopMenubar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC0000020000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -291,6 +297,7 @@
 		NPC000020000000000000001 /* NotificationPermissionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPermissionController.swift; sourceTree = "<group>"; };
 		D1000000A000000000000001 /* SettingsFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFooter.swift; sourceTree = "<group>"; };
 		D10000060000000000000001 /* SessionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCardView.swift; sourceTree = "<group>"; };
+		SBDV20000000000000000001 /* SessionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBoardView.swift; sourceTree = "<group>"; };
 		SBV000020000000000000001 /* SourceBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceBadgeView.swift; sourceTree = "<group>"; };
 		D10000080000000000000001 /* PopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupView.swift; sourceTree = "<group>"; };
 		PVS000020000000000000001 /* PopupView+Sessions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopupView+Sessions.swift"; sourceTree = "<group>"; };
@@ -409,6 +416,7 @@
 		PPT000020000000000000001 /* PanelPositioningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPositioningTests.swift; sourceTree = "<group>"; };
 		FST000020000000000000001 /* FocusStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStrategyTests.swift; sourceTree = "<group>"; };
 		LKT000020000000000000001 /* LarkBridgeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LarkBridgeSessionTests.swift; sourceTree = "<group>"; };
+		STLT20000000000000000001 /* SessionTimelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimelineTests.swift; sourceTree = "<group>"; };
 		MFT000020000000000000001 /* MultiplexerFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplexerFocusTests.swift; sourceTree = "<group>"; };
 		TMT000020000000000000001 /* ThemeManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManagerTests.swift; sourceTree = "<group>"; };
 		WCC000020000000000000001 /* WorktreeCleanupCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorktreeCleanupCandidate.swift; sourceTree = "<group>"; };
@@ -510,6 +518,8 @@
 				D0FBE6D70C1E41D5B8A04F3E /* SessionDataSources.swift */,
 				CRS000020000000000000001 /* ClientReadState.swift */,
 				CTH000020000000000000001 /* CodexTurnHistory.swift */,
+				STLB20000000000000000001 /* SessionTimelineStore.swift */,
+				STLA20000000000000000001 /* SessionTimeline.swift */,
 				BGC000020000000000000001 /* BackgroundCursor.swift */,
 				DSH000020000000000000001 /* DSHPluginInstaller.swift */,
 				LSM000020000000000000001 /* LegacySettingsMigration.swift */,
@@ -608,6 +618,7 @@
 			isa = PBXGroup;
 			children = (
 				D10000060000000000000001 /* SessionCardView.swift */,
+				SBDV20000000000000000001 /* SessionBoardView.swift */,
 				SBV000020000000000000001 /* SourceBadgeView.swift */,
 				D10000080000000000000001 /* PopupView.swift */,
 				PVS000020000000000000001 /* PopupView+Sessions.swift */,
@@ -711,6 +722,7 @@
 				PPT000020000000000000001 /* PanelPositioningTests.swift */,
 				FST000020000000000000001 /* FocusStrategyTests.swift */,
 				LKT000020000000000000001 /* LarkBridgeSessionTests.swift */,
+				STLT20000000000000000001 /* SessionTimelineTests.swift */,
 				MFT000020000000000000001 /* MultiplexerFocusTests.swift */,
 				TMT000020000000000000001 /* ThemeManagerTests.swift */,
 				WCT000020000000000000001 /* WorktreeCleanupTests.swift */,
@@ -870,6 +882,7 @@
 				SMN000010000000000000001 /* SessionManager+Notifications.swift in Sources */,
 				NPC000010000000000000001 /* NotificationPermissionController.swift in Sources */,
 				D10000050000000000000001 /* SessionCardView.swift in Sources */,
+				SBDV10000000000000000001 /* SessionBoardView.swift in Sources */,
 				SBV000010000000000000001 /* SourceBadgeView.swift in Sources */,
 				D10000070000000000000001 /* PopupView.swift in Sources */,
 				PVS000010000000000000001 /* PopupView+Sessions.swift in Sources */,
@@ -965,6 +978,8 @@
 				455650383669416F98D65C67 /* SessionDataSources.swift in Sources */,
 				CRS000010000000000000001 /* ClientReadState.swift in Sources */,
 				CTH000010000000000000001 /* CodexTurnHistory.swift in Sources */,
+				STLB10000000000000000001 /* SessionTimelineStore.swift in Sources */,
+				STLA10000000000000000001 /* SessionTimeline.swift in Sources */,
 				BGC000010000000000000001 /* BackgroundCursor.swift in Sources */,
 				DSH000010000000000000001 /* DSHPluginInstaller.swift in Sources */,
 				LSM000010000000000000001 /* LegacySettingsMigration.swift in Sources */,
@@ -1054,6 +1069,7 @@
 				PPT000010000000000000001 /* PanelPositioningTests.swift in Sources */,
 				FST000010000000000000001 /* FocusStrategyTests.swift in Sources */,
 				LKT000010000000000000001 /* LarkBridgeSessionTests.swift in Sources */,
+				STLT10000000000000000001 /* SessionTimelineTests.swift in Sources */,
 				MFT000010000000000000001 /* MultiplexerFocusTests.swift in Sources */,
 				TMT000010000000000000001 /* ThemeManagerTests.swift in Sources */,
 				WCT000010000000000000001 /* WorktreeCleanupTests.swift in Sources */,

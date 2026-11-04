@@ -451,6 +451,17 @@
         }
       }
     },
+    "Board": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "看板"
+          }
+        }
+      },
+      "comment": "Session layout switch: one column per session with its conversation rounds"
+    },
     "Branch has %lld unique local commits": {
       "localizations": {
         "zh-Hans": {
@@ -1541,6 +1552,17 @@
         }
       }
     },
+    "List": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表"
+          }
+        }
+      },
+      "comment": "Session layout switch: one row per session"
+    },
     "Main checkout path could not be verified": {
       "localizations": {
         "zh-Hans": {
@@ -1681,6 +1703,16 @@
         }
       }
     },
+    "No conversation history": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可读取的对话记录"
+          }
+        }
+      }
+    },
     "No idle sessions": {
       "localizations": {
         "zh-Hans": {
@@ -1697,6 +1729,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂无最近记录"
+          }
+        }
+      }
+    },
+    "No rounds yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有对话"
           }
         }
       }
@@ -2077,6 +2119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "读取 %@"
+          }
+        }
+      }
+    },
+    "Reading history…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取对话记录…"
           }
         }
       }
@@ -2507,6 +2559,40 @@
           }
         }
       }
+    },
+    "timeline.agent": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "助手"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent"
+          }
+        }
+      },
+      "comment": "Board timeline label for the agent's reply"
+    },
+    "timeline.you": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        }
+      },
+      "comment": "Board timeline label for the user's request"
     },
     "Toggle Panel": {
       "localizations": {

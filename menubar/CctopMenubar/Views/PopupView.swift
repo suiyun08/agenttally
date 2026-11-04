@@ -27,6 +27,10 @@ struct PopupView: View {
     var onLayoutChanged: () -> Void = {}
     /// Upper bound for scrolling lists. The panel host passes its screen-based limit.
     var maxListHeight: CGFloat = AppChrome.overlayMinimumContentHeight
+    /// Widest the board may make the panel. The panel host passes its screen-based limit.
+    var maxBoardWidth = CGFloat(PanelWidth.wider.rawValue)
+    @AppStorage(SessionLayout.defaultsKey) var sessionLayout: SessionLayout = .list
+    @StateObject var timelineStore = SessionTimelineStore()
     @State var selectedTab: PopupTab = .active
     @State var selectedIndex: Int?
     @State var selectedSessionIdentity: SessionIdentityPolicy.LogicalIdentity?
@@ -47,6 +51,19 @@ struct PopupView: View {
     }
     private var showPiBanner: Bool {
         pluginManager.piConfigExists && !pluginManager.piInstalled && !piBannerDismissed
+    }
+
+    /// The panel width the board needs, or nil when the page shows no board.
+    private var boardWidth: CGFloat? {
+        guard sessionLayout == .board, currentPage == .sessions else { return nil }
+        let columns: Int
+        switch selectedTab {
+        case .active: columns = activeSessionRows.count
+        case .idle: columns = idleSessionRows.count
+        case .recent, .cleanup: return nil
+        }
+        guard columns > 0 else { return nil }
+        return SessionBoardMetrics.width(columns: columns, maxWidth: maxBoardWidth)
     }
 
     private var showTabs: Bool { availableTabs.count > 1 && overlayController.active == nil }
@@ -114,6 +131,8 @@ struct PopupView: View {
         .onChange(of: cleanupIsScanning) { _ in handleCleanupScanningChanged() }
         .onChange(of: selectedCleanupCandidate?.id) { _ in notifyLayoutChanged() }
         .alert(item: $pendingConfirmation) { confirmationAlert(for: $0) }
+        .onChange(of: sessionLayout) { _ in notifyLayoutChanged() }
+        .preference(key: PanelBoardWidthKey.self, value: boardWidth)
         .onAppear {
             selectedTab = availableTabs.contains(initialTab) ? initialTab : .active
             if selectedTab == .cleanup,
@@ -142,6 +161,8 @@ struct PopupView: View {
                     hasAttention: tab == .cleanup && cleanupHasUnseenCandidates
                 )
             }
+            SessionLayoutToggle(layout: $sessionLayout)
+                .padding(.leading, 6)
         }
         .padding(2)
         .padding(.horizontal, 16)
@@ -198,7 +219,7 @@ struct PopupView: View {
                             installAction: { pluginManager.installPiPlugin() },
                             installed: $piBannerInstalled, dismissed: $piBannerDismissed)
                     }
-                    sessionList(activeSessionRows, tab: .active, showNavigateNumbers: true)
+                    sessionRows(activeSessionRows, tab: .active, showNavigateNumbers: true)
                 }
             }
         }
@@ -209,7 +230,7 @@ struct PopupView: View {
         if idleSessionRows.isEmpty {
             noIdleSessionsContent
         } else {
-            sessionList(idleSessionRows, tab: .idle)
+            sessionRows(idleSessionRows, tab: .idle)
         }
     }
     func panelList<Item: Identifiable, Row: View>(

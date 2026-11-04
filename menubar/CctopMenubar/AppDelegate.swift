@@ -157,6 +157,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             },
             onHeaderControlsChanged: { [weak self] rects in
                 Task { @MainActor in self?.panel?.headerControlRects = rects }
+            },
+            onBoardWidthChanged: { [weak self] width in
+                Task { @MainActor in
+                    self?.panel?.allowsWidthDrag = width == nil
+                    if width != nil { self?.panelResizeState.hoveredEdge = nil }
+                }
             }
         )
     }
