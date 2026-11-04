@@ -67,8 +67,8 @@ enum SessionBoardMetrics {
     static let timelineVerticalPadding: CGFloat = 7
     /// What an expanded card's timeline takes besides its scrolling lines.
     static let timelineChromeHeight: CGFloat = expanderHeight + 4 + 2 * timelineVerticalPadding
-    /// An expanded card keeps this much room for its lines even in a crowded column.
-    static let minExpandedTimelineHeight: CGFloat = 140
+    /// An expanded card keeps about three lines even in a column too short for its other cards.
+    static let minExpandedTimelineHeight: CGFloat = 64
 
     /// The panel width for all columns, never narrower than the list's width or wider than `maxWidth`.
     static func width(maxWidth: CGFloat) -> CGFloat {
@@ -209,9 +209,9 @@ struct SessionBoardColumn<Header: View>: View {
                     }
                 }
             }
-            // Hug the cards; past the screen's room the column scrolls.
+            // Hug the cards from the top; past the screen's room the column scrolls.
             .frame(height: cardsContentHeight.map { min($0, cardsHeight) })
-            .frame(maxHeight: cardsHeight)
+            .frame(maxHeight: cardsHeight, alignment: .top)
             .onChange(of: selectedIdentity) { identity in
                 guard let identity, rows.contains(where: { $0.id == identity }) else { return }
                 withAnimation(.easeOut(duration: 0.15)) {

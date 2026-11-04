@@ -794,7 +794,7 @@ final class SnapshotTests: XCTestCase {
         try renderScreenshot(view: board([], 900), colorScheme: .light, filename: "board-light.png", width: width)
         // A short screen: the expanded card scrolls inside itself and its column-mate stays in view.
         let form = try XCTUnwrap(rows.first { $0.session.sessionId == "form" })
-        try renderScreenshot(view: board([form.id], 470), colorScheme: .dark, filename: "board-expanded-dark.png", width: width)
+        try renderScreenshot(view: board([form.id], 540), colorScheme: .dark, filename: "board-expanded-dark.png", width: width)
     }
 
     private func renderScreenshot(
