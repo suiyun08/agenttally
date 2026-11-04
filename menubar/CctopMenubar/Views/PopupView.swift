@@ -31,6 +31,8 @@ struct PopupView: View {
     var maxBoardWidth = CGFloat(PanelWidth.wider.rawValue)
     @AppStorage(SessionLayout.defaultsKey) var sessionLayout: SessionLayout = .list
     @StateObject var timelineStore = SessionTimelineStore()
+    /// Board cards showing every line instead of the latest few.
+    @State var expandedBoardCards: Set<SessionIdentityPolicy.LogicalIdentity> = []
     @State var selectedTab: PopupTab = .active
     @State var selectedIndex: Int?
     @State var selectedSessionIdentity: SessionIdentityPolicy.LogicalIdentity?
@@ -55,16 +57,12 @@ struct PopupView: View {
 
     /// The panel width the board needs, or nil when the page shows no board.
     private var boardWidth: CGFloat? {
-        guard sessionLayout == .board, currentPage == .sessions else { return nil }
-        let columns: Int
-        switch selectedTab {
-        case .active: columns = activeSessionRows.count
-        case .idle: columns = idleSessionRows.count
-        case .recent, .cleanup: return nil
-        }
-        guard columns > 0 else { return nil }
-        return SessionBoardMetrics.width(columns: columns, maxWidth: maxBoardWidth)
+        guard showsBoard, currentPage == .sessions, !activeSessionRows.isEmpty else { return nil }
+        return SessionBoardMetrics.width(maxWidth: maxBoardWidth)
     }
+
+    /// Only the Active tab has a board; the other tabs keep their lists.
+    var showsBoard: Bool { sessionLayout == .board && selectedTab == .active }
 
     private var showTabs: Bool { availableTabs.count > 1 && overlayController.active == nil }
     private var currentPage: PanelPage { overlayController.active == .settings ? .settings : .sessions }
@@ -161,8 +159,12 @@ struct PopupView: View {
                     hasAttention: tab == .cleanup && cleanupHasUnseenCandidates
                 )
             }
+            // Kept in place on other tabs so the tabs don't shift.
             SessionLayoutToggle(layout: $sessionLayout)
                 .padding(.leading, 6)
+                .opacity(selectedTab == .active ? 1 : 0)
+                .allowsHitTesting(selectedTab == .active)
+                .accessibilityHidden(selectedTab != .active)
         }
         .padding(2)
         .padding(.horizontal, 16)

@@ -129,12 +129,14 @@ extension PopupView {
         tab: PopupTab,
         showNavigateNumbers: Bool = false
     ) -> some View {
-        if sessionLayout == .board {
+        if showsBoard && tab == .active {
             SessionBoardView(
                 rows: rows,
                 timelines: timelineStore,
                 selectedIdentity: selectedSessionIdentity,
-                maxHeight: maxListHeight
+                maxHeight: maxListHeight,
+                expanded: $expandedBoardCards,
+                onLayoutChanged: notifyLayoutChanged
             ) { row in
                 sessionRow(row, showNavigateNumbers: showNavigateNumbers)
             }

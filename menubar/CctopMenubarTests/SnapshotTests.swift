@@ -737,7 +737,10 @@ final class SnapshotTests: XCTestCase {
             ],
             "board": [
                 ("弹窗加看板样式，每轮一句话", "调研完，给出两种版式"),
-                ("改用一个会话一列", nil),
+                ("改成按状态分栏，卡片显示最近 5 条", nil),
+            ],
+            "reply": [
+                ("给出离线时段和现有话术", "列出两种兜底话术，等你选"),
             ],
         ]
         for (id, rounds) in transcripts {
@@ -760,7 +763,12 @@ final class SnapshotTests: XCTestCase {
             id: "board", project: "agenttally", sessionName: "弹窗看板样式", status: .working,
             lastTool: "Edit", lastToolDetail: "/src/SessionBoardView.swift", source: "cc"
         )
-        let rows = userSessions(fromDataFixtures: [waiting, working, done]).enumerated().map { index, session in
+        let permission = SessionData.mock(
+            id: "reply", project: "support", sessionName: "离线时的转人工应答", status: .waitingPermission,
+            lastTool: "Bash", lastToolDetail: "git push", source: "cc"
+        )
+        let fixtures = [permission, waiting, working, done]
+        let rows = userSessions(fromDataFixtures: fixtures).enumerated().map { index, session in
             PanelSessionRow(slot: index, userSession: session, id: session.identity)
         }
 
@@ -773,13 +781,20 @@ final class SnapshotTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         }
 
-        let view = SessionBoardView(rows: rows, timelines: store, selectedIdentity: nil, maxHeight: 600) { row in
-            SessionCardView(session: row.session)
+        let width = SessionBoardMetrics.width(maxWidth: 2000)
+        let board = { (expanded: Set<SessionIdentityPolicy.LogicalIdentity>, maxHeight: CGFloat) in
+            SessionBoardView(
+                rows: rows, timelines: store, selectedIdentity: nil, maxHeight: maxHeight, expanded: .constant(expanded)
+            ) { row in
+                SessionCardView(session: row.session)
+            }
+            .padding(.top, 10)
         }
-        .padding(.top, 10)
-        let width = SessionBoardMetrics.width(columns: rows.count, maxWidth: 2000)
-        try renderScreenshot(view: view, colorScheme: .dark, filename: "board-dark.png", width: width)
-        try renderScreenshot(view: view, colorScheme: .light, filename: "board-light.png", width: width)
+        try renderScreenshot(view: board([], 900), colorScheme: .dark, filename: "board-dark.png", width: width)
+        try renderScreenshot(view: board([], 900), colorScheme: .light, filename: "board-light.png", width: width)
+        // A short screen: the expanded card scrolls inside itself and its column-mate stays in view.
+        let form = try XCTUnwrap(rows.first { $0.session.sessionId == "form" })
+        try renderScreenshot(view: board([form.id], 470), colorScheme: .dark, filename: "board-expanded-dark.png", width: width)
     }
 
     private func renderScreenshot(

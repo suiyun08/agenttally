@@ -460,7 +460,92 @@
           }
         }
       },
-      "comment": "Session layout switch: one column per session with its conversation rounds"
+      "comment": "Session layout switch: Active sessions in status columns, each card with its latest conversation lines"
+    },
+    "board.background": {
+      "comment": "Board column for sessions with background tasks",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后台"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background"
+          }
+        }
+      }
+    },
+    "board.earlier %lld": {
+      "comment": "Board card button that shows the older lines",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更早 %lld 条"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld earlier"
+          }
+        }
+      }
+    },
+    "board.finished": {
+      "comment": "Board column for finished sessions the user has not seen",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "board.waiting": {
+      "comment": "Board column for sessions waiting on the user",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等回答"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting"
+          }
+        }
+      }
+    },
+    "board.working": {
+      "comment": "Board column for sessions at work",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进行中"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
+          }
+        }
+      }
     },
     "Branch has %lld unique local commits": {
       "localizations": {
@@ -1739,6 +1824,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "还没有对话"
+          }
+        }
+      }
+    },
+    "No sessions": {
+      "comment": "Empty board column",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有会话"
           }
         }
       }

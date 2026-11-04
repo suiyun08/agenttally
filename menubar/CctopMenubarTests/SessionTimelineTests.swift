@@ -137,6 +137,40 @@ final class SessionTimelineTests: XCTestCase {
         XCTAssertEqual(parser.rounds.first?.did, "y")
     }
 
+    // MARK: - Board columns
+
+    func testEveryActiveStatusHasAColumn() {
+        let expected: [SessionStatus: SessionBoardColumnKind] = [
+            .waitingPermission: .waiting, .waitingInput: .waiting, .needsAttention: .waiting,
+            .working: .working, .compacting: .working,
+            .done: .finished,
+            .background: .background,
+        ]
+        for (status, column) in expected {
+            XCTAssertEqual(SessionBoardColumnKind(status: status), column, "\(status)")
+        }
+    }
+
+    func testExpandedCardTakesWhatTheColumnLeaves() {
+        // Two collapsed cards of 180 and the expanded card's 70-point header leave 700 - 430 - 12.
+        let height = SessionBoardMetrics.expandedTimelineHeight(
+            cardsHeight: 700, fixedHeight: 430, expandedCount: 1, cardCount: 3
+        )
+        XCTAssertEqual(height, 258 - SessionBoardMetrics.timelineChromeHeight)
+    }
+
+    func testTwoExpandedCardsShareTheRoom() {
+        let one = SessionBoardMetrics.expandedTimelineHeight(cardsHeight: 700, fixedHeight: 140, expandedCount: 2, cardCount: 2)
+        XCTAssertEqual(one, (700 - 140 - SessionBoardMetrics.cardSpacing) / 2 - SessionBoardMetrics.timelineChromeHeight)
+    }
+
+    func testCrowdedColumnStillGivesAnExpandedCardRoom() {
+        let height = SessionBoardMetrics.expandedTimelineHeight(
+            cardsHeight: 400, fixedHeight: 600, expandedCount: 1, cardCount: 4
+        )
+        XCTAssertEqual(height, SessionBoardMetrics.minExpandedTimelineHeight)
+    }
+
     // MARK: - Helpers
 
     private func feed<P: TimelineTranscriptParser>(_ parser: inout P, _ lines: [String]) {
