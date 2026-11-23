@@ -24,6 +24,9 @@ enum HookEvent: Equatable {
     case notificationPermission
     case notificationOther
     case permissionRequest
+    /// A Codex PermissionRequest under automatic review (`approvals_reviewer: auto_review`): Codex's
+    /// reviewer model answers it, so the user is never asked and the turn keeps working.
+    case permissionAutoReviewed
     case subagentStart
     case subagentStop
     case preCompact
@@ -119,7 +122,8 @@ enum Transition {
         case .autoPreCompact: return current == .working ? .compacting : nil
         // notificationPermission: PermissionRequest already sets waitingPermission immediately.
         // The Notification fires ~6s later and would race with PostToolUse if the user allows quickly.
-        case .subagentStart, .subagentStop, .notificationPermission, .notificationOther, .sessionEnd, .unknown:
+        case .subagentStart, .subagentStop, .notificationPermission, .notificationOther, .permissionAutoReviewed, .sessionEnd,
+             .unknown:
             return nil
         }
     }
@@ -129,7 +133,8 @@ enum Transition {
         switch event {
         case .sessionStart, .userPromptSubmit, .preToolUse, .awaitingUserAnswer, .postToolUse,
              .postToolUseFailure, .stop, .stopWithBackgroundWork, .stopAskingUser, .stopFailure, .notificationIdle,
-             .notificationElicitation, .permissionRequest, .preCompact, .autoPreCompact, .postCompact, .sessionError:
+             .notificationElicitation, .permissionRequest, .permissionAutoReviewed, .preCompact, .autoPreCompact, .postCompact,
+             .sessionError:
             return true
         case .notificationPermission, .notificationOther, .subagentStart, .subagentStop,
              .sessionEnd, .unknown:

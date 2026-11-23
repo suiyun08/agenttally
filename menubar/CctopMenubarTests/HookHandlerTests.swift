@@ -1571,8 +1571,9 @@ final class HookHandlerTests: XCTestCase {
         }
         """, hookName: "UserPromptSubmit")
 
+        // The deferred start still gets its record; with no rollout, nobody is watching the thread.
         let session = try loadSession("codex-ephemeral-user-task.json")
-        XCTAssertFalse(session.hidden)
+        XCTAssertTrue(session.hidden)
     }
 
     func testCodexNullTranscriptStartDefersOnlyWithPositiveStartupEvidence() throws {
@@ -2094,5 +2095,108 @@ final class HookHandlerTests: XCTestCase {
         XCTAssertEqual(sessionFileName(input: codex, pid: 4242, safeSessionId: "thread-1"), "codex-thread-1.json")
         XCTAssertEqual(sessionFileName(input: claude, pid: 4242, safeSessionId: "thread-1"), "4242.json")
         XCTAssertEqual(sessionFileName(input: legacy, pid: 4242, safeSessionId: "thread-1"), "4242.json")
+    }
+
+    // MARK: - Codex automatic review and unwatched threads
+
+    private func codexRollout(source: String = "vscode", reviewers: [String]) throws -> String {
+        let path = NSTemporaryDirectory() + "cctop-rollout-\(UUID().uuidString).jsonl"
+        var lines = [#"{"type":"session_meta","payload":{"id":"t","source":"\#(source)","originator":"x"}}"#]
+        for reviewer in reviewers {
+            lines.append(#"{"type":"event_msg","payload":{"type":"thread_settings_applied","thread_settings":{"#
+                + #""approval_policy":"on-request","approvals_reviewer":"\#(reviewer)","#
+                + #""requested_approvals_reviewer":"\#(reviewer)"}}}"#)
+            lines.append(#"{"type":"response_item","payload":{"type":"message","role":"user"}}"#)
+        }
+        try (lines.joined(separator: "\n") + "\n").write(toFile: path, atomically: true, encoding: .utf8)
+        return path
+    }
+
+    private func codexEvent(_ name: String, id: String, transcript: String?, extra: String = "") -> String {
+        let path = transcript.map { "\"\($0)\"" } ?? "null"
+        return #"{"session_id":"\#(id)","cwd":"/tmp/ordinary-project","hook_event_name":"\#(name)","#
+            + #""harness_name":"codex","transcript_path":\#(path)\#(extra)}"#
+    }
+
+    private func requestPermission(id: String, transcript: String?) throws -> SessionData {
+        try handleHook(
+            codexEvent("UserPromptSubmit", id: id, transcript: transcript, extra: #","prompt":"Fix the import""#),
+            hookName: "UserPromptSubmit"
+        )
+        try handleHook(
+            codexEvent("PermissionRequest", id: id, transcript: transcript,
+                       extra: #","tool_name":"Bash","tool_input":{"command":"lark-cli sheets +cells-get"}"#),
+            hookName: "PermissionRequest"
+        )
+        return try loadSession("codex-\(id).json")
+    }
+
+    /// Codex runs PermissionRequest hooks before its reviewer model decides; under automatic
+    /// review that model answers, so nothing waits on the user.
+    func testCodexPermissionUnderAutomaticReviewKeepsWorking() throws {
+        let rollout = try codexRollout(reviewers: ["auto_review"])
+        defer { try? FileManager.default.removeItem(atPath: rollout) }
+        let session = try requestPermission(id: "auto-reviewed", transcript: rollout)
+        XCTAssertEqual(session.status, .working)
+        XCTAssertNil(session.notificationMessage)
+        XCTAssertFalse(session.hidden)
+    }
+
+    func testCodexPermissionTheUserReviewsWaitsForThem() throws {
+        // The latest settings decide: this thread switched from automatic review to the user.
+        let rollout = try codexRollout(reviewers: ["auto_review", "user"])
+        defer { try? FileManager.default.removeItem(atPath: rollout) }
+        XCTAssertEqual(try requestPermission(id: "user-reviewed", transcript: rollout).status, .waitingPermission)
+    }
+
+    func testCodexPermissionWithAnUnreadableRolloutStillWaitsForTheUser() throws {
+        let missing = NSTemporaryDirectory() + "cctop-missing-\(UUID().uuidString).jsonl"
+        XCTAssertEqual(try requestPermission(id: "unreadable", transcript: missing).status, .waitingPermission)
+    }
+
+    func testRolloutProbeReadsTheLastSettingAcrossChunks() throws {
+        let path = NSTemporaryDirectory() + "cctop-rollout-\(UUID().uuidString).jsonl"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        // The last pair straddles the 256 KB boundary from the end, so it spans two reads.
+        let text = #"{"approvals_reviewer":"auto_review"}"# + "\n" + String(repeating: "a", count: 300_000)
+            + #"{"requested_approvals_reviewer":"auto_review","approvals_reviewer":"user"}"#
+            + String(repeating: "b", count: 256 * 1024 - 10)
+        try text.write(toFile: path, atomically: true, encoding: .utf8)
+        XCTAssertEqual(CodexRolloutProbe.lastStringValue(forKey: "approvals_reviewer", atPath: path), "user")
+    }
+
+    func testCodexExecRunIsHidden() throws {
+        let rollout = try codexRollout(source: "exec", reviewers: [])
+        defer { try? FileManager.default.removeItem(atPath: rollout) }
+        try handleHook(
+            codexEvent("UserPromptSubmit", id: "batch-run", transcript: rollout, extra: #","prompt":"Judge case 12""#),
+            hookName: "UserPromptSubmit"
+        )
+        try handleHook(codexEvent("Stop", id: "batch-run", transcript: rollout), hookName: "Stop")
+        let session = try loadSession("codex-batch-run.json")
+        XCTAssertTrue(session.hidden)
+        XCTAssertEqual(session.status, .done)
+    }
+
+    func testCodexDesktopThreadStaysVisible() throws {
+        let rollout = try codexRollout(source: "vscode", reviewers: ["auto_review"])
+        defer { try? FileManager.default.removeItem(atPath: rollout) }
+        try handleHook(
+            codexEvent("UserPromptSubmit", id: "desktop", transcript: rollout, extra: #","prompt":"Fix the import""#),
+            hookName: "UserPromptSubmit"
+        )
+        XCTAssertFalse(try loadSession("codex-desktop.json").hidden)
+    }
+
+    /// The Feishu bridge runs Codex through `codex exec` too, but someone is waiting on the chat.
+    func testFeishuBridgeCodexRunStaysVisible() throws {
+        let rollout = try codexRollout(source: "exec", reviewers: [])
+        defer { try? FileManager.default.removeItem(atPath: rollout) }
+        try handleHook(
+            codexEvent("UserPromptSubmit", id: "bridge-run", transcript: rollout, extra: #","prompt":"Check this ticket""#),
+            hookName: "UserPromptSubmit",
+            deps: makeDeps(env: ["LARK_CHANNEL": "1", "LARK_CHANNEL_PROFILE": "codex"])
+        )
+        XCTAssertFalse(try loadSession("codex-bridge-run.json").hidden)
     }
 }
