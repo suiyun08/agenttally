@@ -747,7 +747,7 @@ final class SnapshotTests: XCTestCase {
             let lines = rounds.enumerated().flatMap { index, round -> [String] in
                 let user = #"{"type":"user","uuid":"\#(id)u\#(index)","message":{"role":"user","content":"\#(round.0)"}}"#
                 guard let did = round.1 else { return [user] }
-                let reply = "本轮｜你要：\(round.0)｜我做：\(did)"
+                let reply = did + "。"
                 let agent = #"{"type":"assistant","uuid":"\#(id)a\#(index)","message":{"content":[{"type":"text","text":"\#(reply)"}]}}"#
                 return [user, agent]
             }

@@ -124,6 +124,7 @@ final class SessionTimelineReader {
             parseStates[source.key] = fresh
         }
         guard var state = parseStates[source.key] else { return .unavailable }
+        if case .codex(let threadID) = source { appendNewCodexSegments(to: &state, threadID: threadID) }
         for index in state.files.indices {
             let cursor = state.files[index]
             guard let next = Self.feedNewLines(path: cursor.path, from: cursor.offset, into: &state.parser) else {
@@ -147,8 +148,9 @@ final class SessionTimelineReader {
             guard !paths.isEmpty else { return nil }
             return ParseState(files: paths.map { FileCursor(path: $0) }, parser: ClaudeTranscriptParser())
         case .codex(let threadID):
-            guard let path = codexRolloutPath(threadID: threadID) else { return nil }
-            return ParseState(files: [FileCursor(path: path)], parser: CodexRolloutParser())
+            let paths = codexRolloutPaths(threadID: threadID)
+            guard !paths.isEmpty else { return nil }
+            return ParseState(files: paths.map { FileCursor(path: $0) }, parser: CodexRolloutParser())
         }
     }
 
@@ -198,13 +200,47 @@ final class SessionTimelineReader {
         return []
     }
 
-    private func codexRolloutPath(threadID: String) -> String? {
-        guard let enumerator = FileManager.default.enumerator(atPath: codexSessionsDir) else { return nil }
-        let suffix = "-\(threadID).jsonl"
-        for case let relative as String in enumerator where relative.hasSuffix(suffix) {
-            return (codexSessionsDir as NSString).appendingPathComponent(relative)
+    /// Every rollout file of the thread, oldest first. Codex starts a new file
+    /// (`…-<thread>_<segment>.jsonl`) when the user re-sends a message after an interrupted turn;
+    /// it goes on from where the previous file stopped. File names start with their time.
+    private func codexRolloutPaths(threadID: String) -> [String] {
+        guard let enumerator = FileManager.default.enumerator(atPath: codexSessionsDir) else { return [] }
+        var paths: [String] = []
+        for case let relative as String in enumerator
+        where Self.isCodexRollout((relative as NSString).lastPathComponent, threadID: threadID) {
+            paths.append((codexSessionsDir as NSString).appendingPathComponent(relative))
         }
-        return nil
+        return paths.sorted { ($0 as NSString).lastPathComponent < ($1 as NSString).lastPathComponent }
+    }
+
+    /// Follows a thread into the files Codex starts while the board is open. A new file lands in
+    /// the day's folder, so only that and the latest file's folder are listed.
+    private func appendNewCodexSegments(to state: inout ParseState, threadID: String) {
+        guard let latest = state.files.last?.path else { return }
+        let known = Set(state.files.map(\.path))
+        let folders: Set<String> = [(latest as NSString).deletingLastPathComponent, codexDayFolder(Date())]
+        var found: [String] = []
+        for folder in folders {
+            guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder) else { continue }
+            for name in names where Self.isCodexRollout(name, threadID: threadID) {
+                let path = (folder as NSString).appendingPathComponent(name)
+                if !known.contains(path) { found.append(path) }
+            }
+        }
+        let ordered = found.sorted { ($0 as NSString).lastPathComponent < ($1 as NSString).lastPathComponent }
+        state.files.append(contentsOf: ordered.map { FileCursor(path: $0) })
+    }
+
+    private func codexDayFolder(_ date: Date) -> String {
+        let day = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        let relative = String(format: "%04d/%02d/%02d", day.year ?? 0, day.month ?? 0, day.day ?? 0)
+        return (codexSessionsDir as NSString).appendingPathComponent(relative)
+    }
+
+    /// `rollout-<time>-<thread>.jsonl` or a later segment, `rollout-<time>-<thread>_<segment>.jsonl`.
+    static func isCodexRollout(_ name: String, threadID: String) -> Bool {
+        guard name.hasPrefix("rollout-"), name.hasSuffix(".jsonl") else { return false }
+        return name.hasSuffix("-\(threadID).jsonl") || name.contains("-\(threadID)_")
     }
 
     // MARK: - Reading

@@ -1,6 +1,6 @@
 import Foundation
 
-/// One line of a session's board timeline: what the user asked, or what the agent did.
+/// One line of a session's board timeline: the start of what the user said or the agent replied.
 struct TimelineEntry: Identifiable, Equatable {
     enum Role: Equatable {
         case user
@@ -18,70 +18,21 @@ struct TimelineRound: Equatable {
     var prompt: String?
     /// The agent's latest text in this round.
     var reply: String?
-    /// From the reply's summary line, when the agent wrote one.
-    var asked: String?
-    var did: String?
-
-    mutating func takeReply(_ text: String) {
-        reply = text
-        guard let line = TurnSummaryLine.parse(text) else { return }
-        did = line.did
-        // A wake-up reply ("no new request") keeps what the user asked earlier in the round.
-        if !TurnSummaryLine.isNoNewRequest(line.asked) || asked == nil {
-            asked = line.asked
-        }
-    }
 }
 
 enum SessionTimeline {
-    /// Board lines for the rounds, oldest first. The summary line wins; otherwise the
-    /// first sentence of the raw text stands in.
+    /// Board lines for the rounds, oldest first: the first sentence of each message.
     static func entries(from rounds: [TimelineRound]) -> [TimelineEntry] {
         var entries: [TimelineEntry] = []
         for (index, round) in rounds.enumerated() {
-            if let asked = round.asked, !TurnSummaryLine.isNoNewRequest(asked) {
-                entries.append(TimelineEntry(id: "\(index)u", role: .user, text: asked))
-            } else if let prompt = round.prompt.flatMap({ TimelineText.brief($0) }) {
+            if let prompt = round.prompt.flatMap({ TimelineText.brief($0) }) {
                 entries.append(TimelineEntry(id: "\(index)u", role: .user, text: prompt))
             }
-            if let did = round.did {
-                entries.append(TimelineEntry(id: "\(index)a", role: .agent, text: did))
-            } else if let reply = round.reply.flatMap({ TimelineText.brief($0) }) {
+            if let reply = round.reply.flatMap({ TimelineText.brief($0) }) {
                 entries.append(TimelineEntry(id: "\(index)a", role: .agent, text: reply))
             }
         }
         return entries
-    }
-}
-
-/// The line each agent ends a reply with: `本轮｜你要：…｜我做：…`.
-enum TurnSummaryLine {
-    private static let pattern = try? NSRegularExpression(
-        pattern: #"本轮\s*[｜|]\s*你要\s*[：:]\s*(.+?)\s*[｜|]\s*我做\s*[：:]\s*(.+)"#
-    )
-    private static let decoration = CharacterSet(charactersIn: "`*_>#-—– \t")
-
-    /// Reads the summary from the reply's last few non-empty lines, nearest the end first.
-    static func parse(_ reply: String) -> (asked: String, did: String)? {
-        guard let pattern else { return nil }
-        let lines = reply.split(whereSeparator: \.isNewline)
-            .map { $0.trimmingCharacters(in: decoration) }
-            .filter { !$0.isEmpty }
-        for line in lines.suffix(3).reversed() {
-            let range = NSRange(line.startIndex..., in: line)
-            guard let match = pattern.firstMatch(in: line, range: range),
-                  let askedRange = Range(match.range(at: 1), in: line),
-                  let didRange = Range(match.range(at: 2), in: line) else { continue }
-            let asked = line[askedRange].trimmingCharacters(in: decoration)
-            let did = line[didRange].trimmingCharacters(in: decoration)
-            guard !asked.isEmpty, !did.isEmpty else { continue }
-            return (asked, did)
-        }
-        return nil
-    }
-
-    static func isNoNewRequest(_ asked: String) -> Bool {
-        asked.hasPrefix("无新要求")
     }
 }
 
@@ -150,7 +101,7 @@ extension TimelineTranscriptParser {
 
     static func appendReply(_ reply: String, to rounds: inout [TimelineRound]) {
         if rounds.isEmpty { rounds.append(TimelineRound()) }
-        rounds[rounds.count - 1].takeReply(reply)
+        rounds[rounds.count - 1].reply = reply
     }
 
     static func json(_ line: Data) -> [String: Any]? {

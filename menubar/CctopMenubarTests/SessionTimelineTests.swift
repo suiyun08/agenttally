@@ -15,35 +15,16 @@ final class SessionTimelineTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - Summary line
-
-    func testSummaryLineIsReadFromTheEndOfAReply() {
-        let reply = "设计稿改好了。\n\n`本轮｜你要：补空状态提示｜我做：已加提示，等你看效果`"
-        let line = TurnSummaryLine.parse(reply)
-        XCTAssertEqual(line?.asked, "补空状态提示")
-        XCTAssertEqual(line?.did, "已加提示，等你看效果")
-    }
-
-    func testSummaryLineAcceptsHalfWidthMarks() {
-        let line = TurnSummaryLine.parse("本轮 | 你要: 查日志 | 我做: 找到报错原因")
-        XCTAssertEqual(line?.asked, "查日志")
-        XCTAssertEqual(line?.did, "找到报错原因")
-    }
-
-    func testReplyWithoutSummaryLineHasNone() {
-        XCTAssertNil(TurnSummaryLine.parse("本轮改了三处。\n下一步等你确认。"))
-    }
-
     // MARK: - Claude transcript
 
-    func testClaudeRoundsUseSummaryLines() {
+    func testClaudeRoundsShowTheStartOfEachMessage() {
         var parser = ClaudeTranscriptParser()
         feed(&parser, [
             claudeUser("说明开发环境和代码位置，先别动手", uuid: "u1"),
-            claudeAssistant("收到。\n本轮｜你要：说明环境和注意点｜我做：已了解，等你给任务", uuid: "a1"),
+            claudeAssistant("已了解开发环境，等你给任务。\n\n代码在 app 目录下。", uuid: "a1"),
         ])
         XCTAssertEqual(SessionTimeline.entries(from: parser.rounds).map(\.text), [
-            "说明环境和注意点", "已了解，等你给任务",
+            "说明开发环境和代码位置，先别动手", "已了解开发环境，等你给任务。",
         ])
     }
 
@@ -52,13 +33,14 @@ final class SessionTimelineTests: XCTestCase {
         feed(&parser, [
             claudeUser("提供素材和任务说明", uuid: "u1"),
             #"{"type":"user","uuid":"t1","message":{"role":"user","content":[{"type":"tool_result","content":"ok"}]}}"#,
-            claudeAssistant("方案好了。\n本轮｜你要：按素材出方案｜我做：给出方案，文档授权失效", uuid: "a1"),
+            claudeAssistant("方案好了，文档授权失效需要重新授权。", uuid: "a1"),
             claudeUser("<task-notification>done</task-notification>", uuid: "n1", origin: "task-notification"),
-            claudeAssistant("后台任务回来了。\n本轮｜你要：无新要求｜我做：读完文档，方案已更新", uuid: "a2"),
+            claudeAssistant("读完文档，方案已更新。", uuid: "a2"),
             claudeUser("This session is being continued from a previous conversation", uuid: "c1", compact: true),
         ])
+        // The wake-up reply belongs to the round the user started.
         XCTAssertEqual(SessionTimeline.entries(from: parser.rounds).map(\.text), [
-            "按素材出方案", "读完文档，方案已更新",
+            "提供素材和任务说明", "读完文档，方案已更新。",
         ])
     }
 
@@ -81,13 +63,13 @@ final class SessionTimelineTests: XCTestCase {
         try FileManager.default.createDirectory(atPath: desktop, withIntermediateDirectories: true)
         try write(projectDir + "/old.jsonl", [
             claudeUser("先读背景", uuid: "u1"),
-            claudeAssistant("本轮｜你要：读背景｜我做：已读完", uuid: "a1"),
+            claudeAssistant("背景已读完。", uuid: "a1"),
         ])
         // The new CLI session copies the last reply under its original uuid.
         try write(projectDir + "/new.jsonl", [
-            claudeAssistant("本轮｜你要：读背景｜我做：已读完", uuid: "a1"),
+            claudeAssistant("背景已读完。", uuid: "a1"),
             claudeUser("开始做吧", uuid: "u2"),
-            claudeAssistant("本轮｜你要：开始开发｜我做：代码已推送", uuid: "a2"),
+            claudeAssistant("代码已推送。", uuid: "a2"),
         ])
         try #"{"cliSessionId":"new","priorCliSessionIds":["old"]}"#
             .write(toFile: desktop + "/local_1.json", atomically: true, encoding: .utf8)
@@ -98,10 +80,10 @@ final class SessionTimelineTests: XCTestCase {
         let source = TimelineSource.claude(sessionID: "new", projectPath: "/Users/me/app", isDesktop: true)
         let state = reader.read([source])[source.key]
         XCTAssertEqual(state, .entries([
-            TimelineEntry(id: "0u", role: .user, text: "读背景"),
-            TimelineEntry(id: "0a", role: .agent, text: "已读完"),
-            TimelineEntry(id: "1u", role: .user, text: "开始开发"),
-            TimelineEntry(id: "1a", role: .agent, text: "代码已推送"),
+            TimelineEntry(id: "0u", role: .user, text: "先读背景"),
+            TimelineEntry(id: "0a", role: .agent, text: "背景已读完。"),
+            TimelineEntry(id: "1u", role: .user, text: "开始做吧"),
+            TimelineEntry(id: "1a", role: .agent, text: "代码已推送。"),
         ]))
     }
 
@@ -112,18 +94,47 @@ final class SessionTimelineTests: XCTestCase {
         feed(&parser, [
             ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions"}]}}"##,
             #"{"type":"event_msg","payload":{"type":"item_completed","item":{"type":"UserMessage","content":[{"type":"text","text":"生成一张熊猫侠客"}]}}}"#,
-            #"{"type":"event_msg","payload":{"type":"task_complete","last_agent_message":"出图了。\n本轮｜你要：画熊猫侠客｜我做：已出图，等你挑"}}"#,
+            #"{"type":"event_msg","payload":{"type":"task_complete","last_agent_message":"出图了，等你挑。"}}"#,
         ])
         XCTAssertEqual(SessionTimeline.entries(from: parser.rounds).map(\.text), [
-            "画熊猫侠客", "已出图，等你挑",
+            "生成一张熊猫侠客", "出图了，等你挑。",
         ])
+    }
+
+    func testCodexThreadIsReadAcrossItsSegmentFiles() throws {
+        let thread = "01a2074b-aa3b-7c10-a7b5-20f40b027ae2"
+        let day = tmpDir + "/codex/2026/11/23"
+        try FileManager.default.createDirectory(atPath: day, withIntermediateDirectories: true)
+        try write(day + "/rollout-2026-11-23T02-25-29-\(thread).jsonl", [codexPrompt("导入快捷话术"), codexReply("表格读不到，需要重新授权。")])
+        // Re-sent after an interrupted turn: Codex goes on in a new file.
+        try write(day + "/rollout-2026-11-23T02-43-16-\(thread)_01a2075b-f2ac-7011-a75a-6aaad7cc42d4.jsonl", [
+            codexPrompt("我刚刚授权了"), codexReply("授权生效，已导入。"),
+        ])
+        // Another thread whose segment id happens to be this thread's id is not part of it.
+        try write(day + "/rollout-2026-11-23T03-00-00-01a20800-0000-7000-8000-000000000000_\(thread).jsonl", [
+            codexPrompt("别的线程"),
+        ])
+
+        let reader = SessionTimelineReader(
+            claudeProjectsDir: tmpDir, claudeDesktopSessionsDir: tmpDir, codexSessionsDir: tmpDir + "/codex"
+        )
+        let source = TimelineSource.codex(threadID: thread)
+        XCTAssertEqual(entryTexts(reader.read([source])[source.key]), [
+            "导入快捷话术", "表格读不到，需要重新授权。", "我刚刚授权了", "授权生效，已导入。",
+        ])
+
+        // A file Codex starts while the board is open is followed too.
+        try write(day + "/rollout-2026-11-23T04-10-00-\(thread)_01a2076c-30ad-7323-9365-23eb28a740f5.jsonl", [
+            codexPrompt("提交吧"), codexReply("已提交。"),
+        ])
+        XCTAssertEqual(entryTexts(reader.read([source])[source.key]).suffix(2), ["提交吧", "已提交。"])
     }
 
     // MARK: - Incremental reading
 
     func testLineStillBeingWrittenIsReadOnceComplete() throws {
         let path = tmpDir + "/t.jsonl"
-        let first = claudeUser("第一条要求", uuid: "u1") + "\n" + String(claudeAssistant("本轮｜你要：x｜我做：y", uuid: "a1").prefix(20))
+        let first = claudeUser("第一条要求", uuid: "u1") + "\n" + String(claudeAssistant("回复完成。", uuid: "a1").prefix(20))
         try first.write(toFile: path, atomically: true, encoding: .utf8)
 
         var parser: any TimelineTranscriptParser = ClaudeTranscriptParser()
@@ -131,10 +142,10 @@ final class SessionTimelineTests: XCTestCase {
         XCTAssertEqual(parser.rounds.count, 1)
         XCTAssertNil(parser.rounds.first?.reply)
 
-        try (claudeUser("第一条要求", uuid: "u1") + "\n" + claudeAssistant("本轮｜你要：x｜我做：y", uuid: "a1") + "\n")
+        try (claudeUser("第一条要求", uuid: "u1") + "\n" + claudeAssistant("回复完成。", uuid: "a1") + "\n")
             .write(toFile: path, atomically: true, encoding: .utf8)
         _ = SessionTimelineReader.feedNewLines(path: path, from: offset, into: &parser)
-        XCTAssertEqual(parser.rounds.first?.did, "y")
+        XCTAssertEqual(parser.rounds.first?.reply, "回复完成。")
     }
 
     // MARK: - Board columns
@@ -172,6 +183,19 @@ final class SessionTimelineTests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    private func entryTexts(_ state: TimelineState?) -> [String] {
+        guard case .entries(let entries) = state else { return [] }
+        return entries.map(\.text)
+    }
+
+    private func codexPrompt(_ text: String) -> String {
+        #"{"type":"event_msg","payload":{"type":"item_completed","item":{"type":"UserMessage","content":[{"type":"text","text":"\#(text)"}]}}}"#
+    }
+
+    private func codexReply(_ text: String) -> String {
+        #"{"type":"event_msg","payload":{"type":"task_complete","last_agent_message":"\#(text)"}}"#
+    }
 
     private func feed<P: TimelineTranscriptParser>(_ parser: inout P, _ lines: [String]) {
         for line in lines { parser.consume(line: Data(line.utf8)) }
