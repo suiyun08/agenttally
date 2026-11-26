@@ -189,12 +189,14 @@ and other persisted preferences keep their separate contracts.
 | Value | Meaning | Written on |
 | --- | --- | --- |
 | `working`, `compacting` | The agent is running a turn | Prompt and tool events; `PreCompact`, except an automatic one outside a turn |
-| `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest` |
+| `waiting_permission` | A tool call waits for the user's permission | `PermissionRequest`, except a Codex one under automatic review (below) |
 | `waiting_input` | The agent waits for the user's answer | `PreToolUse` for `AskUserQuestion` or `ExitPlanMode`; MCP elicitation notifications; `Stop` right after a wrap-up card that asks something |
 | `needs_attention` | The turn ended on an error | `StopFailure`; `SessionError` |
 | `background` | Written by hooks before 1.0.7 for a turn that ended with background work. The app reads it as `done` | No longer written |
 | `done` | The turn ended | `Stop`, with or without background work; `idle_prompt` only when a turn never sent `Stop` |
 | `idle` | No turn has run since start or compaction | `SessionStart`, `PostCompact` |
+
+Codex runs `PermissionRequest` hooks before its reviewer decides. When the thread uses automatic review (`approvals_reviewer: auto_review`, the last value in its rollout at `transcript_path`), Codex's reviewer model answers the request and the user is never asked, so the hook keeps the current status and records no message. A rollout the hook can't read keeps the request as one for the user.
 
 Claude Code also compacts on its own (`PreCompact` with `trigger: "auto"`) while a session waits: it prepares the summary in the background and uses it only with the next prompt, so no `PostCompact` or `SessionStart` follows until then. Such a `PreCompact` outside a running turn keeps the current status.
 
@@ -204,7 +206,7 @@ A turn the user already read in Claude Desktop or Codex Desktop counts as seen t
 
 Claude Desktop ends a turn with a wrap-up card, the tool `mcp__ccd_turn__wrap_up`, whose `ask` holds any question for the user. The hook records that question as the tool's detail, and a `Stop` that directly follows the card writes `waiting_input` with the question in `notification_message`. Claude Code's `idle_prompt` reminder a minute later leaves the question in place. Any other tool between the card and `Stop` means the turn went on, so the turn ends `done`.
 
-`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them. A finished turn's card shows that summary under Claude's reply. Once the user has read a `done` turn whose `background_task_count` is above zero, the app shows it as Background: it stays in Active, after the unread results, without a floating notice, menubar dot, notification, or sound, until the tasks wake Claude and the next turn starts. Scheduled wakeups alone do not count, since nothing runs until they fire.
+`last_assistant_message` keeps the start of Claude's final reply for the card and notification. `background_task_count`, `scheduled_wakeup_count`, and `background_task_detail` summarize the work reported on `Stop`; a `Stop` without background work clears them. A finished turn's card shows that summary under Claude's reply. A `done` turn whose `background_task_count` is above zero hasn't finished the work, read or not, so the app shows it as Background: it stays in Active, after the finished results, without a floating notice, menubar dot, notification, or sound, until the tasks wake Claude and the turn after them ends. A turn that ends asking the user is `waiting_input` and still calls. Scheduled wakeups alone do not count, since nothing runs until they fire.
 
 ## Terminal Focus Metadata
 
@@ -376,5 +378,13 @@ fail open because transcript-field presence is not persisted. The preferred
 upstream contract is an explicit `user_openable`/visibility field or structured
 session source on every hook; `ephemeral` alone would describe persistence, not
 whether a task belongs in the user-facing session list.
+
+This fork goes further on `UserPromptSubmit`: a Codex thread nobody watches is
+`hidden`. That is an explicitly null `transcript_path` (an ephemeral thread:
+Codex Desktop's suggestion, review, and title helpers, `codex exec --ephemeral`)
+or a rollout whose `session_meta` records `source: "exec"` (batch jobs,
+automations, agents' helpers). Feishu bridge conversations also run through
+`codex exec`, so a hook with the bridge's markers is never hidden this way. A
+`codex exec` run someone watches in a terminal doesn't show in the panel either.
 
 Older cctop versions may have persisted both `is_subagent = true` and `hidden = true` from `thread_source` alone. cctop clears that sticky pair only when structured source proves `cli` or `vscode`, the edge schema is readable and has no spawn edge for the thread, and no independent memory/title auto-hide rule applies.

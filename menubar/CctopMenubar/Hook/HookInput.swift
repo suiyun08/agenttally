@@ -1,10 +1,6 @@
 import Foundation
 
 struct HookInput: Codable {
-    private static let codexProjectSuggestionPromptFragment =
-        "Generate 0 to 3 hyperpersonalized suggestions"
-    private static let codexSuggestionPromptFragmentOffset = 12
-
     let sessionId: String
     let cwd: String
     let transcriptPath: String?
@@ -170,15 +166,6 @@ struct HookInput: Codable {
         resolvedHarnessName == SessionData.codexSource
             && codexSessionStartKind == "startup"
             && transcriptPathWasExplicitlyNull
-    }
-
-    var hasCodexProjectSuggestionEvidence: Bool {
-        guard resolvedHarnessName == SessionData.codexSource,
-              transcriptPathWasExplicitlyNull,
-              let prompt,
-              let range = prompt.range(of: Self.codexProjectSuggestionPromptFragment) else { return false }
-        return prompt.distance(from: prompt.startIndex, to: range.lowerBound)
-            == Self.codexSuggestionPromptFragmentOffset
     }
 }
 
