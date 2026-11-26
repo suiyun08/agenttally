@@ -362,14 +362,16 @@ class SessionManager: ObservableObject {
             dataSources.seenSessions.markSeen(cctopSessionID: cctopSessionID, at: dataSources.now())
         }
         result.isUnseenDone = dataSources.seenSessions.isUnseen(result)
-        return Self.adjustReadBackgroundWork(result)
+        return Self.adjustBackgroundWork(result)
     }
 
-    /// A turn the user has read but whose background tasks will resume the session stays Active
-    /// as `background`, so the panel shows that work is still out. Scheduled wakeups alone don't
-    /// count: nothing is running until they fire.
-    nonisolated static func adjustReadBackgroundWork(_ session: SessionData) -> SessionData {
-        guard session.status == .done, !session.isUnseenDone, (session.backgroundTaskCount ?? 0) > 0 else {
+    /// A turn that ended while its background tasks run hasn't finished the work: the tasks will
+    /// resume the session, and the turn that ends after them is the result worth a notice. Until
+    /// then it stays Active as `background`, read or not, without a notice, dot, notification, or
+    /// sound. A turn that ends asking the user is `waiting_input`, so its question still calls.
+    /// Scheduled wakeups alone don't count: nothing is running until they fire.
+    nonisolated static func adjustBackgroundWork(_ session: SessionData) -> SessionData {
+        guard session.status == .done, (session.backgroundTaskCount ?? 0) > 0 else {
             return session
         }
         var adjusted = session
@@ -384,8 +386,8 @@ class SessionManager: ObservableObject {
     }
 
     /// Hooks before 1.0.7 recorded a turn that ended with background work as `background`. That
-    /// turn ended like any other, so it shows as `done`, unread until the user looks, then as
-    /// `background` while its tasks are out (`adjustReadBackgroundWork`). Nothing here
+    /// turn ended like any other, so it shows as `done`, or as `background` while its tasks are
+    /// out (`adjustBackgroundWork`). Nothing here
     /// times out: a question waits for its answer and an unread result for the user, however long.
     nonisolated static func adjustLegacyBackground(_ session: SessionData) -> SessionData {
         guard session.status == .background else { return session }

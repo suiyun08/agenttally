@@ -14,7 +14,7 @@ enum HookHandler {
             toolName: input.toolName,
             hasBackgroundWork: input.hasBackgroundWork,
             compactTrigger: input.trigger
-        )
+        ).resolvingCodexReview(input: input)
 
         let larkProfile = larkChannelProfile(environment: deps.environment())
         if event == .sessionEnd {
@@ -95,7 +95,7 @@ enum HookHandler {
             }
             applySideEffects(event: turnEvent, data: &data, input: input, sessionsDir: sessionsDir, safeId: safeId)
             if input.isSubagentSession == true { data.isSubagentSession = true }
-            if data.shouldAutoHide || (event == .userPromptSubmit && input.hasCodexProjectSuggestionEvidence) { data.hidden = true }
+            if data.shouldAutoHide || (event == .userPromptSubmit && isUnwatchedCodexThread(input, larkProfile)) { data.hidden = true }
             data.markWrittenByHook(version: Config.hookVersion, isNewSessionFile: isNewSessionFile)
 
             let suffix = newStatus == nil ? " (preserved)" : ""
@@ -252,7 +252,8 @@ enum HookHandler {
             data.notificationMessage = input.error ?? input.message
 
         // notificationPermission: PermissionRequest already handles side effects; Notification fires ~6s later.
-        case .notificationPermission, .postCompact, .preCompact, .autoPreCompact, .postToolUse, .sessionEnd, .unknown:
+        case .notificationPermission, .permissionAutoReviewed, .postCompact, .preCompact, .autoPreCompact, .postToolUse, .sessionEnd,
+             .unknown:
             break
         }
     }
