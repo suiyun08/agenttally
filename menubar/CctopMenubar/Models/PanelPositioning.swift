@@ -147,9 +147,12 @@ final class PanelHeightLimit: ObservableObject {
     static let legacyMaxHeight: CGFloat = 600
 
     @Published var maxHeight: CGFloat
+    /// Widest panel the screen allows; only the board grows the panel toward it.
+    @Published var maxWidth: CGFloat
 
-    init(maxHeight: CGFloat = PanelHeightLimit.legacyMaxHeight) {
+    init(maxHeight: CGFloat = PanelHeightLimit.legacyMaxHeight, maxWidth: CGFloat = 1200) {
         self.maxHeight = maxHeight
+        self.maxWidth = maxWidth
     }
 }
 
@@ -214,6 +217,12 @@ enum PanelPositioning {
     static func maxPanelHeight(forPanelFrame frame: NSRect, in screens: [ScreenLayout]) -> CGFloat? {
         guard let idx = screenIndex(forPanelFrame: frame, in: screens) else { return nil }
         return maxPanelHeight(belowTopY: frame.maxY, on: screens[idx])
+    }
+
+    /// Widest panel that fits on the screen that owns `frame`.
+    static func maxPanelWidth(forPanelFrame frame: NSRect, in screens: [ScreenLayout]) -> CGFloat? {
+        guard let idx = screenIndex(forPanelFrame: frame, in: screens) else { return nil }
+        return screens[idx].visibleFrame.width - 2 * margin
     }
 
     /// Clamp a saved panel position to stay within screen bounds.

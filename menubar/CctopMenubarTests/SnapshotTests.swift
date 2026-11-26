@@ -718,6 +718,85 @@ final class SnapshotTests: XCTestCase {
         return frozen
     }
 
+    /// The board: one column per session, each round a line, opened at the newest.
+    func testGenerateBoardScreenshot() throws {
+        let projects = NSTemporaryDirectory() + "cctop-board-\(UUID().uuidString)"
+        defer { try? FileManager.default.removeItem(atPath: projects) }
+        try FileManager.default.createDirectory(atPath: projects + "/demo", withIntermediateDirectories: true)
+        let transcripts: [String: [(String, String?)]] = [
+            "form": [
+                ("说明开发环境、代码位置和注意点", "已了解，等你给任务"),
+                ("提供素材和任务说明", "给出方案，文档授权失效需重新授权"),
+                ("重新授权", "读完文档，出了方案和示例页"),
+                ("指出图片选填、示例误导、填写框不足", "已修改，待确认文字拼接、风险描述、上线范围"),
+            ],
+            "art": [
+                ("生成一张原创熊猫侠客全身图", "工具拦截了输出，没出图"),
+                ("换成水彩质感再试", "出图了，正面跃步、竹笠背剑"),
+                ("改成走来的感觉，更沉稳", "已改为缓步走来，等你挑"),
+            ],
+            "board": [
+                ("弹窗加看板样式，每轮一句话", "调研完，给出两种版式"),
+                ("改成按状态分栏，卡片显示最近 5 条", nil),
+            ],
+            "reply": [
+                ("给出离线时段和现有话术", "列出两种兜底话术，等你选"),
+            ],
+        ]
+        for (id, rounds) in transcripts {
+            let lines = rounds.enumerated().flatMap { index, round -> [String] in
+                let user = #"{"type":"user","uuid":"\#(id)u\#(index)","message":{"role":"user","content":"\#(round.0)"}}"#
+                guard let did = round.1 else { return [user] }
+                let reply = did + "。"
+                let agent = #"{"type":"assistant","uuid":"\#(id)a\#(index)","message":{"content":[{"type":"text","text":"\#(reply)"}]}}"#
+                return [user, agent]
+            }
+            try (lines.joined(separator: "\n") + "\n")
+                .write(toFile: "\(projects)/demo/\(id).jsonl", atomically: true, encoding: .utf8)
+        }
+
+        var waiting = SessionData.mock(id: "form", project: "support-form", sessionName: "工单页按问题分类加填写指导", status: .waitingInput, source: "cc")
+        waiting.lastPrompt = "文字拼接用方案一还是方案二？"
+        var done = SessionData.mock(id: "art", project: "art", sessionName: "熊猫侠客角色图", status: .done, source: "cc")
+        done.isUnseenDone = true
+        let working = SessionData.mock(
+            id: "board", project: "agenttally", sessionName: "弹窗看板样式", status: .working,
+            lastTool: "Edit", lastToolDetail: "/src/SessionBoardView.swift", source: "cc"
+        )
+        let permission = SessionData.mock(
+            id: "reply", project: "support", sessionName: "离线时的转人工应答", status: .waitingPermission,
+            lastTool: "Bash", lastToolDetail: "git push", source: "cc"
+        )
+        let fixtures = [permission, waiting, working, done]
+        let rows = userSessions(fromDataFixtures: fixtures).enumerated().map { index, session in
+            PanelSessionRow(slot: index, userSession: session, id: session.identity)
+        }
+
+        let store = SessionTimelineStore(reader: SessionTimelineReader(
+            claudeProjectsDir: projects, claudeDesktopSessionsDir: projects, codexSessionsDir: projects
+        ))
+        store.refresh(rows.map(\.session))
+        let deadline = Date().addingTimeInterval(5)
+        while store.states.count < rows.count, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+
+        let width = SessionBoardMetrics.width(maxWidth: 2000)
+        let board = { (expanded: Set<SessionIdentityPolicy.LogicalIdentity>, maxHeight: CGFloat) in
+            SessionBoardView(
+                rows: rows, timelines: store, selectedIdentity: nil, maxHeight: maxHeight, expanded: .constant(expanded)
+            ) { row in
+                SessionCardView(session: row.session)
+            }
+            .padding(.top, 10)
+        }
+        try renderScreenshot(view: board([], 900), colorScheme: .dark, filename: "board-dark.png", width: width)
+        try renderScreenshot(view: board([], 900), colorScheme: .light, filename: "board-light.png", width: width)
+        // A short screen: the expanded card scrolls inside itself and its column-mate stays in view.
+        let form = try XCTUnwrap(rows.first { $0.session.sessionId == "form" })
+        try renderScreenshot(view: board([form.id], 540), colorScheme: .dark, filename: "board-expanded-dark.png", width: width)
+    }
+
     private func renderScreenshot(
         view: some View, colorScheme: ColorScheme, filename: String, width: CGFloat = 320
     ) throws -> NSSize {

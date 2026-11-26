@@ -242,9 +242,12 @@ struct PanelContentView: View {
     var onLayoutChanged: () -> Void = {}
     /// Reports the top bar's button frames (top-left origin) so the panel lets clicks reach them.
     var onHeaderControlsChanged: ([CGRect]) -> Void = { _ in }
+    /// Reports the width the board needs, or nil when the page shows no board.
+    var onBoardWidthChanged: (CGFloat?) -> Void = { _ in }
     @ObservedObject private var themeManager = ThemeManager.shared
     @AppStorage(PanelWidth.defaultsKey) private var panelWidth = PanelWidth.standard.rawValue
     @StateObject private var overlayController = OverlayController()
+    @State private var boardWidth: CGFloat?
 
     var body: some View {
         PopupView(
@@ -265,11 +268,13 @@ struct PanelContentView: View {
             onCleanupTabVisible: onCleanupTabVisible,
             onCleanupTabHidden: onCleanupTabHidden,
             onLayoutChanged: onLayoutChanged,
-            maxListHeight: heightLimit.maxHeight
+            maxListHeight: heightLimit.maxHeight,
+            maxBoardWidth: heightLimit.maxWidth
         )
-        .frame(width: resizeState.width ?? CGFloat(panelWidth))
+        .frame(width: boardWidth ?? resizeState.width ?? CGFloat(panelWidth))
         .coordinateSpace(name: PanelHeaderControlFramesKey.coordinateSpace)
         .onPreferenceChange(PanelHeaderControlFramesKey.self) { onHeaderControlsChanged($0) }
+        .onPreferenceChange(PanelBoardWidthKey.self) { boardWidthChanged($0) }
         .frame(maxHeight: heightLimit.maxHeight, alignment: .top)
         .background {
             PanelSurfaceBackground()
@@ -281,11 +286,24 @@ struct PanelContentView: View {
                 .opacity(PanelSurfaceStyle.liquidGlassAvailable ? 0.5 : 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: AppChrome.panelCornerRadius, style: .continuous))
-        .overlay(alignment: .leading) { PanelResizeGrip(edge: .leading, state: resizeState) }
-        .overlay(alignment: .trailing) { PanelResizeGrip(edge: .trailing, state: resizeState) }
+        .overlay(alignment: .leading) { resizeGrip(.leading) }
+        .overlay(alignment: .trailing) { resizeGrip(.trailing) }
         .modifier(NoFocusRings())
         .id(themeManager.themeId)
         .onChange(of: panelWidth) { _ in onLayoutChanged() }
+    }
+
+    /// The board sets its own width, so its edges don't drag.
+    @ViewBuilder
+    private func resizeGrip(_ edge: PanelResizeEdge) -> some View {
+        if boardWidth == nil { PanelResizeGrip(edge: edge, state: resizeState) }
+    }
+
+    private func boardWidthChanged(_ width: CGFloat?) {
+        guard width != boardWidth else { return }
+        boardWidth = width
+        onBoardWidthChanged(width)
+        onLayoutChanged()
     }
 }
 

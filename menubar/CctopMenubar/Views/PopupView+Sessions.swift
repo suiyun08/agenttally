@@ -123,6 +123,28 @@ extension PopupView {
         }
     }
 
+    @ViewBuilder
+    func sessionRows(
+        _ rows: [PanelSessionRow],
+        tab: PopupTab,
+        showNavigateNumbers: Bool = false
+    ) -> some View {
+        if showsBoard && tab == .active {
+            SessionBoardView(
+                rows: rows,
+                timelines: timelineStore,
+                selectedIdentity: selectedSessionIdentity,
+                maxHeight: maxListHeight,
+                expanded: $expandedBoardCards,
+                onLayoutChanged: notifyLayoutChanged
+            ) { row in
+                sessionRow(row, showNavigateNumbers: showNavigateNumbers)
+            }
+        } else {
+            sessionList(rows, tab: tab, showNavigateNumbers: showNavigateNumbers)
+        }
+    }
+
     private func sessionRow(_ row: PanelSessionRow, showNavigateNumbers: Bool) -> some View {
         let focusStrategy = resolveFocusStrategy(session: row.session)
         let focusActionTitle = focusStrategy.actionTitle
